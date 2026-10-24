@@ -207,6 +207,8 @@ The setup is **unsigned**: no certificate and no Windows SDK signing tools are p
 - A *native* 100 % desktop capture is still impossible here: the active display is 3840x2160 at 200 %
   (the earlier 150 % evidence came from the 3440x1440 configuration). The 96-DPI and 200 % renders cover
   the layout question; neither is a DWM-composited screenshot.
+- Both handsets were detached at the end of this session (Windows keeps only stale records), so the
+  4 GB+ video, locked-phone and cloud-optimised drills could not run; they need the phones reattached.
 - iPhone lock / revoked USB permission still has no physical observation; the HUAWEI keeps MTP active
   while locked, so no Android lock drill applies.
 - Production licence issuer/purchase URL, Steamworks, Authenticode certificate and `signtool` remain
