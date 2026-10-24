@@ -128,7 +128,7 @@ drill that closes them.
 | H1 | Safe per-user installer, upgrade, uninstall | TESTED AND PASSED | `installer/Install-I-Total.Transfer.ps1`: no admin, no firewall, hash-checked, manifest-scoped uninstall, keeps user data. Three automated end-to-end tests. |
 | H2 | Packaged setup executable | TESTED AND PASSED (unsigned) | Inno Setup 6.7.3 (installed 2026-10-24) produced `I-Total.Transfer-1.8.0-setup.exe`. A silent install verified the installed exe hash, HKCU uninstall entry, Start Menu group, no firewall rule and untouched `%APPDATA%`; the app launched and the silent uninstaller removed the folder, entry and shortcuts. Signing is H4. |
 | H3 | Portable ZIP | TESTED AND PASSED | `installer/Build-Installer.ps1` builds it with `INSTALL.txt` and `SHA256SUMS.txt`. |
-| H4 | Code signing and release integrity | BLOCKED BY EXTERNAL REQUIREMENT | `installer/Sign-Artifacts.ps1` signs and verifies with a store thumbprint or a PFX (imported temporarily, password never on the command line), and fails closed. No certificate exists in this workspace; signtool is absent. |
+| H4 | Code signing and release integrity | BLOCKED BY EXTERNAL REQUIREMENT | `signtool.exe` 10.0.26100.0 and `installer/Sign-Artifacts.ps1` are present; the script signs and verifies with a store thumbprint or a PFX (imported temporarily, password never on the command line) and fails closed. A temporary self-signed certificate drill proved SHA-256 signing and `verify /pa`; the release is unsigned because no trusted certificate exists. |
 | H5 | Release artifact hashes and reproducible source archive | TESTED AND PASSED | Recorded in `PROJECT-STATUS.md`; re-verified after every publish. A clean `git clone` now rebuilds the byte-identical executable: `.gitattributes` fixes text at LF (`*.sln`/`*.bat`/`*.cmd` stay CRLF), and the 2026-10-24 clone passed 449 tests and published `411F4CC5...`. |
 | H6 | Change log and version | TESTED AND PASSED | `CHANGELOG.md`, version 1.8.0. |
 
@@ -152,7 +152,7 @@ drill that closes them.
    `Enter licence…` returns `NotConfigured` and the trial continues. This is fail-closed by design.
 2. **Steamworks SDK and partner account.** Needed for a live ownership check and to confirm Steam accepts
    this non-game utility. The signed Steam entitlement path works without it.
-3. **Code-signing certificate and Windows SDK signing tools.** Required to produce a trusted signature.
+3. **Code-signing certificate.** `signtool.exe` and the signing script are present; a trusted certificate is required to produce a trusted signature.
 4. **Inno Setup 6.** Obtained on 2026-10-24 (6.7.3); the packaged setup now builds and was tested. A machine
    without it still skips the setup cleanly.
 5. **Physical phones.** Both were attached together on 2026-10-21/24; the Android walk/copy, cancel/resume,

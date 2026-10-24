@@ -43,14 +43,17 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 - **Deliberate:** no secret is shipped and nothing phones home, so a stronger scheme would be dishonest
   about what it protects. Documented rather than overclaimed.
 
-### KI-05 - No code-signing certificate on this machine
+### KI-05 - No trusted code-signing certificate
 
-- **Impact:** the Inno Setup `setup.exe` is built and tested, but nothing is Authenticode-signed.
-- **Mitigation:** the per-user installer script, the portable ZIP and the setup are complete and exercised end
-  to end without admin rights; `Build-Installer.ps1` skips the setup cleanly when `ISCC.exe` is absent;
-  `Sign-Artifacts.ps1` fails closed when the tool or credential is missing.
-- **To close:** obtain a code-signing certificate and the Windows SDK signing tools, run
-  `installer\Sign-Artifacts.ps1`, verify with `signtool verify /pa`, then publish the hashes.
+- **Impact:** `signtool.exe` (Windows Kits 10.0.26100.0) and `Sign-Artifacts.ps1` are present, and the
+  signing path has been drilled with a temporary self-signed certificate, but no trusted code-signing
+  certificate exists, so nothing shipped is Authenticode-signed.
+- **Mitigation:** the per-user installer script, portable ZIP and setup are complete and tested;
+  `Build-Installer.ps1` skips the setup cleanly when `ISCC.exe` is absent; `Sign-Artifacts.ps1` fails closed
+  (exit 2 without tools/credential, 3 for a missing PFX, 4 on signing failure, 5 on verification) and
+  removes a PFX it imported even when signing fails.
+- **To close:** obtain a trusted code-signing certificate, run `installer\Sign-Artifacts.ps1`, verify with
+  `signtool verify /pa`, then publish the hashes.
 
 ### KI-06 - Steam entitlement is read from the install directory
 

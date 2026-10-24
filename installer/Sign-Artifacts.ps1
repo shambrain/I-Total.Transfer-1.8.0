@@ -86,10 +86,10 @@ if ($PfxPath) {
     try {
         # Import into the per-user store so the password never appears on signtool's command line, where
         # any local process could read it. The certificate is removed again in the finally block.
-        $ImportedCertificate = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2(
-            $PfxPath, $PfxPassword,
-            [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::UserKeySet -bor
-            [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
+        # PowerShell 5.1 read the line break after -bor as an extra argument and failed with
+        # "op_BitwiseOr" on an Object[]. Build the flags first and pass the constructor list explicitly.
+        $KeyFlags = [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]'UserKeySet, PersistKeySet'
+        $ImportedCertificate = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList @($PfxPath, $PfxPassword, $KeyFlags)
         $Store = New-Object System.Security.Cryptography.X509Certificates.X509Store('My', 'CurrentUser')
         $Store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
         $Store.Add($ImportedCertificate)

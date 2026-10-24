@@ -3,12 +3,12 @@
 Code signing is a release decision, not a build side effect. This document describes the prepared procedure,
 what is verified, and what is currently blocked.
 
-## Current state (2026-10-20)
+## Current state (2026-10-25)
 
 | Item | State |
 | --- | --- |
-| `installer/Sign-Artifacts.ps1` | Implemented and statically reviewed; fails closed |
-| Windows SDK `signtool.exe` | Not installed on this machine |
+| `installer/Sign-Artifacts.ps1` | Implemented and drilled; PFX import fixed; fails closed |
+| Windows SDK `signtool.exe` | Present: 10.0.26100.0 |
 | Code-signing certificate (store or PFX) | Not present |
 | Signed artifact | None |
 | Published hashes | `PROJECT-STATUS.md` lists unsigned SHA-256 values |

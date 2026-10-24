@@ -352,10 +352,10 @@ signing procedure in [`docs/RELEASE-SIGNING.md`](docs/RELEASE-SIGNING.md).
 - **Steam ownership is proven by a signed entitlement, not by a live Steamworks call.** The SDK and a
   partner account are not available here, and Steam has not confirmed that this utility is eligible for its
   store. The signed Steam entitlement is bound to the app id and is refused on the direct build.
-- **No setup executable and no code signature in 1.8.0.** Inno Setup 6, the Windows SDK signing tools and a
-  code-signing certificate are absent from this machine. The per-user installer script and the portable ZIP
-  are complete and tested; `Build-Installer.ps1` reports `SETUP SKIPPED` and
-  `Sign-Artifacts.ps1` fails closed. Unsigned builds may trigger SmartScreen.
+- **No trusted code signature in 1.8.0.** The Inno Setup `setup.exe` is produced, but a trusted
+  code-signing certificate is absent. `signtool.exe` and `Sign-Artifacts.ps1` are present and were drilled
+  with a temporary self-signed certificate; the release remains unsigned. Unsigned builds may trigger
+  SmartScreen.
 - **Wireless needs an explicit iOS sender.** An iPhone cannot be enumerated over the network on its
   own; a Shortcut or companion app must select assets and POST them. The protocol, single-use pairing,
   approval gate, rotation, digest and traversal rules *are* covered by loopback tests **and** were driven

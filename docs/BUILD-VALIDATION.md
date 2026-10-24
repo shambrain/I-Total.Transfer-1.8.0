@@ -314,8 +314,9 @@ tree all compile to the same bytes.
   cases are tested with generated keys; a real purchase, refund and revocation push remain outstanding.
 - **The Steam edition has never talked to Steamworks.** The signed-entitlement path is implemented and tested;
   a live ownership check needs the SDK and a partner account, and eligibility is unconfirmed.
-- **Nothing is Authenticode-signed.** The setup and the portable ZIP exist, but the Windows SDK signing
-  tools and a certificate are absent; `Sign-Artifacts.ps1` fails closed. Signing is the open release step.
+- **Nothing shipped is Authenticode-signed.** signtool 10.0.26100.0 and `Sign-Artifacts.ps1` are present; a
+  temporary self-signed certificate drill signed and verified a copy and was discarded. The release remains
+  unsigned for want of a trusted certificate.
 
 - **Detection and enumeration *were* re-run against a handset and passed** (see the live section above:
   a cold `55,185 files / 151.34 GiB, status=Complete` in 23.3 min on 2026-10-22; earlier sessions recorded

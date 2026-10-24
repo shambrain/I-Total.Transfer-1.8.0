@@ -376,9 +376,13 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
   `publish\`), uninstaller and Start Menu group, wrote the HKCU entry, created no firewall rule and kept
   `%APPDATA%`; the installed app launched and exited 0; the silent uninstaller removed the folder, key and
   shortcuts and kept the operator data; an upgrade over a running installation closed the app and exited 0. The setup is unsigned.
-- [ ] **Authenticode signature.** BLOCKED BY EXTERNAL REQUIREMENT: no certificate and no signing tools here.
-  `installer/Sign-Artifacts.ps1` signs, timestamps and verifies, and fails closed; `docs/RELEASE-SIGNING.md`
-  records the procedure and the checklist. Nothing in 1.8.0 is claimed to be signed.
+- [x] **Signing and verification drilled with a temporary self-signed certificate; nothing shipped is
+  signed.** signtool 10.0.26100.0 signed a copy of the published exe with SHA-256 and `verify /pa` passed
+  while a temporary test certificate was trusted; the release exe and setup stayed `NotSigned`, and the
+  certificate and PFX were removed. The drill found and fixed a PFX-import defect (`op_BitwiseOr`) in
+  `Sign-Artifacts.ps1`; a signing failure exits 4 and removes the imported certificate. A **trusted**
+  certificate is still absent, so 1.8.0 remains unsigned; the RFC3161 timestamp step could not complete
+  here (the TSA request hung).
 ## What this means
 
 **Release-ready today**, with the evidence above: the correctness contract, the engine's performance

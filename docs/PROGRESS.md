@@ -145,6 +145,24 @@ A real window capture of the published exe was taken with a DPI-aware `PrintWind
 measured 1433x936 *device* and looked clipped; that was the capture tool's virtualisation, not the app
 (`GetDpiForWindow` reports 192).
 
+### Signing drill and PFX-import defect
+
+The Windows SDK signing tools are present (`signtool.exe` 10.0.26100.0), contrary to the earlier note, so
+the signing path was drilled with a temporary self-signed code-signing certificate:
+
+- `signtool sign /fd sha256` signed a copy of the published exe; `signtool verify /pa` passed while the test
+  certificate was trusted in `CurrentUser\Root`; `Get-AuthenticodeSignature` read `Valid`; the release exe
+  and setup stayed `NotSigned`; the certificate, trust entry, PFX and signed copy were removed
+- the documented `-PfxPath` path **failed** on PowerShell 5.1: the line break after `-bor` became an extra
+  constructor argument and the script reported `op_BitwiseOr` on an `Object[]`. The flags are now built as a
+  single `X509KeyStorageFlags` value and passed through `-ArgumentList`; a repeat drill imported the PFX,
+  reached signtool, failed on a read-only copy with **exit 4**, and removed the imported certificate
+- the RFC3161 timestamp step could not complete: `signtool` hung on the timestamp request against DigiCert
+  (and other authorities were not reachable in time), so the script's full success path remains unverified
+  and no artifact was signed
+
+The release remains unsigned; `Sign-Artifacts.ps1` still requires a timestamp and a trusted certificate.
+
 ### Files changed
 
 ```
@@ -158,6 +176,7 @@ tests/I-Total.Transfer.Tests/PageControlTests.cs
 tests/I-Total.Transfer.Tests/ConnectionDiagnosticsTests.cs
 tests/I-Total.Transfer.Tests/InstallerScriptTests.cs
 installer/Install-I-Total.Transfer.ps1
+installer/Sign-Artifacts.ps1
 .gitattributes, .editorconfig, .gitignore
 CHANGELOG.md, PROJECT-STATUS.md, README.md
 docs/PROGRESS.md, docs/UI-REQUIREMENTS-MATRIX.md, docs/KNOWN_ISSUES.md
@@ -178,7 +197,7 @@ the portable ZIP. The setup was exercised silently:
 - `unins000.exe /VERYSILENT` exited 0 and removed the folder, the HKCU entry and the Start Menu group while
   `%APPDATA%\I-Total Transfer` survived
 
-The setup is **unsigned**: no certificate and no Windows SDK signing tools are present, so
+The setup is **unsigned**: no trusted certificate is present (signtool 10.0.26100.0 is), so
 `Sign-Artifacts.ps1` still fails closed.
 
 ### Packaging
@@ -211,8 +230,9 @@ The setup is **unsigned**: no certificate and no Windows SDK signing tools are p
   4 GB+ video, locked-phone and cloud-optimised drills could not run; they need the phones reattached.
 - iPhone lock / revoked USB permission still has no physical observation; the HUAWEI keeps MTP active
   while locked, so no Android lock drill applies.
-- Production licence issuer/purchase URL, Steamworks, Authenticode certificate and `signtool` remain
-  external blockers. Windows 11 and audible cues remain unobserved; the 200 % layout is now rendered.
+- Production licence issuer/purchase URL, Steamworks and an Authenticode certificate remain external
+  blockers (`signtool` is present). Windows 11 and audible cues remain unobserved; the 200 % layout is now
+  rendered.
 
 ### Next task
 
@@ -392,6 +412,7 @@ src/I-Total.Transfer/UI/Pages/TransferPage.Designer.cs
 src/I-Total.Transfer/UI/Pages/WirelessPage.cs
 src/I-Total.Transfer/UI/Pages/WirelessPage.Designer.cs
 installer/Install-I-Total.Transfer.ps1
+installer/Sign-Artifacts.ps1
 tests/I-Total.Transfer.Tests/FilterAndConflictTests.cs
 tests/I-Total.Transfer.Tests/PageControlTests.cs
 tests/I-Total.Transfer.Tests/WirelessReceiverTests.cs
@@ -668,7 +689,8 @@ absent from this machine.
    - `WirelessReceiver`: optional licence service; refuses uploads with HTTP 402 when the trial is finished;
      charges one trial job per sender session on the first committed file.
    - `TransferSummary.JobId`: engine-generated run identity for idempotent recording.
-2. **Safe per-user installer** (`installer/Install-I-Total.Transfer.ps1`)
+2. **Safe per-user installer** (`installer/Install-I-Total.Transfer.ps1
+installer/Sign-Artifacts.ps1`)
    - No administrator rights, no firewall changes, no services, no scheduled tasks.
    - Installs to `%LOCALAPPDATA%\Programs\I-Total Transfer`, Start Menu shortcut, HKCU uninstall entry.
    - Optional `-ExpectedSha256`; refuses on mismatch and installs nothing.

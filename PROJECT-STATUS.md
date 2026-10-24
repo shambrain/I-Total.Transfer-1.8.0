@@ -158,8 +158,9 @@ predate this hardware work and are superseded by the rows above. The fixed compl
 - **The setup executable exists but is not Authenticode-signed.** Inno Setup 6.7.3 was installed on
   2026-10-24, so `Build-Installer.ps1` now produces `I-Total.Transfer-1.8.0-setup.exe` beside the portable
   ZIP. A silent per-user install and uninstall were run end to end (installed exe hash matches `publish\`,
-  HKCU uninstall entry, Start Menu group, no firewall rule, `%APPDATA%` kept). The Windows SDK signing tools
-  and a code-signing certificate are still absent, so `Sign-Artifacts.ps1` fails closed and nothing is signed.
+  HKCU uninstall entry, Start Menu group, no firewall rule, `%APPDATA%` kept). `signtool.exe` 10.0.26100.0
+  and `Sign-Artifacts.ps1` are present; a temporary self-signed certificate drill signed and verified a copy
+  and was discarded. A trusted code-signing certificate is still absent, so nothing shipped is signed.
 ## Fail-closed native runtime
 
 `native/dependencies.json` pins native binaries by SHA-256 and **currently ships with empty hashes**.
