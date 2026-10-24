@@ -90,7 +90,7 @@ IL still produced a different PE.
 `*.zip`, `*.png`, `*.ico` and `*.dmp` are binary), `.editorconfig` matches, and the working tree was
 re-checked-out from the index. A second clone then built at 0 warnings, passed the full suite
 (449 passed, 2 skipped, 451 total, 29 s) and published the byte-identical `411F4CC5...` executable.
-Repeated at the final `7426568` release commit after the 200 % work: the clone built at 0 warnings,
+Repeated at the final build commit `7426568` after the 200 % work: the clone built at 0 warnings,
 passed **453 tests** and published the byte-identical `945E2D1F...` executable (112,154,438 B).
 
 The same pass removed four tracked testhost hang dumps (about 1.1 GB) and a stale root-level 1.8.0 ZIP
