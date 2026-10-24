@@ -101,8 +101,8 @@ What remains, in order:
 
 1. **Hardware**: Android walk/copy/PTP, locked phone, mid-scan pull on the fixed exe, two-phone preference,
    cancel/resume, HEIC+MOV and single-file buffer sweep and mixed-size batch are live; no statistical benchmark is claimed (`DEVICE_TEST_MATRIX.md`).
-2. **Package and sign**: decide the channel, obtain a certificate and Inno Setup, sign, verify, republish
-   hashes (`RELEASE-SIGNING.md`).
+2. **Package and sign**: the setup now builds (Inno Setup 6.7.3); decide the channel, obtain a certificate,
+   sign, verify and republish hashes (`RELEASE-SIGNING.md`).
 3. **Production entitlements**: offline key pair, issuing backend, purchase URL, then live activation, refund
    and revocation drills.
 4. **Steamworks**: confirm eligibility, then either integrate the SDK or document the signed-entitlement

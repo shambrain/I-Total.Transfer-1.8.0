@@ -122,10 +122,27 @@ docs/BUILD-VALIDATION.md, docs/RELEASE-ACCEPTANCE.md, docs/PERFORMANCE-AUDIT.md
 docs/MASTER_IMPLEMENTATION_PLAN.md
 ```
 
+### Packaged setup executable
+
+`winget install --id JRSoftware.InnoSetup` installed Inno Setup 6.7.3. `Build-Installer.ps1
+-ExpectedSha256 411F4CC5...` then produced `dist\installer\I-Total.Transfer-1.8.0-setup.exe` in addition to
+the portable ZIP. The setup was exercised silently:
+
+- `/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=<temp>` exited 0; the installed exe hashed to
+  `411F4CC5...`; `unins000.exe`, the HKCU uninstall entry (`I-Total Transfer` 1.8.0, Deveg) and two Start
+  Menu entries existed; no firewall rule was created; `%APPDATA%` and the trial ledger were untouched
+- the installed application launched and exited 0
+- `unins000.exe /VERYSILENT` exited 0 and removed the folder, the HKCU entry and the Start Menu group while
+  `%APPDATA%\I-Total Transfer` survived
+
+The setup is **unsigned**: no certificate and no Windows SDK signing tools are present, so
+`Sign-Artifacts.ps1` still fails closed.
+
 ### Packaging
 
-- `installer\Build-Installer.ps1 -Version 1.8.0 -ExpectedSha256 411F4CC5...` rebuilt the portable ZIP;
-  `SETUP SKIPPED` because Inno Setup 6 is still absent. Nothing is Authenticode-signed.
+- `installer\Build-Installer.ps1 -Version 1.8.0 -ExpectedSha256 411F4CC5...` produced the portable ZIP and the
+  Inno Setup executable; the container hashes are in `dist\installer\SHA256SUMS.txt`. Nothing is
+  Authenticode-signed.
 - The deployment and source ZIPs were regenerated with the new executable and the updated documents.
   `dist\SHA256SUMS.txt` and `dist\installer\SHA256SUMS.txt` are the authoritative hash records.
 - Verification: the deployment ZIP's embedded exe hashes to `411F4CC5...`; the extracted source ZIP
@@ -141,8 +158,8 @@ docs/MASTER_IMPLEMENTATION_PLAN.md
   covers the layout question; it is not a DWM-composited screenshot.
 - iPhone lock / revoked USB permission still has no physical observation; the HUAWEI keeps MTP active
   while locked, so no Android lock drill applies.
-- Production licence issuer/purchase URL, Steamworks, Inno Setup 6, Authenticode certificate and
-  `signtool` remain external blockers. Windows 11, 200 % scaling and audible cues remain unobserved.
+- Production licence issuer/purchase URL, Steamworks, Authenticode certificate and `signtool` remain
+  external blockers. Windows 11, 200 % scaling and audible cues remain unobserved.
 
 ### Next task
 

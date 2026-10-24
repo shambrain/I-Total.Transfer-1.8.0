@@ -51,11 +51,14 @@
   real PowerShell installer against temporary folders and a temporary HKCU key - install, wrong-hash refusal
   (exit 4), upgrade with settings/trial preserved, uninstall through the installed copy, and refusal to
   uninstall an unrelated folder (exit 3). The build stayed at **0 warnings, 0 errors**.
-- **Packaging ran against the publish output.** `installer\Build-Installer.ps1` produced
-  `I-Total.Transfer-1.8.0-portable-win-x64.zip` (46,869,982 B, SHA-256 `B1C82181...`) plus `SHA256SUMS.txt` and printed
-  `SETUP SKIPPED` because Inno Setup 6 is not installed. `Sign-Artifacts.ps1` was exercised only on its
-  refusal path (no signtool, no certificate): it exits non-zero and signs nothing. That is the honest state -
-  no setup executable and no signature exist for 1.8.0. The portable ZIP's own installer was also extracted and run against temporary folders and a temporary HKCU key: install and uninstall both returned OK, the folder and key were removed, and the temporary settings file survived.- **The support bundle now carries the trial counter, and the boundary is tested.** `DiagnosticsBundleTests`
+- **Packaging ran against the publish output.** `installer\Build-Installer.ps1` produced the portable ZIP and
+  `SHA256SUMS.txt`; with Inno Setup 6.7.3 present it also produced `I-Total.Transfer-1.8.0-setup.exe`. The
+  setup was installed silently into a temporary folder (`/VERYSILENT /DIR=...`): the installed exe hashed to
+  the published executable, the HKCU uninstall entry, uninstaller and Start Menu group existed, no firewall
+  rule was created, the installed app launched and exited 0, and the silent uninstaller removed the folder,
+  key and shortcuts while `%APPDATA%` survived. `Sign-Artifacts.ps1` still fails closed (no signtool, no
+  certificate), so nothing is signed.
+- **The support bundle now carries the trial counter, and the boundary is tested.** `DiagnosticsBundleTests`
   (5) builds a bundle from a 2-of-3 snapshot and asserts that the counter and standing are present while the
   purchase id is absent and `trial.json` is not copied. The published build was then driven through
   *Export diagnostics ZIP*; the resulting `licence.txt` read `Standing: Trial`, `Jobs used: 0`,
@@ -311,9 +314,8 @@ tree all compile to the same bytes.
   cases are tested with generated keys; a real purchase, refund and revocation push remain outstanding.
 - **The Steam edition has never talked to Steamworks.** The signed-entitlement path is implemented and tested;
   a live ownership check needs the SDK and a partner account, and eligibility is unconfirmed.
-- **No setup executable and no Authenticode signature exist.** Inno Setup 6, the Windows SDK signing tools and
-  a certificate are absent. The per-user installer script and portable ZIP are tested; signing is prepared and
-  fails closed.
+- **Nothing is Authenticode-signed.** The setup and the portable ZIP exist, but the Windows SDK signing
+  tools and a certificate are absent; `Sign-Artifacts.ps1` fails closed. Signing is the open release step.
 
 - **Detection and enumeration *were* re-run against a handset and passed** (see the live section above:
   a cold `55,185 files / 151.34 GiB, status=Complete` in 23.3 min on 2026-10-22; earlier sessions recorded

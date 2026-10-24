@@ -6,9 +6,9 @@ a firewall rule, and never install a service or scheduled task.
 | Form | Produced by | Needs an external tool | State here |
 | --- | --- | --- | --- |
 | Portable ZIP + PowerShell installer | `installer\Build-Installer.ps1` | No | Complete and tested |
-| Inno Setup `setup.exe` | same script, when `ISCC.exe` is found | Inno Setup 6 | Script written; toolchain absent |
+| Inno Setup `setup.exe` | same script, when `ISCC.exe` is found | Inno Setup 6 | Built and tested here (unsigned) |
 
-The portable form is the supported one until a signed setup executable exists.
+Both forms are per-user and install the same files. The setup builds on this machine but is not Authenticode-signed.
 
 ## What gets installed where
 
@@ -108,8 +108,10 @@ If `ISCC.exe` is not found the script prints:
 SETUP     SKIPPED - Inno Setup 6 (ISCC.exe) is not installed on this machine.
 ```
 
-and still produces the portable ZIP and `SHA256SUMS.txt`. That is the current state of this workspace. See
-`RELEASE-SIGNING.md` for signing the setup once it exists.
+and still produces the portable ZIP and `SHA256SUMS.txt`. On 2026-10-24 Inno Setup 6.7.3 was present, so the
+setup was produced: `I-Total.Transfer-1.8.0-setup.exe`. It was installed silently into a temporary folder,
+launched, and uninstalled; the folder, HKCU entry and shortcuts were removed and `%APPDATA%` was kept. It is
+not signed. See `RELEASE-SIGNING.md`.
 
 ## Security properties
 

@@ -371,9 +371,11 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
   folder carrying this product's own data files.
 - [x] **Portable package.** `installer/Build-Installer.ps1` produces the portable ZIP with `INSTALL.txt`
   and `SHA256SUMS.txt` and refuses to package an executable whose hash does not match.
-- [ ] **Packaged setup executable.** BLOCKED BY EXTERNAL REQUIREMENT: Inno Setup 6 is not installed. The
-  script (`installer/I-Total.Transfer.iss`) is written with the same per-user, no-firewall, data-preserving
-  rules; `Build-Installer.ps1` prints `SETUP SKIPPED` rather than pretending a setup exists.
+- [x] **Packaged setup executable.** LIVE PASS on 2026-10-24 with Inno Setup 6.7.3. `Build-Installer.ps1`
+  produced `I-Total.Transfer-1.8.0-setup.exe`; `/VERYSILENT /DIR=...` installed the exe (hash matches
+  `publish\`), uninstaller and Start Menu group, wrote the HKCU entry, created no firewall rule and kept
+  `%APPDATA%`; the installed app launched and exited 0; the silent uninstaller removed the folder, key and
+  shortcuts and kept the operator data. The setup is unsigned.
 - [ ] **Authenticode signature.** BLOCKED BY EXTERNAL REQUIREMENT: no certificate and no signing tools here.
   `installer/Sign-Artifacts.ps1` signs, timestamps and verifies, and fails closed; `docs/RELEASE-SIGNING.md`
   records the procedure and the checklist. Nothing in 1.8.0 is claimed to be signed.
@@ -388,24 +390,19 @@ Windows merely remembers can no longer be told apart from one that is there), th
 from the running build after fixing the defect that had stopped it being written at all), and the ability to
 build and test without a device.
 
-**Not yet release-ready**, and the four reasons:
+**Not yet release-ready**, and the remaining reasons:
 
-1. **The handset legs.** Buffers on a real device, a 4 GB+ video, locked/not-trusted, a genuinely
-   cloud-optimized library, a real cable pull mid-copy, the transferred bytes/second of the resumed path, and
-   the *attached* branch of the new USB diagnosis in its corrected form (it was seen once, naming an Android
-   phone under an Apple row) are all ⛔ — each needs the phone attached, and the resume drill in particular is
-   what would confirm the `FolderNameIndex` change end to end. The scan phase *was* exercised by a real cable
-   pull, which found the completeness defect now fixed; the fixed behaviour has not been re-observed.
+1. **Physical handset legs.** A locked/untrusted iPhone, a genuinely cloud-optimised library, a real cable
+   pull mid-copy, and the locked/unplugged variants of the USB diagnosis still need the phone attached. The
+   buffers, attached diagnosis, mid-scan pull, selected-phone disappearance, Android cancel/resume and PTP
+   warning are live and recorded above.
 2. **The wireless sender leg.** The receiver is proven; the *sender* is not. No iOS Shortcut or companion app
    has delivered a file from a real handset, so the pairing QR, the approval prompt and the digest check have
-   never been exercised by a real client — only by a scripted one. The recipe is ready in `docs/WIRELESS.md`.
-3. **Packaging and signing.** The per-user installer, upgrade and uninstall paths now exist, are executed by
-   the automated tests, and the portable package is built. What remains is a packaged setup executable
-   (Inno Setup 6 is not installed) and an Authenticode certificate (none exists here), so no signature is
-   claimed. Those are external requirements, not a quiet omission.
-4. **The Android leg.** The HUAWEI was walked live on 2026-10-22 (4,103 files / 14.54 GiB); a 612,420,912-byte
-   MP4 was cancelled mid-copy and resumed to source/destination SHA-256 equality. A PTP-mode handset now shows
-   the camera-only warning; a locked-screen abort is not applicable on this MTP stack, and an Android
-   throughput evidence is now a single-file buffer sweep plus a 30-file mixed-size batch; neither is a statistical benchmark.
-   Until those run, Android is *live-verified for walk/copy, partly verified for recovery* and must not be
-   described as fully verified in any release note.
+   never been exercised by a real client - only by a scripted one. The recipe is ready in `docs/WIRELESS.md`.
+3. **Signing.** The per-user installer, the portable ZIP and the Inno Setup `setup.exe` are built and tested
+   (the setup was installed, launched and uninstalled silently on 2026-10-24). What remains is an Authenticode
+   certificate and the Windows SDK signing tools, so nothing is signed.
+4. **Android.** Walk/copy, cancel/resume, PTP, unplug, the single-file buffer sweep and the 30-file batch are
+   live; a screen lock is not a disconnect on this MTP stack, and no statistical benchmark is claimed.
+
+Release notes must say exactly this and nothing stronger.
