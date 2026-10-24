@@ -125,7 +125,7 @@ whole storage volumes — and that is a *policy* choice, not a second device lay
   filesystem operations plus `MediaProvider` metadata, so a scan proves what the device exposed, not what the
   filesystem holds. The diagnostics page says so.
 - **Live now, but not exhausted.** On 2026-10-21 the app walked a HUAWEI Y7 Prime 2018 through both volumes
-  (4,106 files / 15.01 GiB, `Complete`) and copied a filtered 520-file selection (412 verified, 108
+  (4,103 files / 14.54 GiB, `Complete` on 2026-10-22) and copied a filtered 520-file selection (412 verified, 108
   unverifiable, 0 failed); the policy is therefore exercised end to end, not only unit-tested. Still open:
   a real cancel-then-resume, a locked-screen abort, PTP-only mode, and Android throughput. Those are recorded
   in `docs/RELEASE-ACCEPTANCE.md` and `docs/DEVICE_TEST_MATRIX.md` as explicit open items rather than caveats.

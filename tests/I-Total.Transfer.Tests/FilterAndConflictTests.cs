@@ -100,6 +100,10 @@ public sealed class FilterAndConflictTests
         Assert.AreEqual(EnumerationStatus.Incomplete, TransferRules.ClassifyEnumeration(3, 1, 10, 0));
         Assert.AreEqual(EnumerationStatus.Incomplete, TransferRules.ClassifyEnumeration(3, 0, 10, 1));
         Assert.AreEqual(EnumerationStatus.Complete, TransferRules.ClassifyEnumeration(3, 0, 10, 0));
+        // A disconnected handset can return names while later property reads yield zero sizes. A large
+        // unknown-size share is not a complete listing; a few genuine zero-byte files are still fine.
+        Assert.AreEqual(EnumerationStatus.Incomplete, TransferRules.ClassifyEnumeration(3, 0, 100, 0, 50));
+        Assert.AreEqual(EnumerationStatus.Complete, TransferRules.ClassifyEnumeration(3, 0, 100, 0, 5));
     }
 
     [TestMethod]

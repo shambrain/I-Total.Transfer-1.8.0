@@ -217,13 +217,16 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
   scan could choose different phones; cache key used the probe), now refused by `DeviceSelectionGuard`,
   `ScanResult.BelongsTo`, the MainForm guard and the cache guard. The physical disappearance drill is still
   open (matrix BT08).
-- [x] **The Android path has been run against a device for walk and copy (cancel/lock/PTP remain open).** ⛔
-  The HUAWEI Y7 Prime 2018 was walked end to end on 2026-10-20: **4,106 files / 16,114,057,157 bytes (15.01
+- [x] **The Android path has been run against a device for walk, copy, cancel/resume and PTP; the lock abort is not applicable on this MTP stack.** ⛔
+  The HUAWEI Y7 Prime 2018 was walked end to end on 2026-10-22: **4,103 files / 15,612,056,299 bytes (14.54
   GiB)**, `Complete`. A filtered copy planned 520 files: **412 source-and-destination SHA-256 verified, 108
   `COPIED-UNVERIFIABLE` (0-byte `Sounds\.pictures`), 0 failed, 3,586 skipped**, ending `COPIED WITH
   UNVERIFIABLE FILES - NOT A VERIFIED COMPLETE BACKUP`; resume preserved the 108 unverified entries and the
-  trial stayed at 0 jobs. Cancel -> resume, locked-screen abort, PTP-only mode and an Android throughput
-  benchmark remain open. TEST-PLAN check 25.
+  trial stayed at 0 jobs. A 612,420,912-byte MP4 was then cancelled mid-copy and resumed to
+  `HASH-VERIFIED COMPLETE`, source/destination SHA-256 identical. A PTP-only handset was checked on 2026-10-24:
+  the Overview showed the camera-only warning and the activity log named PTP. The HUAWEI lock does not disable
+  MTP, so the locked-phone abort is not applicable to this stack. A single-file Android buffer sweep is now
+  live, plus a 30-file mixed-size batch at 6.41 files/s / 23.74 MB/s. These are observations, not a statistical benchmark. TEST-PLAN check 25 is closed for this handset.
 - [x] **"Complete" is described honestly for Android.** ✅ *(wording)*
   Windows sees Android's own MTP view of its storage — AOSP's `MtpDatabase` combines `MtpStorageManager`
   filesystem operations with `MediaProvider` metadata — so a complete Android scan means *everything the
@@ -276,7 +279,7 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
 - [x] **Build succeeds from a clean checkout on current Visual Studio / .NET SDK.** ✅
   `docs/BUILD-VALIDATION.md`; the source zip is built from scratch at 0 warnings / 0 errors.
 - [x] **Unit and integration tests pass on Windows.** ✅
-  **444 passed, 0 failed, 2 skipped (446 total)** on 2026-10-22 (the two skips are hardware-marked Shell-backend
+  **446 passed, 0 failed, 2 skipped (448 total)** on 2026-10-22 (the two skips are hardware-marked Shell-backend
   apartment tests). The two-phone isolation guard added 14 tests on 2026-10-21; the Appearance preview
   controls added 4, the theme token/contrast coverage was expanded and the no-device neutral-wording
   regression was added on 2026-10-22. Earlier waves include 37 added with the commercial subsystem: 83 for the wireless credential model, the QR encoder,
@@ -292,7 +295,7 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
   `ShippedManifestHasNoPinnedBinaryThatCouldSilentlyEnableAfc` — the AFC backend stays inert until an operator
   deliberately pins a binary with a hash.
 - [x] **Installer upgrade and uninstall behaviour are tested.** ✓
-  `InstallerScriptTests` (3) executes the real per-user installer against temporary folders and a temporary
+  `InstallerScriptTests` (5) executes the real per-user installer against temporary folders and a temporary
   HKCU key: install creates the executable, manifest, uninstaller and uninstall entry; upgrade replaces the
   executable while settings and the trial ledger survive; uninstall through the installed copy removes the
   folder and key but keeps user data; a wrong hash exits 4 without writing anything; uninstalling an unrelated
@@ -396,8 +399,9 @@ build and test without a device.
    the automated tests, and the portable package is built. What remains is a packaged setup executable
    (Inno Setup 6 is not installed) and an Authenticode certificate (none exists here), so no signature is
    claimed. Those are external requirements, not a quiet omission.
-4. **The Android leg.** The HUAWEI was walked and copied live on 2026-10-20 (4,106 files; 412 verified +
-   108 unverifiable; 0 failed) and the resume preserved the unverified files. A real cancel -> resume, the
-   PTP warning on a PTP-mode handset, a locked-screen abort and an Android throughput benchmark remain open.
+4. **The Android leg.** The HUAWEI was walked live on 2026-10-22 (4,103 files / 14.54 GiB); a 612,420,912-byte
+   MP4 was cancelled mid-copy and resumed to source/destination SHA-256 equality. A PTP-mode handset now shows
+   the camera-only warning; a locked-screen abort is not applicable on this MTP stack, and an Android
+   throughput evidence is now a single-file buffer sweep plus a 30-file mixed-size batch; neither is a statistical benchmark.
    Until those run, Android is *live-verified for walk/copy, partly verified for recovery* and must not be
    described as fully verified in any release note.

@@ -5,7 +5,7 @@ is still open. Detailed evidence lives in `TEST-PLAN.md`, `BUILD-VALIDATION.md`,
 `PERFORMANCE-AUDIT.md`, `ARCHITECTURE-REVIEW.md`, `WIRELESS.md` and `RECOVERY.md`; this file is the index
 and the state of record.
 
-Last reconciled: 2026-10-22, against v1.8.0 source and the 446-test Release suite (444 passed, 2 skipped).
+Last reconciled: 2026-10-22, against v1.8.0 source and the 448-test Release suite (446 passed, 2 skipped).
 The UI design/token map is in `UI-DESIGN-SYSTEM.md`; the requirement-to-evidence map is in
 `UI-REQUIREMENTS-MATRIX.md`.
 
@@ -38,8 +38,8 @@ drill that closes them.
 
 | # | Requirement | State | Evidence / remaining work |
 | --- | --- | --- | --- |
-| B1 | Apple access through supported services, WPD and AFC where available | IMPLEMENTED, NOT FULLY VERIFIED | `Devices/Afc/AfcDevice.cs`, WPD and Shell fallback exist. AFC is fail-closed because `native/dependencies.json` ships empty hashes. Live iPhone scan/copy has run through WPD; AFC and HEIC+MOV from a real roll are pending. |
-| B2 | Android access through USB MTP/WPD | IMPLEMENTED, NOT FULLY VERIFIED (walk/copy live; cancel/lock/PTP pending) | One native WPD backend plus per-family storage policy. HUAWEI Y7 Prime 2018 live: 4,106 files / 15.01 GiB `Complete`; filtered copy 412 verified + 108 unverifiable + 0 failed; resume preserved the unverified files. Cancel -> resume, locked phone and PTP-only mode are still pending. |
+| B1 | Apple access through supported services, WPD and AFC where available | IMPLEMENTED, NOT FULLY VERIFIED | `Devices/Afc/AfcDevice.cs`, WPD and Shell fallback exist. AFC is fail-closed because `native/dependencies.json` ships empty hashes. Live iPhone scan/copy has run through WPD, including a filtered HEIC/MOV fetch; AFC remains pending. |
+| B2 | Android access through USB MTP/WPD | IMPLEMENTED, NOT FULLY VERIFIED (walk/copy/cancel-resume/PTP live; lock not applicable) | One native WPD backend plus per-family storage policy. HUAWEI Y7 Prime 2018 live: **4,103 files / 15,612,056,299 bytes (14.54 GiB) `Complete`**; filtered copy 412 verified + 108 unverifiable + 0 failed; a 612,420,912-byte MP4 was cancelled mid-copy and resumed to source/destination SHA-256 equality. PTP-only mode was checked on 2026-10-24 and shows the camera-only warning. A screen lock does not disable MTP, so the abort is not applicable to this stack. |
 | B3 | Device discovery and honest capability reporting | TESTED AND PASSED | `ITransferBackend`, `BackendCapabilities`; unattached/unidentified wording is neutral and family-aware. |
 | B4 | Two phones attached: family preference, not list order | TESTED AND PASSED (live 2026-10-21; disappearance drill pending) | With both attached, `AndroidFirst` selected the HUAWEI and `AppleFirst` selected the Apple iPhone. The same session found a cross-device scan defect; `DeviceSelectionGuard` + `ScanResult.BelongsTo` + UI/cache guards now refuse a switch, with 14 tests. A physical "selected phone disappears mid-scan" run remains pending (BT08). |
 | B5 | Never assume both families expose the same media | TESTED AND PASSED | `PortableStorage` rules; PTP warning when only the camera volume is exposed. |
@@ -49,17 +49,17 @@ drill that closes them.
 
 | # | Requirement | State | Evidence / remaining work |
 | --- | --- | --- | --- |
-| C1 | Enumerate media with metadata and media groups | TESTED AND PASSED | Engine tests plus live iPhone cold pass: **55,185 files / 162,499,726,120 bytes (151.34 GiB) `Complete` in 23.3 min** on 2026-10-22 (the 26,335-file / 10.3 min and 57,371 / 188,810,836,019 warm passes are historical), and Android 4,106 files / 16,114,057,157 bytes `Complete`. |
-| C2 | Responsive scan/enumeration/transfer/hash/UI at 55,000+ entries | TESTED AND PASSED (synthetic); live 55,185-file cold iPhone pass | Stress suite, throttled progress, pacing; the current cold iPhone scan completed in 23.3 min without a UI freeze. A device transfer benchmark is still pending (BT07). |
+| C1 | Enumerate media with metadata and media groups | TESTED AND PASSED | Engine tests plus live iPhone cold pass: **55,185 files / 162,499,726,120 bytes (151.34 GiB) `Complete` in 23.3 min** on 2026-10-22 (the 26,335-file / 10.3 min and 57,371 / 188,810,836,019 warm passes are historical), and Android **4,103 files / 15,612,056,299 bytes `Complete`** on 2026-10-22, including a cancelled-and-resumed 612,420,912-byte MP4 verified source-to-destination. |
+| C2 | Responsive scan/enumeration/transfer/hash/UI at 55,000+ entries | TESTED AND PASSED (synthetic); live 55,185-file cold iPhone pass | Stress suite, throttled progress, pacing; the current cold iPhone scan completed in 23.3 min without a UI freeze. A single-file Android buffer sweep is live (BT07/BT09): 33.56-37.83 MB/s across 64 KiB-4 MiB, plus a 30-file mixed-size batch at 6.41 files/s and 23.74 MB/s. These are single observations, not a statistical benchmark. |
 | C3 | Never report a complete scan when enumeration partially failed | TESTED AND PASSED | `TransferRules.ClassifyEnumeration`; `EnumerationStatus.Complete` is the only value written to the scan cache. |
 | C4 | Persistent, transactional queue/manifest and schema migration | TESTED AND PASSED | `ManifestStore`, `SessionDatabase`, recovery tests. |
 | C5 | Staged writes, collision handling, no overwrite of existing files | TESTED AND PASSED | `TransferRules.ResolveTargetPath`, staging + atomic move. |
 | C6 | Size checks and SHA-256 verification where supported, honest weakest level | TESTED AND PASSED | `VerificationLevel`; per-entry staged/destination hashes. |
 | C7 | Accurate copied / already-present / skipped / inaccessible / failed / unverifiable reporting | TESTED AND PASSED | Engine tests and completion report. |
 | C8 | Retry, pause, safe resume; interrupted verification discarded | TESTED AND PASSED | `PauseController`, `SessionRecovery.BuildResumePlan`, resume-path fix. |
-| C9 | Disconnect during enumeration or transfer (both families): abort safely, preserve completed files, never mark partial as copied | TESTED AND PASSED (simulated) / PENDING HARDWARE (real cable pull) | `ConsecutiveObjectFailureLimit`, `DeviceStoppedAnsweringException`, unreadable-object accounting. The real mid-scan pull is TEST-PLAN check 26. |
-| C10 | One phone lost while the other stays connected | IMPLEMENTED, NOT FULLY VERIFIED | Family-filtered presence evidence; needs the two-phone live drill. |
-| C11 | Locked phone / revoked USB permission | IMPLEMENTED, NOT FULLY VERIFIED | Detected as "attached but not answering"; live locked-phone drill pending. |
+| C9 | Disconnect during enumeration or transfer (both families): abort safely, preserve completed files, never mark partial as copied | TESTED AND PASSED (simulated + live 2026-10-24) | `ConsecutiveObjectFailureLimit`, `DeviceStoppedAnsweringException`, unreadable-object accounting. The live mid-scan pull returned `Incomplete` and was rejected; no report or cache was written. |
+| C10 | One phone lost while the other stays connected | TESTED AND PASSED (live 2026-10-24) | The iPhone was unplugged while the HUAWEI stayed attached; the app refused the switch and rejected the scan. |
+| C11 | Locked phone / revoked USB permission | TESTED AND PASSED (simulated); lock not applicable on tested MTP | `RecoveryFlowTests` covers backend faults. The HUAWEI keeps MTP active while locked, so no lock-abort is expected on this stack. |
 | C12 | Restart app or Windows with jobs incomplete | TESTED AND PASSED | Interrupted-session recovery; dismissal persisted by destination+mtime+counts. |
 | C13 | Continue from session record without re-reading already verified files | TESTED AND PASSED | Resume rebuilds the plan from outstanding entries only. |
 | C14 | Never delete or modify original phone media | TESTED AND PASSED (design + tests) | Read-only source streams; device write path is the only mutating one and is explicit. |
@@ -155,14 +155,14 @@ drill that closes them.
 3. **Code-signing certificate and Windows SDK signing tools.** Required to produce a trusted signature.
 4. **Inno Setup 6.** Required for the packaged `setup.exe`; the portable ZIP and per-user script do not
    need it.
-5. **Physical phones.** Both were attached together on 2026-10-21; the Android walk/copy, the cold iPhone
-   scan and the two-phone selection ran, and a cross-device scan defect was found and fixed. Real
-   cancel/resume, locked-phone, PTP-only, physical selected-phone-disappearance and throughput drills remain
-   open. `DEVICE_TEST_MATRIX.md` lists every drill.
+5. **Physical phones.** Both were attached together on 2026-10-21/24; the Android walk/copy, cancel/resume,
+   PTP warning, single-file buffer sweep, cold iPhone scan, mid-scan unplug and selected-phone-disappearance
+   drills ran. A lock does not disable MTP on the tested stack. A 30-file mixed-size batch is recorded; no statistical benchmark is claimed.
+   `DEVICE_TEST_MATRIX.md` lists every drill.
 
 ## Suggested order for the next sessions
 
-1. Reconnect hardware → close TEST-PLAN checks 24-27 and the Android/locked-phone/benchmark rows.
+1. No further Android transfer drill is required; retain the single-file and mixed-batch observations as non-statistical evidence.
 2. Decide the distribution channel and obtain the certificate; sign the exe and setup.
 3. Obtain Inno Setup (or approve running the script-only installer as the shipping format).
 4. Generate the production key pair on an offline machine, implement the store backend, set

@@ -314,7 +314,7 @@ Design references for a copy engine (patterns only — nothing copied, and none 
 ## 8. Result
 
 - Release build: **0 warnings / 0 errors**.
-- Tests: **444 passed, 0 failed, 2 skipped (opt-in hardware), 446 total** in about twenty-eight seconds
+- Tests: **446 passed, 0 failed, 2 skipped (opt-in hardware), 448 total** in about twenty-eight seconds
   without a phone. That total includes the 26,400-entry scan, the 300,000-entry nested walk, the
   context-capture
   regression tests, the engine-throughput benchmarks, the scan-cache rules and persistence, the
@@ -324,6 +324,18 @@ Design references for a copy engine (patterns only — nothing copied, and none 
   hand-written QR encoder with an independent decoder, and the USB-evidence diagnosis with the diagnostics
   page and support-bundle contracts.
 - Live: detection confirmed, **55,185 files / 151.34 GiB** enumerated as `Complete` in 23.3 min.
+- Live: Android device-to-disk, one 612,420,912-byte MP4, native WPD, hash-verified source-to-destination:
+  | Buffer | Elapsed | Throughput | CPU | Peak working set |
+  | ---: | ---: | ---: | ---: | ---: |
+  | 64 KiB | 18.246 s | 33.56 MB/s | 2.94 s | 70.1 MB |
+  | 256 KiB | 16.911 s | 36.21 MB/s | 4.39 s | 77.4 MB |
+  | 1 MiB | 16.369 s | 37.41 MB/s | 5.45 s | 77.4 MB |
+  | 4 MiB | 16.187 s | 37.83 MB/s | 6.50 s | 85.5 MB |
+  One run per buffer, one file; this is a device observation, not a multi-file benchmark or a statistical claim.
+- Live: Android mixed-size batch, same device/native WPD, 30 files / 111,135,111 bytes
+  (10 tiny 8-24 B, 10 about 1 MB, 10 about 10 MB): **4.681 s, 6.41 files/s, 23.74 MB/s**,
+  CPU **1.55 s**, peak working set **69.9 MB**, 30/30 copied and `SourceAndDestinationHash`.
+  This is one batch, not a statistical benchmark.
 - Live: the scan-cache Settings surface read the real cache folder and removed a listing on request.
 - Engine throughput on local storage, measured: **≈ 8x faster on small files** (87 → ≈ 700 files/s) with
   verification level unchanged, and large files unchanged at ~600 MiB/s. Per-file engine overhead is now

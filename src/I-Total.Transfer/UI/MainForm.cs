@@ -655,12 +655,14 @@ public sealed partial class MainForm : Form
             });
             ScanResult scan = await _service!.ScanAsync(_cts!.Token, progress);
             EnsureScanCameFromSelectedDevice(preflight, scan);
+            await EnsureDeviceStillReadyAfterScanAsync();
 
             if ((_dashboard.ConfirmScan || _settingsPage.ConfirmScan) && scan.Files.Count > 0)
             {
                 Log("Second scan enabled: re-enumerating to detect a listing that changes mid-scan.", "WARN");
                 ScanResult second = await _service.ScanAsync(_cts!.Token, progress);
                 EnsureScanCameFromSelectedDevice(preflight, second);
+                await EnsureDeviceStillReadyAfterScanAsync();
                 IReadOnlyList<string> changed = ScanStability.ChangedPaths(scan, second);
                 if (changed.Count > 0)
                     throw new InvalidOperationException($"The {PhoneNoun} listing changed between scans. No transfer plan was accepted. First changed paths: " + string.Join(", ", changed));
@@ -671,7 +673,7 @@ public sealed partial class MainForm : Form
             _scan = scan;
             LogScan(scan);
             FinishScanCache(preflight, scan);
-            SetStatus($"Scan finished: {scan.Files.Count:N0} files · {FormatBytes(scan.TotalBytes)}.", scan.IsComplete ? "OK" : "WARN");
+            SetStatus($"Scan finished: {scan.Files.Count:N0} files · {FormatBytes(scan.TotalBytes)}.", scan.IsComplete && scan.Warnings.Count == 0 ? "OK" : "WARN");
             _dashboard.SetOperation(new OperationStatus(OperationPhase.Idle,
                 scan.IsComplete
                     ? $"Scan finished: {scan.Files.Count:N0} files · {MediaSummary.FormatBytes(scan.TotalBytes)}. Review the groups below."
@@ -681,6 +683,10 @@ public sealed partial class MainForm : Form
             _dashboard.SetMetrics(scan.Files.Count, scan.TotalBytes, 0, 0, 0,
                 unknownSize: scan.Report?.UnknownSizeCount ?? 0);
             PushMediaGroups();
+            string? ptpWarning = scan.Warnings.FirstOrDefault(w => w.Contains("camera folders", StringComparison.OrdinalIgnoreCase));
+            _dashboard.SetMediaHint(ptpWarning is null
+                ? null
+                : "Camera-only connection (PTP): only DCIM and Pictures are visible. If its Files app shows more, switch the USB notification to \"File transfer\" and scan again.");
             _transfer.SetPhase("Scan complete — review warnings before copying.");
             RefreshQueue();
             SaveScanReports(scan);
@@ -721,9 +727,23 @@ public sealed partial class MainForm : Form
             "). Nothing was accepted, cached or queued. Reconnect the phone you want, choose Check device, and scan again.");
     }
 
+    /// <summary>
+    /// A listing can finish after the phone has already stopped answering: the names are still returned
+    /// while later property reads yield zero sizes. Re-probe before accepting anything so a disconnected
+    /// handset cannot leave a "complete" listing on screen or in the cache.
+    /// </summary>
+    private async Task EnsureDeviceStillReadyAfterScanAsync()
+    {
+        DeviceInfo post = await Task.Run(() => _device!.Probe());
+        if (post.Status.IsUsable()) return;
+        throw new InvalidOperationException(
+            $"{PhoneWithArticle} stopped answering during the scan. The listing is incomplete and was not accepted. " +
+            "Reconnect it, unlock it, then scan again.");
+    }
+
     private void LogScan(ScanResult scan)
     {
-        string level = scan.IsComplete ? "OK" : "WARN";
+        string level = scan.IsComplete && scan.Warnings.Count == 0 ? "OK" : "WARN";
         Log($"Scan finished: {scan.Files.Count:N0} files, {FormatBytes(scan.TotalBytes)}, status={scan.Status}, duration={scan.Duration.TotalMinutes:N1} min, backend={_device?.Name}.", level);
         foreach (string warning in scan.Warnings) Log(warning, "WARN");
     }
@@ -880,6 +900,14 @@ public sealed partial class MainForm : Form
         if (_scan is null)
         {
             MessageBox.Show(this, $"Scan {PhoneWithArticle} successfully before starting a transfer.", "No scan", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+        if (!_scan.IsComplete)
+        {
+            MessageBox.Show(this,
+                "The last scan is incomplete, so it cannot be used as a complete backup.\n\n" +
+                "Reconnect and unlock the phone, then scan again before starting the transfer.",
+                "Scan incomplete", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
         LicenseDecision licence = _license!.TryStartJob(resuming: false);
@@ -1187,7 +1215,19 @@ public sealed partial class MainForm : Form
             if (_scan is null)
                 Log("Post-copy verification was not run: it checks a scan listing, and this run continued from the session record instead. Use Verify on the Library page to re-prove those files.", "INFO");
             else
-                await VerifyCoreAsync(repair: false);
+            {
+                int planned = _service?.PlanSummary(_scan).Count ?? _scan.Files.Count;
+                if (planned == _scan.Files.Count)
+                {
+                    await VerifyCoreAsync(repair: false);
+                }
+                else
+                {
+                    // The destination is not expected to contain the excluded files. Verifying the whole
+                    // scan here would report every filtered file as missing even though the copy succeeded.
+                    Log($"Post-copy verification of the whole library was skipped: the filter planned {planned:N0} of {_scan.Files.Count:N0} file(s). Every copied file was source/destination verified during the copy; use Verify destination only when the whole library was planned.", "INFO");
+                }
+            }
         }
 
         JobRecordResult licence = RecordFinishedJob(summary, LicenseJobKind.DeviceToWindows);

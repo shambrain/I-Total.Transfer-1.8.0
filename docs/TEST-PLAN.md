@@ -247,8 +247,8 @@ Do not label a release device-tested until these tests pass on actual Windows 10
     explain the lock, then unplug and confirm the row flips to CACHED RECORD ONLY with the same name and the
     page stays readable. The cross-device scan defect found on 2026-10-21 is covered by check 27/BT08.
 
-25. **An Android phone, end to end (live walk/copy 2026-10-20; cancel/lock/PTP outstanding).** A HUAWEI Y7
-    Prime 2018 was walked and copied through native WPD: **4,106 files / 16,114,057,157 bytes (15.01 GiB)**,
+25. **An Android phone, end to end (live walk/copy 2026-10-20; cancel/PTP checked 2026-10-24; lock not applicable on MTP).** A HUAWEI Y7
+    Prime 2018 was walked and copied through native WPD: **4,103 files / 15,612,056,299 bytes (14.54 GiB)**, on 2026-10-22 (the 2026-10-20 4,106-file / 15.01 GiB listing is historical),
     `Complete`; the filtered copy planned 520, with **412 source-and-destination SHA-256 verified, 108
     `COPIED-UNVERIFIABLE` (0-byte `Sounds\.pictures` files), 0 failed, 3,586 skipped**, ending
     `COPIED WITH UNVERIFIABLE FILES - NOT A VERIFIED COMPLETE BACKUP`. Resume preserved the 108 unverified
@@ -271,9 +271,10 @@ Do not label a release device-tested until these tests pass on actual Windows 10
     - record the real enumeration rate, file count and byte total, then compare against the phone's own
       Files app: any shortfall is Android's MTP view and must be stated as such, never as "everything was
       backed up".
-    The walk (~6 s for 4,106 files) and the copy (1:15 for 520 planned) are single observations, not
-    benchmarks. Cancel -> resume, locked-phone abort and PTP mode remain unmeasured; no Android throughput
-    number may be published as a device benchmark.
+    The walk (4,103 files on 2026-10-22) and the copy are single observations, not benchmarks. A
+    612,420,912-byte MP4 was cancelled mid-copy and resumed to source/destination SHA-256 equality;
+    PTP mode now shows the camera-only warning; a lock does not disable MTP, so no abort is expected; the single-file buffer sweep is recorded above; no
+    multi-file Android throughput number may be published as a device benchmark.
 
 26. **A phone unplugged mid-scan must not produce a complete scan (outstanding: fixed after a live failure).**
     Start a scan of a large camera roll and pull the cable while it is still walking. Expected after the fix:

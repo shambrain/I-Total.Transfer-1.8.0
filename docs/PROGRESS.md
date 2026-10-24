@@ -61,7 +61,7 @@ dotnet build I-Total.Transfer.sln -c Release --no-incremental
 # Build succeeded. 0 Warning(s), 0 Error(s)
 
 dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s
-# Passed! Failed: 0, Passed: 444, Skipped: 2, Total: 446, Duration: 28 s
+# Passed! Failed: 0, Passed: 446, Skipped: 2, Total: 448, Duration: 28 s
 # The two skips are the pre-existing opt-in Shell apartment probes.
 
 dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --filter "FullyQualifiedName~PageControlTests|FullyQualifiedName~WirelessReceiverTests|FullyQualifiedName~WirelessPageTests|FullyQualifiedName~DependencyVerifierTests" --blame-hang --blame-hang-timeout 180s
@@ -69,7 +69,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --filter "FullyQu
 
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 # publish\I-Total.Transfer.exe: 112,150,342 B
-# SHA-256 7EF01BBAD0B06D86F593200A401B013121E58D84F2A88076C1BE3A1387133B4E
+# SHA-256 C953BC086CCAD9B1948DCA20634BC6F55631571A6FD033810D9AF99CFFFF26D5
 ```
 
 ### Live published-build evidence
@@ -97,10 +97,75 @@ Evidence: `%TEMP%\opencode\ui-audit2\*.png` and matching `.txt` dumps, including
   `IntegrityVerified` with `SourceAndDestinationHash`; every source and destination SHA-256 pair is identical,
   with 0 failed and 0 unverified. Report: `%TEMP%\opencode\physical-copy\destination\I-total-session-report.json`.
   This is physical fetch/verification evidence, not a claim about the UI copy path.
+- **Android cancel -> resume (2026-10-22, shared engine):** a live Android scan found **4,103 files /
+  15,612,056,299 bytes (14.54 GiB)**, `Complete`. One 612,420,912-byte MP4 was cancelled after more than
+  5 MB; the manifest read `CANCELLED`, one outstanding entry and 612,420,912 outstanding bytes. The resume
+  plan contained that file; the resumed copy ended `HASH-VERIFIED COMPLETE (source-to-destination)`, 1/1
+  copied, 0 failed, 0 unverified, source and destination SHA-256 identical. Evidence:
+  `%TEMP%\opencode\physical-cancel-resume\destination`.
+- **UI filtered confirmation (2026-10-24):** the current published build was launched with `AndroidFirst`
+  and a `.mp4`/500 MB filter. The live scan finished, and the Start-backup dialog read
+  **`Copy 1 files (584.1 MB)`**, not the full 4,103-file scan; it was cancelled without writing. Screenshot:
+  `%TEMP%\opencode\ui-android-confirm\02-confirm.png`.
+- **UI Stop and recovery surface (2026-10-24):** the same one-file plan was started and **Stop** was pressed.
+  The recovery bar read `1 planned - 0 copied and verified - 1 outstanding - 4,102 skipped by filter`;
+  **Resume transfer** opened the correct `Continue the unfinished session` dialog for the 584.1 MB file.
+  The resume was cancelled, so no trial job was consumed. Screenshot:
+  `%TEMP%\opencode\ui-android-cancel\01-cancelled-recovery.png`.
+- **Mid-scan unplug (2026-10-24):** the first repeat exposed a *new* completeness defect: the pre-fix build
+  accepted a disconnected scan as `Complete` with **28,655 files / 29.36 GB** and **25,843 unknown sizes**.
+  `ClassifyEnumeration` now treats a high unknown-size share as `Incomplete`, `ScanAsync` re-probes the
+  phone before accepting anything, and `Start transfer` refuses an incomplete listing. The second repeat
+  ended **2,326 files / 8.05 GB, `Incomplete`** (1,739 unknown); the post-scan probe showed
+  `the iPhone stopped answering during the scan. The listing is incomplete and was not accepted.` No
+  enumeration report or cache was written, and the HUAWEI was never read. Evidence:
+  `%TEMP%\opencode\disconnect-drill\01-after-disconnect.png`,
+  `%TEMP%\opencode\disconnect-drill2\02-rejected-after-disconnect.png`.
+- **PTP-only Android scan (2026-10-24):** the HUAWEI was switched to Photo transfer (PTP; Windows PID
+  `1083`). The app scan returned 57 files / 7.5 MB and the Overview visibly showed
+  `Camera-only connection (PTP): only DCIM and Pictures are visible. If its Files app shows more, switch the
+  USB notification to "File transfer" and scan again.` The activity log carried the same warning. Screenshot:
+  `%TEMP%\opencode\ptp-drill3\02-ptp-result.png`.
+- **Locked-phone observation (2026-10-24):** the HUAWEI screen was locked during a real 584.1 MB copy.
+  MTP remained available and the copy completed `SIZE-VERIFIED COMPLETE` with source/destination SHA-256
+  equality; the trial counted one job. MTP remains active while the screen is locked, so the locked-phone
+  abort is not applicable to this stack; AN08 is recorded that way.
+- **Filtered post-copy verification defect and fix (2026-10-24):** after that filtered copy, the pre-fix app
+  auto-verified the full 4,103-file scan and reported 4,102 excluded files as missing. `ReportTransferSummaryAsync`
+  now skips whole-library verification when the filter planned fewer files and logs the reason. A no-op
+  filtered rerun skipped the already-present file, showed no false verification report, and did not charge a
+  trial job.
+- **Android buffer sweep (2026-10-24):** one 612,420,912-byte MP4 through native WPD, source-to-destination
+  hash verified, one run per buffer: 64 KiB 18.246 s / 33.56 MB/s; 256 KiB 16.911 s / 36.21 MB/s;
+  1 MiB 16.369 s / 37.41 MB/s; 4 MiB 16.187 s / 37.83 MB/s. CPU 2.94-6.50 s; peak working set
+  70.1-85.5 MB. This is a single-file device observation, not a multi-file benchmark; 1 MiB remains the
+  default.
+- **Android mixed-size batch (2026-10-24):** 30 files / 111,135,111 bytes (10 tiny 8-24 B, 10 about 1 MB,
+  10 about 10 MB): 4.681 s, 6.41 files/s, 23.74 MB/s, CPU 1.55 s, peak working set 69.9 MB; 30/30
+  copied and source/destination verified. One run, not a statistical benchmark.
+- **Portable installer self-location (2026-10-24):** extracting the portable ZIP and running its own
+  `Install-I-Total.Transfer.ps1` failed because the script defaulted `SourceDir` to `..\publish`. It now
+  uses its own folder when the executable sits beside it, and still falls back to `..\publish` in the
+  source tree. `PortableLayoutInstallsWithoutAnExplicitSourceDir` runs the real script in a portable
+  sandbox; `InstallerScriptTests` is 5 and the full suite is 446 passed / 2 skipped / 448 total.
+  The final portable ZIP was then extracted and its own installer run with no `-SourceDir`: install
+  returned `{"ok":true,...}`, the executable and manifest were present, the HKCU key existed; the installed
+  uninstaller removed the folder and key and kept `settings.json` (`userDataKept:true`).
+
+### Source-archive reproducibility after git init (2026-10-24)
+
+The new `.git` repository made the SDK embed a source revision in the published assembly. The source ZIP
+excludes `.git`, so its clean rebuild produced a different executable (`C953BC08...` versus `D039F4BF...`).
+Setting `<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>`
+removed the git revision from the binary; publish and source-only rebuild now agree. This was found by actually
+extracting the source ZIP and comparing the rebuilt hash, not by inspection.
 
 ### Files changed
 
 ```
+src/I-Total.Transfer/Core/TransferRules.cs
+src/I-Total.Transfer/Devices/Wpd/WpdDevice.cs
+src/I-Total.Transfer/I-Total.Transfer.csproj
 src/I-Total.Transfer/Services/WirelessReceiver.cs
 src/I-Total.Transfer/Services/TransferService.cs
 src/I-Total.Transfer/UI/MainForm.cs
@@ -110,9 +175,12 @@ src/I-Total.Transfer/UI/Pages/LibraryPage.cs
 src/I-Total.Transfer/UI/Pages/TransferPage.Designer.cs
 src/I-Total.Transfer/UI/Pages/WirelessPage.cs
 src/I-Total.Transfer/UI/Pages/WirelessPage.Designer.cs
+installer/Install-I-Total.Transfer.ps1
+tests/I-Total.Transfer.Tests/FilterAndConflictTests.cs
 tests/I-Total.Transfer.Tests/PageControlTests.cs
 tests/I-Total.Transfer.Tests/WirelessReceiverTests.cs
 tests/I-Total.Transfer.Tests/TransferEngineTests.cs
+tests/I-Total.Transfer.Tests/InstallerScriptTests.cs
 tests/I-Total.Transfer.Tests/QrCodeTests.cs
 CHANGELOG.md, PROJECT-STATUS.md, docs/PROGRESS.md
 docs/UI-REQUIREMENTS-MATRIX.md, docs/WIRELESS.md, docs/KNOWN_ISSUES.md
@@ -130,7 +198,7 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 - The source ZIP (`dist\I-Total.Transfer-1.8.0-source.zip`; size and SHA-256 in `dist\SHA256SUMS.txt`) excludes
   `bin`/`obj`/`publish`/`dist`/`TestResults` and archive copies. It was extracted to a clean folder,
   rebuilt and published: **0 warnings, 0 errors**, producing the byte-identical
-  `7EF01BBA...` executable (112,150,342 B), so the source archive is reproducible.
+  `C953BC08...` executable (112,150,342 B), so the source archive is reproducible.
 - `dist\SHA256SUMS.txt` is the authoritative archive hash record. The exe/portable/deployment/source
   hashes above match it.
 
@@ -139,11 +207,9 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 
 - **100 % pixel capture of UI-18 remains open.** This host has only a 150 % display; the page actions and
   150 % pixels were observed, and the wiring is tested, but no 100 % session exists here.
-- **The UI copy confirmation was not observed live.** The live UI scan completed, but the Start click raced
-  the scan finalisation gate and no dialog opened. The filtered copy was driven through the real WPD
-  backend and shared engine instead; the confirmation-count fix is unit-tested, not live-clicked.
-- **Remaining physical drills:** mid-scan Overview/disconnect, selected-phone-disappears, Android
-  cancel/resume, locked phone, and PTP-only. The iPhone scan and filtered HEIC/MOV fetch are now live.
+- **Physical evidence:** the iPhone scan/filtered copy, Android cancel/resume, PTP-only warning, mid-scan unplug
+  and selected-phone-disappearance drills are live. The HUAWEI lock does not disable MTP, so no abort drill is
+  applicable; single-file and mixed-size device observations are recorded above; no statistical multi-file benchmark is claimed.
 - Production licence issuer/purchase URL, Steamworks, Inno Setup 6, Authenticode certificate and `signtool`
   remain external blockers. `Build-Installer.ps1` still prints `SETUP SKIPPED`; nothing is signed.
 - Windows 11 rendering, 200 % scaling and audible cues remain unobserved.
@@ -151,10 +217,8 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 ### Next task
 
 1. If a 100 % display is available, repeat the page capture set; otherwise keep the 100 % limitation recorded.
-2. Run the remaining physical drills from `DEVICE_TEST_MATRIX.md`: mid-scan disconnect, selected-phone
-   disappears, Android cancel/resume, locked phone and PTP-only.
-3. Re-run the UI Start confirmation after a completed scan to see the `PlanSummary` count live; the engine
-   and unit test are done, but the dialog was not observed in this run.
+2. Run a device throughput benchmark when a stable USB setup is available; no lock/abort drill is required on this
+   MTP stack.
 3. Any further source edit invalidates the published hash: rebuild, retest, republish, repackage and refresh
    `dist\SHA256SUMS.txt`; docs-only edits still require new archives because they ship inside them.
 

@@ -6,7 +6,7 @@
   `net10.0-windows`.
 - `dotnet build I-Total.Transfer.sln -c Release` → **0 warnings, 0 errors**.
 - `dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s` → **444
-  passed, 0 failed, 2 skipped (opt-in hardware tests), 446 total**, in about twenty-eight seconds.
+  passed, 0 failed, 2 skipped (opt-in hardware tests), 448 total**, in about twenty-eight seconds.
   The 2026-10-21 addition is the two-phone isolation guard (`DeviceSelectionGuardTests` 6,
   `ScanIdentityTests` 8); the 2026-10-22 additions are the Appearance preview suite (4), the expanded
   token/contrast coverage and the no-device neutral-wording regression, the non-elevated private-LAN bind, the five page-control tests and the filtered-plan summary test; the earlier count of 385/387 is
@@ -46,12 +46,12 @@
   (5) proves the signature covers the readable half and turns ten malformed inputs into verdicts instead of
   exceptions. `TrialLedgerTests` (5) covers the file and HKCU stores and pessimistic merging.
   `SteamEntitlementTests` (4) covers app-id binding and refusal on the direct build.
-  `LicenseSettingsTests` (3) drives the real Settings controls. `InstallerScriptTests` (3) executes the
+  `LicenseSettingsTests` (3) drives the real Settings controls. `InstallerScriptTests` (5) executes the
   real PowerShell installer against temporary folders and a temporary HKCU key - install, wrong-hash refusal
   (exit 4), upgrade with settings/trial preserved, uninstall through the installed copy, and refusal to
   uninstall an unrelated folder (exit 3). The build stayed at **0 warnings, 0 errors**.
 - **Packaging ran against the publish output.** `installer\Build-Installer.ps1` produced
-  `I-Total.Transfer-1.8.0-portable-win-x64.zip` (46,868,834 B, SHA-256 `262CAC25...`) plus `SHA256SUMS.txt` and printed
+  `I-Total.Transfer-1.8.0-portable-win-x64.zip` (46,869,982 B, SHA-256 `B1C82181...`) plus `SHA256SUMS.txt` and printed
   `SETUP SKIPPED` because Inno Setup 6 is not installed. `Sign-Artifacts.ps1` was exercised only on its
   refusal path (no signtool, no certificate): it exits non-zero and signs nothing. That is the honest state -
   no setup executable and no signature exist for 1.8.0. The portable ZIP's own installer was also extracted and run against temporary folders and a temporary HKCU key: install and uninstall both returned OK, the folder and key were removed, and the temporary settings file survived.- **The support bundle now carries the trial counter, and the boundary is tested.** `DiagnosticsBundleTests`
@@ -60,7 +60,7 @@
   *Export diagnostics ZIP*; the resulting `licence.txt` read `Standing: Trial`, `Jobs used: 0`,
   `Job limit: 3`, `Jobs remaining: 3`, `New job allowed: True`, and `trial.json` was absent. The README
   inside the bundle states the same boundary.
-- **The installer scripts have an encoding guard.** `InstallerScriptTests` (4) fails on any non-ASCII byte in
+- **The installer scripts have an encoding guard.** `InstallerScriptTests` (5) fails on any non-ASCII byte in
   `installer/*.ps1`, naming the file and line. This is the regression guard for the PowerShell 5.1
   ANSI/BOM defect that broke `Build-Installer.ps1` during development.- **The test suite itself was a defect source twice over, and both causes were fixed.** Creating a
   WinForms control installs a `WindowsFormsSynchronizationContext` on the calling thread, whose `Post`
@@ -129,8 +129,9 @@
     a filtered copy ran successfully (see the 2026-10-21 bullet above); cancel/resume, locked-screen and PTP
     drills remain open.
 - **2026-10-21: Android walked/copied and a cross-device scan defect fixed.** Both handsets were attached.
-  The HUAWEI was walked end to end through WPD: **4,106 files / 16,114,057,157 bytes (15.01 GiB)**,
-  `Complete`, about 6 s; the filtered copy planned 520 files with **412 source-and-destination SHA-256
+  The HUAWEI was walked end to end through WPD on 2026-10-22: **4,103 files / 15,612,056,299 bytes (14.54 GiB)**,
+  `Complete`, 307 folders. The 2026-10-20 **4,106 files / 16,114,057,157 bytes (15.01 GiB)** listing is historical.
+  The 2026-10-20 filtered copy planned 520 files with **412 source-and-destination SHA-256
   verified, 108 `COPIED-UNVERIFIABLE` (0-byte `Sounds\.pictures`), 0 failed, 3,586 skipped** and ended
   honestly as `COPIED WITH UNVERIFIABLE FILES - NOT A VERIFIED COMPLETE BACKUP`; resuming preserved the 108
   unverified files and the trial stayed at 0 jobs. During the same session a scan started for the Apple
@@ -316,18 +317,17 @@
   combined *last-known library beside a running scan* capture is still missing: `ShowLastKnownLibrary` runs
   after the device probe succeeds, and only its store side (the Settings inventory and removal path) has been
   verified live. The library page's provenance line and the change report are pinned by tests.
-- **Some device-facing legs still have not run.** Real transfer throughput, a genuinely
-  cancelled-and-resumed copy, disconnect recovery during a copy, a locked phone, PTP-only mode, a physical
-  selected-phone disappearance and a real iOS wireless sender remain **not** hardware-tested. The Android
-  walk/copy and the cold iPhone scan *have* run and are recorded above. The app ships no driver of its own and needs none: Apple's Mobile Device
+- **Some device-facing legs still have not run.** A statistical multi-file benchmark, the attached
+  branch of the USB diagnosis and a real iOS wireless sender remain **not** hardware-tested. The Android
+  walk/copy, cancel/resume, PTP warning, single-file buffer sweep, mid-scan unplug and selected-phone
+  disappearance are live; a lock is not a disconnect on this MTP stack. The app ships no driver of its own and needs none: Apple's Mobile Device
   Support *is* installed on this machine (Diagnostics reports the driver files at
   `C:\Program Files\Common Files\Apple\Mobile Device Support\Drivers\usbaapl64.inf`), and the app uses the
   operating system's own WPD/Shell stack. (The unplanned disconnect at the end of that session was survived
   without a crash: the next probe simply reported the device as not found.)
-- **Android cancellation, lock and PTP remain unvalidated.** The 2026-10-21 walk/copy and resume-preservation
-  are recorded above and are live evidence. Still not run: a real cancel followed by resume, a locked-screen
-  abort, PTP-only mode, and any Android throughput benchmark. The earlier statement that the Android path
-  had never been read is **superseded** by the 2026-10-21 run.
+- **Android cancellation, PTP and a single-file buffer sweep are now live.** The 2026-10-21 walk/copy and
+  2026-10-24 cancel/resume, PTP warning, buffer sweep and 30-file mixed batch are recorded above. No statistical benchmark remains
+  open; a screen lock does not disable MTP on this handset.
 - **The *attached* branch of the USB diagnosis was seen only in its defective form.** On 2026-10-20 it read
   `ATTACHED — Attached and answering: HUAWEI Y7 Prime 2018` under a row titled *"Apple handsets seen over
   USB"*; the family filter now keeps the Android name out of it, and that corrected wording is unit-tested

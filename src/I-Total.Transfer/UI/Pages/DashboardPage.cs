@@ -286,6 +286,22 @@ public partial class DashboardPage : UserControl, IThemedPage
     }
 
     /// <summary>
+    /// Replaces the media-card hint with a scan warning, or restores the neutral hint. Used for the
+    /// camera-only/PTP case, where the tiles are numerically valid but three groups are hidden by the
+    /// phone's USB mode, not empty.
+    /// </summary>
+    public void SetMediaHint(string? warning)
+    {
+        if (string.IsNullOrWhiteSpace(warning))
+        {
+            _mediaHint.ForeColor = _theme.Muted;
+            return;
+        }
+        _mediaHint.Text = warning.Trim();
+        _mediaHint.ForeColor = _theme.Warn;
+    }
+
+    /// <summary>
     /// Shows the one operation the app is running: where it is, how far it has got, and how fast.
     ///
     /// <para>

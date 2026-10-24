@@ -150,6 +150,28 @@ public sealed class InstallerScriptTests
     }
 
     [TestMethod]
+    public void PortableLayoutInstallsWithoutAnExplicitSourceDir()
+    {
+        if (!File.Exists(PowerShell)) { Assert.Inconclusive("Windows PowerShell is not available."); }
+        using var box = new Sandbox();
+        string portableScript = Path.Combine(box.Source, "Install-I-Total.Transfer.ps1");
+        File.Copy(Path.Combine(RepositoryRoot(), "installer", "Install-I-Total.Transfer.ps1"),
+            portableScript);
+        box.WriteExecutable([1, 2, 3, 4, 5, 6, 7, 8]);
+        string startMenu = Path.Combine(box.Root, "start-menu");
+        Directory.CreateDirectory(startMenu);
+
+        RunResult install = RunScript(portableScript,
+            "-InstallDir", box.App, "-UserDataDir", box.Data, "-StartMenuDir", startMenu,
+            "-RegistryKey", box.RegistryKey, "-NoShortcut", "-Json");
+
+        Assert.AreEqual(0, install.ExitCode, install.Error);
+        Assert.AreEqual("install", install.Json.GetProperty("action").GetString());
+        Assert.IsTrue(File.Exists(Path.Combine(box.App, "I-Total.Transfer.exe")),
+            "The portable layout must install the executable sitting beside its own installer.");
+    }
+
+    [TestMethod]
     public void InstallUpgradeAndUninstallLeaveTheOperatorsDataAlone()
     {
         if (!File.Exists(PowerShell)) { Assert.Inconclusive("Windows PowerShell is not available."); }

@@ -19,7 +19,8 @@
     trial/licence state must survive a reinstall.
 
 .PARAMETER SourceDir
-    Folder produced by `dotnet publish` (default: ..\publish relative to this script).
+    Folder containing I-Total.Transfer.exe. Defaults to the script's own folder when the portable package
+    puts the executable beside it, otherwise to ..\publish relative to this script.
 
 .PARAMETER ExpectedSha256
     When supplied, installation refuses to proceed unless the published executable has this hash.
@@ -188,7 +189,15 @@ function Invoke-Uninstall {
 }
 
 function Invoke-Install {
-    if (-not $SourceDir) { $SourceDir = Join-Path $PSScriptRoot '..\publish' }
+    if (-not $SourceDir) {
+        if (Test-Path -LiteralPath (Join-Path $PSScriptRoot $ExeName)) {
+            # The portable package places the executable beside this script. Defaulting to ..\publish
+            # made a freshly extracted portable ZIP un-installable unless the user knew to pass -SourceDir.
+            $SourceDir = $PSScriptRoot
+        } else {
+            $SourceDir = Join-Path $PSScriptRoot '..\publish'
+        }
+    }
     $SourceDir = [System.IO.Path]::GetFullPath($SourceDir)
 
     $SourceExe = Join-Path $SourceDir $ExeName

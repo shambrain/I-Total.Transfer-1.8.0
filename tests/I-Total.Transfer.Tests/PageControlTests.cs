@@ -35,6 +35,15 @@ public sealed class PageControlTests : WinFormsTestBase
     }
 
     [TestMethod]
+    public void DashboardShowsAPtpWarningInTheMediaCard()
+    {
+        using var page = new DashboardPage();
+        page.SetMediaHint("Camera-only connection (PTP): only DCIM and Pictures are visible.");
+        Assert.AreEqual("Camera-only connection (PTP): only DCIM and Pictures are visible.",
+            Find<Label>(page, "_mediaHint").Text);
+    }
+
+    [TestMethod]
     public void TransferToolbarRaisesItsRequestsAndClearViewOnlyClearsTheConsole()
     {
         using var page = new TransferPage();

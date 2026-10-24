@@ -140,7 +140,7 @@ matching certificate.
 
 ## Live non-elevated LAN check (2026-10-22)
 
-The current published build (SHA-256 `7EF01BBA...`) was started through its own Wireless page by the
+The current published build (SHA-256 `C953BC08...`) was started through its own Wireless page by the
 non-elevated user `DRRAMPAGE-PC\shambrain` with `Require TLS` on and no matching certificate. It bound
 `192.168.8.91:47821` successfully, created a ticket with an `http://` URL, displayed
 `Listening on http://192.168.8.91:47821/ (HTTP; no certificate).`, and `/health` answered

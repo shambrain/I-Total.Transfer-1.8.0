@@ -60,14 +60,18 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 
 ## Device access (hardware unavailable on 2026-10-20)
 
-### KI-07 - Android path is live for walk/copy, but cancel/resume, lock and PTP remain open
+### KI-07 - Resolved: Android path is live, and the locked-phone abort is not applicable to this MTP stack
 
-- **Impact:** the HUAWEI was walked and copied on 2026-10-20 (4,106 files; 412 verified + 108 unverifiable;
-  0 failed), but a real cancel -> resume, a locked-phone abort and a PTP-only handset have not been run.
-- **Mitigation:** the Android walk, volume labels, filtered copy and resume-preservation of unverified files
-  are live-verified; the same engine and recovery code serve both families.
-- **To close:** `DEVICE_TEST_MATRIX.md` rows AN06-AN08 and the cancel/resume drill. No Android throughput
-  number is published.
+- **Impact:** the HUAWEI was walked on 2026-10-22 (4,103 files / 14.54 GiB; 412 verified + 108 unverifiable in
+  the earlier filtered copy; 0 failed). A 612,420,912-byte MP4 was cancelled mid-copy and resumed to
+  `HASH-VERIFIED COMPLETE`, source/destination SHA-256 identical. A PTP-only handset was checked on
+  2026-10-24: the Overview showed the camera-only warning and the log named PTP. On the same day the screen
+  was locked during a 584.1 MB copy; MTP stayed active and the copy completed. A screen lock is not a
+  disconnect on this Android stack, so no attached-but-not-answering abort is expected.
+- **Mitigation:** the Android walk, volume labels, filtered copy, cancel/resume, PTP warning and source/destination
+  verification are live-verified. Backend-fault behaviour is covered by `RecoveryFlowTests`.
+- **To close:** no open Android action for this handset. A device that gates MTP on lock could exercise the
+  abort path, but it is not a release blocker. A single-file buffer sweep and a 30-file mixed-size batch are published; no statistical benchmark is claimed.
 
 ### KI-08 - iPhone AFC backend is inert
 
@@ -81,11 +85,12 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
   entry was deleted, the code fixed, and simulated tests pass. Only a real pull proves the fix.
 - **To close:** TEST-PLAN check 26.
 
-### KI-10 - Locked phone / revoked USB permission not drilled
+### KI-10 - iPhone lock / revoked USB permission not drilled
 
-- **Impact:** the app reports "attached but not answering" and aborts safely in simulation; no physical
-  evidence for locked-phone or permission-revoked states.
-- **To close:** matrix rows IP08, AN08.
+- **Impact:** the app reports "attached but not answering" and aborts safely in simulation. The HUAWEI
+  keeps MTP active while locked, so AN08 is not applicable there; an iPhone lock and a revoked USB
+  permission still have no physical observation.
+- **To close:** matrix row IP08 (iPhone lock) or a device that revokes USB permission mid-copy.
 
 ### KI-11 - Windows 11 and 200 % scaling unobserved
 
@@ -111,8 +116,7 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 
 - **Impact:** the cold live scan on 2026-10-22 counted **55,185 files / 151.34 GiB in 23.3 min** on this
   machine and phone; that is a single observation, not a benchmark. The earlier 26,335-file / 10.3-minute
-  pass, the 52,574-file / 23.2-minute pass and the 57,371-file warm pass are historical. No buffer sweep or
-  device write benchmark exists yet.
+  pass, the 52,574-file / 23.2-minute pass and the 57,371-file warm pass are historical. A single-file buffer sweep and a 30-file mixed-size batch exist now (BT07/BT09/BT10); no statistical or device-write benchmark exists yet.
 - **To close:** matrix rows BT07/BT08, published with the full context block.
 
 ## Robustness / technical debt

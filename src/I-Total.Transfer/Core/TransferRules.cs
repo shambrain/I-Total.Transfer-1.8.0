@@ -183,11 +183,16 @@ public static class TransferRules
         consecutiveFailures >= ConsecutiveObjectFailureLimit;
 
     /// <summary>Classifies an enumeration outcome. A scan is only Complete when every folder read and no duplicates exist.</summary>
-    public static EnumerationStatus ClassifyEnumeration(int folderCount, int failedFolders, int fileCount, int duplicatePaths)
+    public static EnumerationStatus ClassifyEnumeration(int folderCount, int failedFolders, int fileCount,
+        int duplicatePaths, int unknownSizeCount = 0)
     {
         if (fileCount == 0 && failedFolders == 0) return EnumerationStatus.Empty;
         if (failedFolders > 0) return EnumerationStatus.Incomplete;
         if (duplicatePaths > 0) return EnumerationStatus.Incomplete;
+        // A handset that disappears during enumeration can still return names while every later
+        // property read yields zero. A small number of genuine zero-byte files is normal; a large
+        // fraction is not a complete listing. Ten percent is deliberately conservative.
+        if (unknownSizeCount > 0 && unknownSizeCount * 10 >= fileCount) return EnumerationStatus.Incomplete;
         return EnumerationStatus.Complete;
     }
 

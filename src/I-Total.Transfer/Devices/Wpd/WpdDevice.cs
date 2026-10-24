@@ -313,7 +313,7 @@ public sealed class WpdDevice : ITransferBackend
             warnings.Add($"{unknownSize:N0} file(s) reported no usable size.");
 
         int failedFolders = folders.Count(f => !f.Succeeded);
-        var status = TransferRules.ClassifyEnumeration(folders.Count, failedFolders, files.Count, duplicatePaths.Length);
+        var status = TransferRules.ClassifyEnumeration(folders.Count, failedFolders, files.Count, duplicatePaths.Length, unknownSize);
         var report = new EnumerationReport(status, folders.Count, failedFolders, files.Count,
             files.Sum(f => Math.Max(0, f.Size)), files.Count(f => f.Size == 0), unknownSize, duplicatePaths.Length,
             TransferRules.CountLivePhotoPairs(files), Name, folders, warnings);

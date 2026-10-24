@@ -65,10 +65,10 @@ the family selects a storage *policy*, not a backend.
   `Complete` over a tree whose tail it could no longer read.
 
 **Implemented (1.8.0); walk and copy are now live-verified on a HUAWEI Y7 Prime 2018 (2026-10-20).** The app
-read both volumes (4,106 files / 16,114,057,157 bytes, `Complete`) and copied a filtered selection (412
+read both volumes (4,103 files / 15,612,056,299 bytes, `Complete` on 2026-10-22) and copied a filtered selection (412
 verified + 108 unverifiable + 0 failed); resume preserved the unverifiable files. The classifier, storage
 policy, category mapping, diagnostics wording, two-phone order and disconnect guard are covered by tests.
-Cancel -> resume, locked-screen abort, PTP-only mode and an Android throughput benchmark remain open, and
+A 612,420,912-byte MP4 was cancelled mid-copy and resumed to source/destination SHA-256 equality; PTP-only mode is live-checked; a lock does not disable MTP, so no abort is expected; a single-file buffer sweep and a 30-file mixed-size batch are live; neither is a statistical benchmark, and
 that distinction is carried into [`RELEASE-ACCEPTANCE.md`](RELEASE-ACCEPTANCE.md) rather than blurred.
 
 ## Designer scope
@@ -100,7 +100,7 @@ tree and tested:
 What remains, in order:
 
 1. **Hardware**: Android walk/copy/PTP, locked phone, mid-scan pull on the fixed exe, two-phone preference,
-   cancel/resume, HEIC+MOV, benchmark and buffer sweep (`DEVICE_TEST_MATRIX.md`).
+   cancel/resume, HEIC+MOV and single-file buffer sweep and mixed-size batch are live; no statistical benchmark is claimed (`DEVICE_TEST_MATRIX.md`).
 2. **Package and sign**: decide the channel, obtain a certificate and Inno Setup, sign, verify, republish
    hashes (`RELEASE-SIGNING.md`).
 3. **Production entitlements**: offline key pair, issuing backend, purchase URL, then live activation, refund

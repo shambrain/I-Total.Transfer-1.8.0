@@ -31,7 +31,7 @@ Legend:
 | UI-15 | The design artefacts are editable, versioned sources, not flat mockups. | PASS (file present) | `i-total-transfer-design-system.figcraft` (69,239 bytes) with four pages; four exported renders. See `UI-DESIGN-SYSTEM.md`. |
 | UI-16 | Windows 11 rendering and 200 % scaling are observed. | OPEN | No Windows 11 machine and no 200 % session on this host. Tracked as KI-11 and EN2/EN3. |
 | UI-17 | Audible cues are heard on real hardware. | OPEN | `UiSound` synthesises tones; the harness cannot hear them. E6 remains IMPLEMENTED, NOT FULLY VERIFIED. |
-| UI-18 | Every control on every page is audited as action / disabled-with-reason / documented future work. | PASS at 150 % (live) + automated; 100 % pixel capture OPEN | All seven pages were walked: Overview and Appearance previously, and Backup & queue, Media library, Wireless import, History and Diagnostics on 2026-10-22 with a real `PrintWindow` capture and UIA dump (`%TEMP%\opencode\ui-audit2`). Toolbar actions were clicked; disabled controls were recorded with the reason. `PageControlTests` (5 real-control tests) pins every page's toolbar events and the Clear-view boundary. The only unobserved scale is 100 %, because this host has no 100 % display; see UI-16/KI-21. |
+| UI-18 | Every control on every page is audited as action / disabled-with-reason / documented future work. | PASS at 150 % (live) + automated; 100 % pixel capture OPEN | All seven pages were walked: Overview and Appearance previously, and Backup & queue, Media library, Wireless import, History and Diagnostics on 2026-10-22 with a real `PrintWindow` capture and UIA dump (`%TEMP%\opencode\ui-audit2`). Toolbar actions were clicked; disabled controls were recorded with the reason. The live filtered Start confirmation read **`Copy 1 files (584.1 MB)`**, not the full 4,103-file scan (`%TEMP%\opencode\ui-android-confirm\02-confirm.png`). A real Stop produced the recovery bar `1 planned - 0 copied - 1 outstanding - 4,102 skipped by filter`; Resume opened the correct 584.1 MB continuation dialog (`%TEMP%\opencode\ui-android-cancel\01-cancelled-recovery.png`). `PageControlTests` (5 real-control tests) pins every page's toolbar events and the Clear-view boundary. The only unobserved scale is 100 %, because this host has no 100 % display; see UI-16/KI-21. |
 
 ## 2. Overview control audit (2026-10-22)
 
@@ -78,7 +78,7 @@ saved choice cannot be lost by clicking a swatch.
 | Persistent queue grid | Read-only rows from the engine, including state, verification and note. | Empty state says nothing is queued; no placeholder rows. |
 | Activity console | Append-only real log lines with level colours. | `Clear view` resets the console, not the file. |
 
-The current build (SHA-256 `7EF01BBA...`) was captured at 2152x1380 with `PrintWindow`
+The current build (SHA-256 `C953BC08...`) was captured at 2152x1380 with `PrintWindow`
 (`backup-queue-150.png`); `Clear view` raised the real action and was exercised. The earlier audit also
 opened `Export report` with no scan and observed the real modal.
 
@@ -165,7 +165,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --filter "FullyQu
 Results recorded on 2026-10-22:
 
 - Release build: 0 warnings, 0 errors.
-- Full suite: 444 passed, 0 failed, 2 skipped, 446 total, 28 s.
+- Full suite: 446 passed, 0 failed, 2 skipped, 448 total, 28 s.
 - Targeted UI/theme suite: 42 passed, 0 failed, 42 total.
 
 ## 10. Evidence files
