@@ -5,13 +5,13 @@
 - .NET SDK **10.0.302** (pinned via `global.json` to `10.0.100` with `rollForward: latestFeature`),
   `net10.0-windows`.
 - `dotnet build I-Total.Transfer.sln -c Release` → **0 warnings, 0 errors**.
-- `dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s` → **448
-  passed, 0 failed, 2 skipped (opt-in hardware tests), 450 total**, in about thirty seconds.
+- `dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s` → **449
+  passed, 0 failed, 2 skipped (opt-in hardware tests), 451 total**, in about thirty seconds.
   The 2026-10-21 addition is the two-phone isolation guard (`DeviceSelectionGuardTests` 6,
   `ScanIdentityTests` 8); the 2026-10-22 additions are the Appearance preview suite (4), the expanded
   token/contrast coverage and the no-device neutral-wording regression, the non-elevated private-LAN bind, the five page-control tests and the filtered-plan summary test, plus the 2026-10-24 96-DPI
-  caption-fit regression and the installed-uninstaller self-location test; the earlier count of 385/387
-  is superseded.
+  caption-fit regression, the installed-uninstaller self-location test and the AFC-status regression; the
+  earlier count of 385/387 is superseded.
   Includes real **loopback and private-LAN** wireless tests (binding a `TcpListener` on a genuine socket: single-use pairing,
   session-token rotation and expiry, the approval gate in both directions, upload, SHA-256 on receipt, digest
   and size disagreement, traversal and reserved-path rejection, collision renaming, `/health`, refusal of

@@ -165,7 +165,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --filter "FullyQu
 Results recorded on 2026-10-24 (whole suite after the caption fix):
 
 - Release build: 0 warnings, 0 errors.
-- Full suite: 448 passed, 0 failed, 2 skipped, 450 total, 30 s.
+- Full suite: 449 passed, 0 failed, 2 skipped, 451 total, 29 s.
 - Targeted UI/theme suite: 42 passed, 0 failed, 42 total.
 
 ## 10. Evidence files
@@ -212,6 +212,20 @@ attempt captured the whole form and painted the OS caption over the client (the 
 non-client area with `WM_NCCALCSIZE`), which produced a false "title clipped" reading; the shell root
 is rendered instead and `header-only.png` shows the full 78 px brand band. The render exposed the
 clipped Wireless TLS caption recorded in the UI-18 row.
+
+2026-10-24 follow-up defects, all fixed and pinned by tests:
+
+- The Wireless `Require TLS` caption ran past its card and lost the closing bracket; it is reworded, and
+  `WirelessTlsCaptionFitsInsideItsCardAtTheDesignedWidth` fails on the old text.
+- The installed uninstaller ignored a custom `-InstallDir` and targeted the default folder;
+  `TheInstalledUninstallerFindsACustomInstallFolderOnItsOwn` fails without the self-location rule.
+- The Diagnostics row `Native AFC runtime` read `VERIFIED` while no pinned binary existed (the required set
+  is empty, so "satisfied" was vacuously true); it now says `NOT PRESENT`, pinned by
+  `AMissingAfcRuntimeIsNotReportedAsVerified`.
+
+A live attached-diagnostics run on the same day produced 10 Apple checks with both handsets attached and
+8 Android rows with only the HUAWEI: rows in `%TEMP%\opencode\diag-live\diagnostics-attached.txt`, page in
+`...\diagnostics-attached-page.png`.
 
 ## 11. Open gaps
 

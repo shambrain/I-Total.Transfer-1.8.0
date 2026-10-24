@@ -116,6 +116,31 @@ public sealed class ConnectionDiagnosticsTests
     }
 
     [TestMethod]
+    public void AMissingAfcRuntimeIsNotReportedAsVerified()
+    {
+        // The plan marks every native binary optional, so RequiredDependenciesSatisfied is true with an
+        // empty runtime. The row used to read "Native AFC runtime: VERIFIED" next to the sentence that no
+        // binary was verified; the live attached-page run on 2026-10-24 showed exactly that.
+        var afc = new NativeDependency("afc", "libimobiledevice.dll", "1.0", "x64", "LGPL", "", new string('a', 64), false);
+        var missing = new DependencyReport(
+            [new DependencyFileStatus(afc, DependencyFileState.Missing, "Native binary is not present.")],
+            @"C:\none");
+
+        DiagnosticItem absent = Row(ConnectionDiagnostics.Collect(Device(DeviceFamily.Android), "backend", missing),
+            "Native AFC runtime");
+        Assert.AreEqual("NOT PRESENT", absent.Status,
+            "Nothing was verified, so the runtime may not be called verified.");
+        StringAssert.Contains(absent.Details, "fail-closed");
+
+        var verified = new DependencyReport(
+            [new DependencyFileStatus(afc, DependencyFileState.Verified, "SHA-256 matches the pin.")],
+            @"C:\none");
+        Assert.AreEqual("VERIFIED",
+            Row(ConnectionDiagnostics.Collect(Device(DeviceFamily.Android), "backend", verified), "Native AFC runtime").Status,
+            "A genuinely verified runtime still reports as verified.");
+    }
+
+    [TestMethod]
     public void EveryRowHasANameAndSomeDetail()
     {
         foreach (DeviceFamily family in new[] { DeviceFamily.Apple, DeviceFamily.Android, DeviceFamily.Unknown })

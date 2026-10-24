@@ -90,8 +90,11 @@ public static class ConnectionDiagnostics
         {
             int verified = dependencies.Files.Count(f => f.State == DependencyFileState.Verified);
             bool satisfied = dependencies.RequiredDependenciesSatisfied;
+            // RequiredDependenciesSatisfied is vacuously true when no dependency is marked required, so
+            // it cannot decide this row on its own: an empty runtime would otherwise read "VERIFIED"
+            // beside the sentence saying nothing was verified. The status follows what was verified.
             items.Add(new("Native AFC runtime",
-                satisfied ? "VERIFIED" : verified > 0 ? "PARTIAL" : "NOT PRESENT",
+                verified == 0 ? "NOT PRESENT" : satisfied ? "VERIFIED" : "PARTIAL",
                 verified == 0
                     ? "No pinned native binary verified, so the AFC backend stays inert (fail-closed). Install a pinned runtime to enable Windows-to-iPhone transfers."
                     : $"{verified} of {dependencies.Files.Count} native binaries verified. Required set satisfied: {satisfied}."));

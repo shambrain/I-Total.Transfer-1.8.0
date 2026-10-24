@@ -238,15 +238,19 @@ Do not label a release device-tested until these tests pass on actual Windows 10
     mismatch the previous build shipped. Record whichever sender actually worked, since "an iPhone can push to
     this receiver" is otherwise an assumption.
 
-24. **The attached branch of the diagnosis on a live handset (live pass 2026-10-21; locked/unplugged variants outstanding).**
-    With both phones attached, *Run diagnostics* led with the selected family: Apple `ATTACHED`, family
-    `APPLE`, software `DETECTED`, drivers `FOUND`, trust `ACCESSIBLE`; the summary named both handsets. The
-    AndroidFirst bundle also named both. The earlier defective row
-    `Attached and answering: HUAWEI Y7 Prime 2018` under the Apple heading was fixed by the family filter.
-    Still to test: attach but **lock** the phone and confirm the row remains ATTACHED while media rows
-    explain the lock, then unplug and confirm the row flips to CACHED RECORD ONLY with the same name and the
-    page stays readable. The cross-device scan defect found on 2026-10-21 is covered by check 27/BT08.
-
+24. **The attached branch of the diagnosis on a live handset (live passes 2026-10-21 and 2026-10-24;
+    locked/unplugged variants outstanding).** With both phones attached, *Run diagnostics* led with the
+    selected family: Apple `ATTACHED`, family `APPLE`, software `DETECTED`, drivers `FOUND`, trust
+    `ACCESSIBLE`; the summary named both handsets. The AndroidFirst bundle also named both. The earlier
+    defective row `Attached and answering: HUAWEI Y7 Prime 2018` under the Apple heading was fixed by the
+    family filter. Repeated on 2026-10-24 with the current build: 10 Apple checks and the summary
+    `Attached: HUAWEI Y7 Prime 2018 (Android), Apple iPhone (Apple).` With only the HUAWEI attached, the same
+    page showed its 8 Android rows and named only the HUAWEI. The 2026-10-24 run also exposed
+    `Native AFC runtime: VERIFIED` with no pinned binary present; a repeat run after the fix showed `NOT PRESENT`
+    (`AMissingAfcRuntimeIsNotReportedAsVerified`). Still to test: attach but **lock** the phone and confirm
+    the row remains ATTACHED while media rows explain the lock, then unplug and confirm the row flips to
+    CACHED RECORD ONLY with the same name and the page stays readable. The cross-device scan defect found on
+    2026-10-21 is covered by check 27/BT08.
 25. **An Android phone, end to end (live walk/copy 2026-10-20; cancel/PTP checked 2026-10-24; lock not applicable on MTP).** A HUAWEI Y7
     Prime 2018 was walked and copied through native WPD: **4,103 files / 15,612,056,299 bytes (14.54 GiB)**, on 2026-10-22 (the 2026-10-20 4,106-file / 15.01 GiB listing is historical),
     `Complete`; the filtered copy planned 520, with **412 source-and-destination SHA-256 verified, 108

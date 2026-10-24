@@ -141,10 +141,14 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
   bundle both read `CACHED RECORD ONLY (2)` — *Apple iPhone, Apple iPad* — with 3 support records and nothing
   attached. `AttachmentDiagnosisTests` (10) uses that same record set, and the live read is asserted to return
   display names only, never the instance key Windows stores the serial number in.
-- [ ] **The attached branch of that diagnosis on a live handset.** ⛔
-  No handset was attached while it was written, so *attached* — and attached-but-locked, where the row must
-  still read ATTACHED while the media rows explain the phone is not readable — is behaviour-pinned by tests but
-  not observed on hardware. TEST-PLAN hardware check 24.
+- [x] **The attached branch of that diagnosis on a live handset.** LIVE PASS on 2026-10-24 with both phones
+  attached. The AppleFirst run produced 10 checks: Apple handsets `ATTACHED` (naming the two support
+  interfaces that cannot supply media), Windows device access `PASS`, family `APPLE`, software `DETECTED`,
+  drivers `FOUND`, trust `ACCESSIBLE`; the summary read `Attached: HUAWEI Y7 Prime 2018 (Android), Apple iPhone
+  (Apple).` With only the HUAWEI attached the same page produced its 8 Android rows, named the HUAWEI alone and
+  showed no Apple rows. The same run found `Native AFC runtime: VERIFIED` beside a sentence saying no binary
+  was verified; a repeat run after the fix showed `NOT PRESENT`. Attached-but-locked and unplugged variants remain open
+  (TEST-PLAN check 24).
 - [x] **The diagnostics page shows its findings whole.** ✅
   The detail column neither wrapped nor grew, so any finding longer than the column was silently truncated with
   nothing to say it had been — the worst failure mode for a page whose entire purpose is to explain a fault.
@@ -279,7 +283,7 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
 - [x] **Build succeeds from a clean checkout on current Visual Studio / .NET SDK.** ✅
   `docs/BUILD-VALIDATION.md`; the source zip is built from scratch at 0 warnings / 0 errors.
 - [x] **Unit and integration tests pass on Windows.** ✅
-  **448 passed, 0 failed, 2 skipped (450 total)** on 2026-10-24 (the two skips are hardware-marked Shell-backend
+  **449 passed, 0 failed, 2 skipped (451 total)** on 2026-10-24 (the two skips are hardware-marked Shell-backend
   apartment tests). The two-phone isolation guard added 14 tests on 2026-10-21; the Appearance preview
   controls added 4, the theme token/contrast coverage was expanded and the no-device neutral-wording
   regression was added on 2026-10-22. Earlier waves include 37 added with the commercial subsystem: 83 for the wireless credential model, the QR encoder,

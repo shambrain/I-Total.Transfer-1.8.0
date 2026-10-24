@@ -6,7 +6,7 @@ start from here without re-reading the whole conversation.
 
 ---
 
-## 2026-10-24 - 96-DPI shell render, clipped Wireless caption fixed, release refreshed
+## 2026-10-24 - 96-DPI shell render, three release defects fixed, release refreshed
 
 ### Starting point
 
@@ -43,11 +43,11 @@ dotnet build I-Total.Transfer.sln -c Release --no-incremental
 # Build succeeded. 0 Warning(s), 0 Error(s)
 
 dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s
-# Passed! - Failed: 0, Passed: 448, Skipped: 2, Total: 450, Duration: 30 s
+# Passed! - Failed: 0, Passed: 449, Skipped: 2, Total: 451, Duration: 29 s
 
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 # publish\I-Total.Transfer.exe: 112,150,342 B
-# SHA-256 42C6C9754D458832BC374AFDCB8D9EAF463C98AF0813F628E336BD3EB689B7B3
+# SHA-256 411F4CC5CD8303D10E6C542AE8CD28AD9EAAEE82C60C720912FD371FA8988CFF
 ```
 
 ### Second real defect found during release packaging
@@ -61,11 +61,31 @@ it wrote; a portable package (which has no manifest) is never treated as an inst
 `TheInstalledUninstallerFindsACustomInstallFolderOnItsOwn` runs the installed copy with only `-Uninstall`;
 it failed with exit 3 before the fix and passes now.
 
+### Third real defect found by the attached-diagnostics run
+
+With both handsets attached, the real Diagnostics page showed `Native AFC runtime: VERIFIED` beside the
+sentence "No pinned native binary verified". `DependencyReport.RequiredDependenciesSatisfied` is vacuously
+true when no dependency is marked required, and every native binary is optional, so the old expression
+chose VERIFIED for an empty runtime. The status now follows what was actually verified: `NOT PRESENT` when
+nothing is, `VERIFIED` only when at least one binary verifies and the required set is satisfied, `PARTIAL`
+otherwise. `AMissingAfcRuntimeIsNotReportedAsVerified` failed with `Expected:<NOT PRESENT>. Actual:<VERIFIED>`
+before the change and passes after it.
+
+The same live run produced the attached-branch evidence: 10 checks with both phones attached (Apple
+`ATTACHED`, family `APPLE`, software `DETECTED`, drivers `FOUND`, trust `ACCESSIBLE`) and a summary naming
+both handsets; with only the HUAWEI attached, 8 Android rows and no Apple rows. Rows are in
+`%TEMP%\opencode\diag-live\diagnostics-attached.txt` and the page capture is
+`%TEMP%\opencode\diag-live\diagnostics-attached-page.png`. The iPhone was briefly absent while the first
+probe ran; the fallback to the HUAWEI under `AppleFirst` is what the preference rule intends and is recorded
+in the same log and capture set.
+
 ### Files changed
 
 ```
 src/I-Total.Transfer/UI/Pages/WirelessPage.Designer.cs
+src/I-Total.Transfer/Services/ConnectionDiagnostics.cs
 tests/I-Total.Transfer.Tests/PageControlTests.cs
+tests/I-Total.Transfer.Tests/ConnectionDiagnosticsTests.cs
 tests/I-Total.Transfer.Tests/InstallerScriptTests.cs
 installer/Install-I-Total.Transfer.ps1
 CHANGELOG.md, PROJECT-STATUS.md, README.md
@@ -76,12 +96,12 @@ docs/MASTER_IMPLEMENTATION_PLAN.md
 
 ### Packaging
 
-- `installer\Build-Installer.ps1 -Version 1.8.0 -ExpectedSha256 42C6C975...` rebuilt the portable ZIP;
+- `installer\Build-Installer.ps1 -Version 1.8.0 -ExpectedSha256 411F4CC5...` rebuilt the portable ZIP;
   `SETUP SKIPPED` because Inno Setup 6 is still absent. Nothing is Authenticode-signed.
 - The deployment and source ZIPs were regenerated with the new executable and the updated documents.
   `dist\SHA256SUMS.txt` and `dist\installer\SHA256SUMS.txt` are the authoritative hash records.
-- Verification: the deployment ZIP's embedded exe hashes to `42C6C975...`; the extracted source ZIP
-  rebuilds and publishes to the byte-identical `42C6C975...` executable (112,150,342 B).
+- Verification: the deployment ZIP's embedded exe hashes to `411F4CC5...`; the extracted source ZIP
+  rebuilds and publishes to the byte-identical `411F4CC5...` executable (112,150,342 B).
 - The portable ZIP was extracted and its own installer run with no `-SourceDir`: install returned
   `{"ok":true,...}` with the executable, manifest and uninstaller present and the HKCU key created; the
   installed uninstaller then removed the folder and key and kept `settings.json`. The first attempt failed
