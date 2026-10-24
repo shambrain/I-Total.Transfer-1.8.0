@@ -281,7 +281,7 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
 ## Release engineering
 
 - [x] **Build succeeds from a clean checkout on current Visual Studio / .NET SDK.** ✅
-  `docs/BUILD-VALIDATION.md`; the source zip is built from scratch at 0 warnings / 0 errors.
+  `docs/BUILD-VALIDATION.md`; on 2026-10-24 a fresh `git clone` also built at 0 warnings / 0 errors, passed the full 449-test suite and published the byte-identical `411F4CC5...` executable, and the source zip is built from scratch at 0 warnings / 0 errors.
 - [x] **Unit and integration tests pass on Windows.** ✅
   **449 passed, 0 failed, 2 skipped (451 total)** on 2026-10-24 (the two skips are hardware-marked Shell-backend
   apartment tests). The two-phone isolation guard added 14 tests on 2026-10-21; the Appearance preview

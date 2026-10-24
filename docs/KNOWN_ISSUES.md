@@ -190,3 +190,14 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 - **To close:** only a native 100 % desktop capture remains, and it needs a 100 % display; no layout or
   control-audit work is outstanding.
 
+### KI-22 - Git history still carries the old test crash dumps
+
+- **Impact:** four testhost hang dumps (about 1.1 GB) and their `.trx`/sequence files were committed on
+  2026-10-18 and stayed tracked until 2026-10-24. They are now removed from the working tree and ignored
+  (`**/TestResults/`, `*.dmp`), so a checkout is 146 MB instead of 1.37 GB, but the objects remain in the
+  history pack: a clone still downloads them.
+- **Mitigation:** `HEAD` no longer tracks them, and the source ZIP never included `TestResults`. The
+  remaining cost is clone size/time, not release correctness.
+- **To close:** rewrite history with `git filter-repo --path tests/I-Total.Transfer.Tests/TestResults
+  --invert-paths` on a mirror, then force-push and re-clone. That is a deliberate repository operation,
+  not something a release build should do unattended.

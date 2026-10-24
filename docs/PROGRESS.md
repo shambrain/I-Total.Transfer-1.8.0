@@ -79,6 +79,33 @@ both handsets; with only the HUAWEI attached, 8 Android rows and no Apple rows. 
 probe ran; the fallback to the HUAWEI under `AppleFirst` is what the preference rule intends and is recorded
 in the same log and capture set.
 
+### Clean-clone reproducibility and line endings
+
+A fresh `git clone` of the release commit built cleanly but published `7C126C55...`, not `411F4CC5...`.
+The cause was line endings: every `.cs` file was LF in the working tree, while `core.autocrlf=true` and
+`* text=auto` checked the clone out as CRLF. The deterministic MVID follows the source bytes, so identical
+IL still produced a different PE.
+
+`.gitattributes` now states the policy (`* text=auto eol=lf`; `*.sln`, `*.bat` and `*.cmd` stay CRLF;
+`*.zip`, `*.png`, `*.ico` and `*.dmp` are binary), `.editorconfig` matches, and the working tree was
+re-checked-out from the index. A second clone then built at 0 warnings, passed the full suite
+(449 passed, 2 skipped, 451 total, 29 s) and published the byte-identical `411F4CC5...` executable.
+
+The same pass removed four tracked testhost hang dumps (about 1.1 GB) and a stale root-level 1.8.0 ZIP
+from `HEAD`, and added `**/TestResults/` and `*.dmp` to `.gitignore`. The checkout fell from 1.37 GB to
+146 MB. The dumps remain in the history pack; KI-22 records the `git filter-repo` step that would
+reclaim that space. The 1.7.0 archive is kept as the last pre-1.8 artifact.
+
+```powershell
+git clone <repo> $env:TEMP\opencode\clone-verify3
+dotnet build I-Total.Transfer.sln -c Release --no-incremental
+# Build succeeded. 0 Warning(s), 0 Error(s)
+dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+# 411F4CC5CD8303D10E6C542AE8CD28AD9EAAEE82C60C720912FD371FA8988CFF  (byte-identical to publish\)
+dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s
+# Passed! - Failed: 0, Passed: 449, Skipped: 2, Total: 451, Duration: 29 s
+```
+
 ### Files changed
 
 ```
@@ -88,6 +115,7 @@ tests/I-Total.Transfer.Tests/PageControlTests.cs
 tests/I-Total.Transfer.Tests/ConnectionDiagnosticsTests.cs
 tests/I-Total.Transfer.Tests/InstallerScriptTests.cs
 installer/Install-I-Total.Transfer.ps1
+.gitattributes, .editorconfig, .gitignore
 CHANGELOG.md, PROJECT-STATUS.md, README.md
 docs/PROGRESS.md, docs/UI-REQUIREMENTS-MATRIX.md, docs/KNOWN_ISSUES.md
 docs/BUILD-VALIDATION.md, docs/RELEASE-ACCEPTANCE.md, docs/PERFORMANCE-AUDIT.md

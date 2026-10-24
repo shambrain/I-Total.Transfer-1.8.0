@@ -1,6 +1,6 @@
 # Build validation status — v1.8.0
 
-## Executed in this workspace (2026-10-18, extended 2026-10-19, 2026-10-20, 2026-10-21 and 2026-10-22)
+## Executed in this workspace (2026-10-18, extended 2026-10-19/20/21/22 and 2026-10-24)
 
 - .NET SDK **10.0.302** (pinned via `global.json` to `10.0.100` with `rollForward: latestFeature`),
   `net10.0-windows`.
@@ -287,6 +287,22 @@
   the correct size.
 - `"Follow Windows"` resolution was checked against the live registry flag (`AppsUseLightTheme = 0`).
   `ThemeTests` assert the sampled banner palette values, the default and the legacy-`Dark` migration.
+
+## Clean-clone reproducibility (2026-10-24)
+
+A fresh `git clone` of the committed tree to a temporary folder was built, tested and published:
+
+- build: **0 warnings, 0 errors**
+- publish (`win-x64`, self-contained, single file): SHA-256 `411F4CC5...` - **byte-identical** to
+  `publish\I-Total.Transfer.exe`
+- full suite: **449 passed, 0 failed, 2 skipped (451 total), 29 s**
+
+The first clone attempt produced `7C126C55...` instead. The cause was line endings: every C# file was LF
+in the working tree, while `core.autocrlf=true` checked the clone out as CRLF, and the deterministic MVID
+follows the source bytes. `.gitattributes` now sets `* text=auto eol=lf` (`*.sln`, `*.bat` and `*.cmd`
+stay CRLF; `*.zip`, `*.png`, `*.ico` and `*.dmp` are binary), `.editorconfig` matches, and the working
+tree was re-checked-out from the index. With that policy the clone, the source ZIP and the published
+tree all compile to the same bytes.
 
 ## Not validated here
 

@@ -129,7 +129,7 @@ drill that closes them.
 | H2 | Packaged setup executable | BLOCKED BY EXTERNAL REQUIREMENT | Inno Setup 6 script is written (`installer/I-Total.Transfer.iss`); ISCC.exe is not installed here, so no setup EXE was produced. |
 | H3 | Portable ZIP | TESTED AND PASSED | `installer/Build-Installer.ps1` builds it with `INSTALL.txt` and `SHA256SUMS.txt`. |
 | H4 | Code signing and release integrity | BLOCKED BY EXTERNAL REQUIREMENT | `installer/Sign-Artifacts.ps1` signs and verifies with a store thumbprint or a PFX (imported temporarily, password never on the command line), and fails closed. No certificate exists in this workspace; signtool is absent. |
-| H5 | Release artifact hashes and reproducible source archive | TESTED AND PASSED | Recorded in `PROJECT-STATUS.md`; re-verified after every publish. |
+| H5 | Release artifact hashes and reproducible source archive | TESTED AND PASSED | Recorded in `PROJECT-STATUS.md`; re-verified after every publish. A clean `git clone` now rebuilds the byte-identical executable: `.gitattributes` fixes text at LF (`*.sln`/`*.bat`/`*.cmd` stay CRLF), and the 2026-10-24 clone passed 449 tests and published `411F4CC5...`. |
 | H6 | Change log and version | TESTED AND PASSED | `CHANGELOG.md`, version 1.8.0. |
 
 ## I. Documentation and support

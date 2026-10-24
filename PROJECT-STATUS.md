@@ -232,7 +232,7 @@ verification boundary without the source tree. The source ZIP is extracted and *
 `publish\I-Total.Transfer.exe`. On 2026-10-21 the extracted tree produced the then-current
 `4179C72E...` executable (112,113,478 B); on 2026-10-22 the current source ZIP was extracted, rebuilt
 clean (0 warnings / 0 errors) and produced the byte-identical `C953BC08...` executable (112,150,342 B),
-so the source archive is reproducible, not merely unopened.
+so the source archive is reproducible, not merely unopened. On 2026-10-24 a fresh `git clone` was built, tested and published too: it passed 449 tests and produced the byte-identical `411F4CC5...` executable once `.gitattributes` fixed the text line endings at LF (`core.autocrlf` had previously given a clone CRLF sources and a different deterministic MVID).
 
 The deployment ZIP contains the exe, `native\dependencies.json` (kept outside the single-file bundle so
 pins can be edited without a rebuild), `README.md`, `CHANGELOG.md`, `LICENSE`, `PROJECT-STATUS.md`,
