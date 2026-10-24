@@ -14,6 +14,8 @@ public partial class LibraryPage : UserControl, IThemedPage
     public event EventHandler? ExportScanRequested;
 
     private Theme _theme = Theme.NeonInstance;
+    private bool _layingOutToolbar;
+    private bool _narrowToolbar;
     private readonly List<RoundedButton> _chips = [];
     private string _kind = "All";
 
@@ -43,8 +45,60 @@ public partial class LibraryPage : UserControl, IThemedPage
         _verifyButton.Click += (_, _) => VerifyRequested?.Invoke(this, EventArgs.Empty);
         _exportScanButton.Click += (_, _) => ExportScanRequested?.Invoke(this, EventArgs.Empty);
 
+        _repairCheck.Anchor = AnchorStyles.Top | AnchorStyles.Left;         _filterBox.Anchor = AnchorStyles.Top | AnchorStyles.Left;         _toolbarCard.SizeChanged += (_, _) => LayoutToolbar();         SizeChanged += (_, _) => LayoutToolbar();         LayoutToolbar();
+
         ApplyTheme(_theme);
         SetFiles([], 0);
+    }
+
+
+    /// <summary>
+    /// Keeps the library toolbar usable at the shell's minimum width. The Designer places the search
+    /// box, five group chips, Apply and Repair on one 1144 px row; below that the chips and the checkbox
+    /// used to overlap and Apply ran past the card. A second row is used when the width cannot hold one.
+    /// </summary>
+    private void LayoutToolbar()
+    {
+        if (_layingOutToolbar || _toolbarCard.Width <= 0) return;
+        _layingOutToolbar = true;
+        bool rowChanged = false;
+        try
+        {
+            float dpi = Math.Max(1f, DeviceDpi / 96f);
+            int Px(int value) => (int)Math.Round(value * dpi);
+            int width = _toolbarCard.ClientSize.Width;
+            bool narrow = width < Px(1010);
+            if (narrow != _narrowToolbar)
+            {
+                _narrowToolbar = narrow;
+                _root.RowStyles[0] = new RowStyle(SizeType.Absolute, narrow ? Px(108) : Px(70));
+                // Set the card now as well: a TestHost or a design-time surface has no handle, so the
+                // deferred row layout below cannot run there and the card would stay single-row high.
+                _toolbarCard.Height = narrow ? Px(96) : Px(58);
+                rowChanged = true;
+            }
+            _searchIcon.SetBounds(Px(16), Px(17), Px(24), Px(24));
+            if (narrow)
+            {
+                _applyButton.SetBounds(width - Px(114), Px(14), Px(96), Px(30));
+                _filterBox.SetBounds(Px(46), Px(15), Math.Max(Px(120), width - Px(172)), Px(25));
+                _kindRow.SetBounds(Px(18), Px(52), Px(500), Px(38));
+                _repairCheck.SetBounds(Px(536), Px(60), Px(150), Px(22));
+            }
+            else
+            {
+                _applyButton.SetBounds(Px(864), Px(14), Px(96), Px(30));
+                _filterBox.SetBounds(Px(46), Px(15), Px(280), Px(25));
+                _kindRow.SetBounds(Px(340), Px(10), Px(510), Px(38));
+                _repairCheck.SetBounds(width - Px(172), Px(18), Px(150), Px(22));
+            }
+        }
+        finally { _layingOutToolbar = false; }
+        // The row height is applied after this layout pass: PerformLayout during a child's SizeChanged
+        // is ignored by WinForms, which left the toolbar at its single-row height.
+        if (!rowChanged) return;
+        void ApplyRow() { if (!IsDisposed) _root.PerformLayout(); }
+        if (IsHandleCreated) BeginInvoke((Action)ApplyRow); else ApplyRow();
     }
 
     /// <summary>Records the active palette and repaints the chip row, the empty state and the grid.</summary>

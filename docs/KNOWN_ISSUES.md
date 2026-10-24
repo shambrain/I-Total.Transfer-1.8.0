@@ -92,11 +92,12 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
   permission still have no physical observation.
 - **To close:** matrix row IP08 (iPhone lock) or a device that revokes USB permission mid-copy.
 
-### KI-11 - Windows 11 and 200 % scaling unobserved
+### KI-11 - Windows 11 rendering unobserved
 
-- **Impact:** rendering, caption contrast and DPI layout are proven on Windows 10 22H2 at 100 % and 150 %
-  only.
-- **To close:** run the standard visual drill on a Windows 11 machine and at 200 %.
+- **Impact:** rendering, caption contrast and DPI layout are proven on Windows 10 22H2 at 100 %, 150 %
+  and 200 %. The 200 % pass is a real 192-DPI render of the minimum and design sizes, not a desktop
+  screenshot. Windows 11 has not been run.
+- **To close:** run the standard visual drill on a Windows 11 machine.
 
 ### KI-12 - No physical iOS wireless sender
 

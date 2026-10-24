@@ -25,6 +25,7 @@ public partial class WirelessPage : UserControl, IThemedPage
 
     private Theme _theme = Theme.NeonInstance;
     private bool _running;
+    private bool _layingOutSettings;
 
     public WirelessPage()
     {
@@ -46,6 +47,10 @@ public partial class WirelessPage : UserControl, IThemedPage
             AutoApproveChanged?.Invoke(_autoApproveCheck.Checked);
         };
         _enableCheck.CheckedChanged += (_, _) => UpdateStartEnabled();
+        _settingsCard.AutoScroll = true;
+        _settingsCard.SizeChanged += (_, _) => LayoutSettingsCard();
+        SizeChanged += (_, _) => LayoutSettingsCard();
+        LayoutSettingsCard();
         ApplyTheme(_theme);
         SetRunning(false, "", false);
         SetPending([]);
@@ -60,6 +65,76 @@ public partial class WirelessPage : UserControl, IThemedPage
         _qrBox.BackColor = Color.White;
         _ticketStateLabel.ForeColor = _theme.Muted;
     }
+
+    /// <summary>
+    /// Lays the settings card out for the width it actually has. The Designer sizes every child for a
+    /// 450 px card; at the shell's minimum window the card is about 360 px, where the three transport
+    /// buttons and the TLS caption used to run past its edge. The card scrolls vertically so the sender
+    /// notice stays reachable in a short window.
+    /// </summary>
+    private void LayoutSettingsCard()
+    {
+        if (_layingOutSettings || _settingsCard.Width <= 0) return;
+        _layingOutSettings = true;
+        try
+        {
+            float dpi = Math.Max(1f, DeviceDpi / 96f);
+            int Px(int value) => (int)Math.Round(value * dpi);
+            int inset = Px(18);
+            int inner = Math.Max(Px(220),
+                _settingsCard.ClientSize.Width - inset * 2 - SystemInformation.VerticalScrollBarWidth);
+
+            _tlsCheck.AutoSize = false;
+            _autoApproveCheck.AutoSize = false;
+            int tlsHeight = CaptionHeight(_tlsCheck.Text, _tlsCheck.Font, Math.Max(Px(80), inner - Px(30)), Px(4), Px(19));
+            _tlsCheck.SetBounds(inset, Px(162), inner, tlsHeight);
+            int autoY = Px(162) + tlsHeight + Px(6);
+            int autoHeight = CaptionHeight(_autoApproveCheck.Text, _autoApproveCheck.Font, Math.Max(Px(80), inner - Px(30)), Px(4), Px(19));
+            _autoApproveCheck.SetBounds(inset, autoY, inner, autoHeight);
+            int buttonsY = autoY + autoHeight + Px(14);
+            int delta = buttonsY - Px(220);
+
+            int gap = Px(12);
+            int available = Math.Max(Px(240), inner - gap * 2);
+            double design = Px(150) + Px(120) + Px(120);
+            double scale = Math.Min(1.0, available / design);
+            int startWidth = Math.Max(TextWidth(_startButton.Text, _startButton.Font) + Px(34),
+                (int)Math.Round(Px(150) * scale));
+            int stopWidth = Math.Max(TextWidth(_stopButton.Text, _stopButton.Font) + Px(26),
+                (int)Math.Round(Px(120) * scale));
+            int pairWidth = Math.Max(TextWidth(_pairButton.Text, _pairButton.Font) + Px(26), available - startWidth - stopWidth);
+            int overflow = startWidth + stopWidth + pairWidth - available;
+            if (overflow > 0)
+            {
+                // Give the extra back from the two secondary buttons first, then from the primary one.
+                int take = Math.Min(overflow, Math.Max(0, stopWidth - (TextWidth(_stopButton.Text, _stopButton.Font) + Px(12))));
+                stopWidth -= take; overflow -= take;
+                take = Math.Min(overflow, Math.Max(0, pairWidth - (TextWidth(_pairButton.Text, _pairButton.Font) + Px(12))));
+                pairWidth -= take; overflow -= take;
+                startWidth = Math.Max(1, startWidth - overflow);
+            }
+            _startButton.SetBounds(inset, buttonsY, startWidth, Px(36));
+            _stopButton.SetBounds(inset + startWidth + gap, buttonsY, stopWidth, Px(36));
+            _pairButton.SetBounds(inset + startWidth + gap + stopWidth + gap, buttonsY, pairWidth, Px(36));
+
+            _statusLabel.SetBounds(inset, Px(264) + delta, inner, Px(20));
+            _pairUrlLabel.Location = new Point(inset, Px(292) + delta);
+            _pairUrlBox.SetBounds(inset, Px(312) + delta, inner, Px(27));
+            _qrBox.SetBounds(inset, Px(350) + delta, Px(150), Px(150));
+            _ticketStateLabel.SetBounds(Px(184), Px(352) + delta, Math.Max(Px(120), inner - Px(166)), Px(150));
+            _noticeLabel.SetBounds(inset, Px(508) + delta, inner, Px(140));
+            _settingsCard.AutoScrollMinSize = new Size(0, Px(508) + delta + Px(140) + Px(12));
+        }
+        finally { _layingOutSettings = false; }
+    }
+
+    private static int TextWidth(string text, Font font) =>
+        TextRenderer.MeasureText(text, font).Width;
+
+    private static int CaptionHeight(string text, Font font, int width, int padding, int minimum) =>
+        Math.Max(minimum,
+            TextRenderer.MeasureText(text, font, new Size(width, 0),
+                TextFormatFlags.WordBreak | TextFormatFlags.TextBoxControl).Height + padding);
 
     [Browsable(false)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]

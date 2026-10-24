@@ -129,7 +129,7 @@ keeps the window caption glyphs at or above 3:1.
   attached. Neither image is used to claim a device action happened.
 - The design screens are 1440x900. The runtime is DPI-scaled; the real window on this machine is
   2152x1380 physical at 150 %, which is 1434x920 logical.
-- 200 % scaling and Windows 11 rendering have not been observed. They remain open in `KNOWN_ISSUES.md`
+- Windows 11 rendering has not been observed; the 200 % layout was rendered on 2026-10-24. See `KNOWN_ISSUES.md`.
   (KI-11) and `DEVICE_TEST_MATRIX.md` (EN2/EN3).
 
 ## 7. Changing the design

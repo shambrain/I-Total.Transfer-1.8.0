@@ -234,4 +234,80 @@ public sealed class PageControlTests : WinFormsTestBase
         Assert.IsTrue(rendered <= available,
             $"\"{tls.Text}\" needs {rendered} px but only {available} px fit in {card.Name} ({card.Width} px wide).");
     }
+
+    [TestMethod]
+    public void TheWirelessCardReflowsAtTheMinimumWindowWidth()
+    {
+        // The Designer sizes the card for a 450 px column; the shell's minimum window leaves about 360.
+        using var page = new WirelessPage { Size = new Size(884, 532) };
+        page.PerformLayout();
+        CardPanel card = Find<CardPanel>(page, "_settingsCard");
+        FluentCheckBox tls = Find<FluentCheckBox>(page, "_tlsCheck");
+        FluentCheckBox auto = Find<FluentCheckBox>(page, "_autoApproveCheck");
+        RoundedButton start = Find<RoundedButton>(page, "_startButton");
+        RoundedButton stop = Find<RoundedButton>(page, "_stopButton");
+        RoundedButton pair = Find<RoundedButton>(page, "_pairButton");
+
+        Assert.IsTrue(tls.Height > tls.Font.Height,
+            "The TLS caption must wrap onto a second line instead of running past the card.");
+        Assert.IsTrue(auto.Height > auto.Font.Height,
+            "The auto-approval caption must wrap as well.");
+        Assert.IsTrue(start.Right < stop.Left && stop.Right < pair.Left,
+            "The three transport buttons must not overlap.");
+        Assert.IsTrue(pair.Right <= card.ClientSize.Width,
+            $"The New ticket button ends at {pair.Right} in a {card.ClientSize.Width} px card.");
+        foreach (RoundedButton button in new[] { start, stop, pair })
+            Assert.IsTrue(TextRenderer.MeasureText(button.Text, button.Font).Width + 8 <= button.Width,
+                $"'{button.Text}' must fit inside its {button.Width} px button.");
+        Assert.IsTrue(card.AutoScroll, "A short window must be able to scroll to the sender notice.");
+        Assert.IsTrue(card.AutoScrollMinSize.Height >= card.ClientSize.Height,
+            "The notice defines a scrollable extent taller than the visible card.");
+    }
+
+    [TestMethod]
+    public void TheLibraryToolbarWrapsInsteadOfOverlappingAtTheMinimumWidth()
+    {
+        using var page = new LibraryPage { Size = new Size(884, 532) };
+        page.PerformLayout();
+        CardPanel card = Find<CardPanel>(page, "_toolbarCard");
+        FlowLayoutPanel kind = Find<FlowLayoutPanel>(page, "_kindRow");
+        FluentCheckBox repair = Find<FluentCheckBox>(page, "_repairCheck");
+        RoundedButton apply = Find<RoundedButton>(page, "_applyButton");
+        TextBox filter = Find<TextBox>(page, "_filterBox");
+
+        Assert.IsTrue(card.Height > 70, "The toolbar must take two rows when one cannot hold it.");
+        Assert.IsTrue(kind.Bottom <= card.ClientSize.Height, "The group chips must stay inside the card.");
+        Assert.IsTrue(repair.Left > kind.Right && repair.Right <= card.ClientSize.Width,
+            "Repair missing must follow the chips, not sit on top of them.");
+        Assert.IsTrue(apply.Right <= card.ClientSize.Width, "Apply must stay inside the card.");
+        Assert.IsTrue(apply.Left > filter.Right, "Apply must not cover the filter box.");
+    }
+
+    [TestMethod]
+    public void TheHistoryToolbarGrowsSoTheDatabasePathStaysVisible()
+    {
+        using var page = new HistoryPage { Size = new Size(884, 532) };
+        page.PerformLayout();
+        FlowLayoutPanel toolbar = Find<FlowLayoutPanel>(page, "_toolbar");
+        Label database = Find<Label>(page, "_databaseLabel");
+
+        Assert.IsTrue(toolbar.Height > 46, "The toolbar must grow to a second row for the database path.");
+        Assert.IsTrue(database.Bottom <= toolbar.ClientSize.Height,
+            "The database path must render inside the toolbar rather than behind the sessions card.");
+    }
+
+    [TestMethod]
+    public void TheTransferLogToolbarWrapsInsteadOfHidingClearView()
+    {
+        using var page = new TransferPage { Size = new Size(884, 532) };
+        page.PerformLayout();
+        FlowLayoutPanel toolbar = Find<FlowLayoutPanel>(page, "_logToolbar");
+        RoundedButton clear = Find<RoundedButton>(page, "_clearLogButton");
+
+        Assert.AreEqual(4, toolbar.Controls.Count);
+        Assert.IsTrue(toolbar.Height > 34, "Four log actions need a second row at this width.");
+        Assert.IsTrue(clear.Bottom <= toolbar.ClientSize.Height,
+            "Clear view must be inside the grown toolbar, not clipped by the log box.");
+    }
+
 }

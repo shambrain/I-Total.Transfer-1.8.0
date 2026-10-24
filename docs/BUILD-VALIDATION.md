@@ -6,7 +6,7 @@
   `net10.0-windows`.
 - `dotnet build I-Total.Transfer.sln -c Release` → **0 warnings, 0 errors**.
 - `dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s` → **449
-  passed, 0 failed, 2 skipped (opt-in hardware tests), 451 total**, in about thirty seconds.
+  passed, 0 failed, 2 skipped (opt-in hardware tests), 455 total**, in about thirty seconds.
   The 2026-10-21 addition is the two-phone isolation guard (`DeviceSelectionGuardTests` 6,
   `ScanIdentityTests` 8); the 2026-10-22 additions are the Appearance preview suite (4), the expanded
   token/contrast coverage and the no-device neutral-wording regression, the non-elevated private-LAN bind, the five page-control tests and the filtered-plan summary test, plus the 2026-10-24 96-DPI
@@ -298,7 +298,7 @@ A fresh `git clone` of the committed tree to a temporary folder was built, teste
 - build: **0 warnings, 0 errors**
 - publish (`win-x64`, self-contained, single file): SHA-256 `411F4CC5...` - **byte-identical** to
   `publish\I-Total.Transfer.exe`
-- full suite: **449 passed, 0 failed, 2 skipped (451 total), 29 s**
+- full suite: **453 passed, 0 failed, 2 skipped (455 total), 27 s**
 
 The first clone attempt produced `7C126C55...` instead. The cause was line endings: every C# file was LF
 in the working tree, while `core.autocrlf=true` checked the clone out as CRLF, and the deterministic MVID

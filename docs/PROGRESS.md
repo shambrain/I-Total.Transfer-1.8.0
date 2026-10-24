@@ -43,11 +43,11 @@ dotnet build I-Total.Transfer.sln -c Release --no-incremental
 # Build succeeded. 0 Warning(s), 0 Error(s)
 
 dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s
-# Passed! - Failed: 0, Passed: 449, Skipped: 2, Total: 451, Duration: 29 s
+# Passed! - Failed: 0, Passed: 453, Skipped: 2, Total: 455, Duration: 27 s
 
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-# publish\I-Total.Transfer.exe: 112,150,342 B
-# SHA-256 411F4CC5CD8303D10E6C542AE8CD28AD9EAAEE82C60C720912FD371FA8988CFF
+# publish\I-Total.Transfer.exe: 112,154,438 B
+# SHA-256 945E2D1FF5E4169C2DE1412C7D70DBD90B9FE20A5E49249657D0632FFF85337A
 ```
 
 ### Second real defect found during release packaging
@@ -103,13 +103,48 @@ dotnet build I-Total.Transfer.sln -c Release --no-incremental
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 # 411F4CC5CD8303D10E6C542AE8CD28AD9EAAEE82C60C720912FD371FA8988CFF  (byte-identical to publish\)
 dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s
-# Passed! - Failed: 0, Passed: 449, Skipped: 2, Total: 451, Duration: 29 s
+# Passed! - Failed: 0, Passed: 453, Skipped: 2, Total: 455, Duration: 27 s
 ```
+
+### Minimum-window layout audit
+
+The shell's declared minimum (1160x740) was rendered with the 96-DPI harness for all seven pages. Four
+real clips appeared and were fixed:
+
+- Wireless: the TLS caption lost its bracket, `New ticket` was cut to `Ne`, and the sender notice was
+  below the card. The card now reflows for its width (captions wrap, buttons keep their labels, a
+  vertical scrollbar reaches the notice) in `WirelessPage.LayoutSettingsCard`, and `FluentCheckBox`/
+  `FluentRadioButton` wrap a caption that does not fit instead of only ellipsizing it.
+- Library: `Repair missing` sat on top of the Files chip and Apply ran off the card. The toolbar now uses
+  two rows below 1010 px (`LibraryPage.LayoutToolbar`).
+- Transfer: the log toolbar hid `Clear view`; it now wraps and grows. The queue columns were rebalanced so
+  `Size`, `Verification` and `Note` all render at this width.
+- History: the database path wrapped behind the sessions card; the toolbar now grows.
+
+`PageControlTests` gained four cases at 884x532 (the shell's minimum content area); each one fails on the
+old layout. Suite: **453 passed, 2 skipped, 455 total, 27 s**.
+
+### 200 % DPI render
+
+This session's active display is 3840x2160 at **192 DPI (200 %)**. A PerMonitorV2 harness rendered the
+real `MainForm` at the minimum logical window (2320x1480 device) and at the design size (2840x1800) for
+all seven pages: text, cards, chips and the reflowed toolbars scale uniformly and nothing clips.
+
+The window is larger than the logical desktop (1920x1080), so these are **200 % DPI renders**, not
+200 % desktop screenshots. Captures: `%TEMP%\opencode\ui200\*-200-min.png` and `*-200-design.png`. The
+200 % check in `DEVICE_TEST_MATRIX.md` (EN3) and UI-16 now records the pass; Windows 11 remains open.
+
+At 200 % the `Received (UTC)` header wrapped past its row, so the column is now `Received` with the UTC
+wording in its tooltip.
 
 ### Files changed
 
 ```
 src/I-Total.Transfer/UI/Pages/WirelessPage.Designer.cs
+src/I-Total.Transfer/UI/Pages/LibraryPage.cs
+src/I-Total.Transfer/UI/Pages/TransferPage.cs
+src/I-Total.Transfer/UI/Pages/HistoryPage.cs
+src/I-Total.Transfer/UI/Controls/FluentSelection.cs
 src/I-Total.Transfer/Services/ConnectionDiagnostics.cs
 tests/I-Total.Transfer.Tests/PageControlTests.cs
 tests/I-Total.Transfer.Tests/ConnectionDiagnosticsTests.cs
@@ -125,11 +160,11 @@ docs/MASTER_IMPLEMENTATION_PLAN.md
 ### Packaged setup executable
 
 `winget install --id JRSoftware.InnoSetup` installed Inno Setup 6.7.3. `Build-Installer.ps1
--ExpectedSha256 411F4CC5...` then produced `dist\installer\I-Total.Transfer-1.8.0-setup.exe` in addition to
+-ExpectedSha256 945E2D1F...` then produced `dist\installer\I-Total.Transfer-1.8.0-setup.exe` in addition to
 the portable ZIP. The setup was exercised silently:
 
 - `/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=<temp>` exited 0; the installed exe hashed to
-  `411F4CC5...`; `unins000.exe`, the HKCU uninstall entry (`I-Total Transfer` 1.8.0, Deveg) and two Start
+  `945E2D1F...`; `unins000.exe`, the HKCU uninstall entry (`I-Total Transfer` 1.8.0, Deveg) and two Start
   Menu entries existed; no firewall rule was created; `%APPDATA%` and the trial ledger were untouched
 - the installed application launched and exited 0
 - `unins000.exe /VERYSILENT` exited 0 and removed the folder, the HKCU entry and the Start Menu group while
@@ -140,26 +175,30 @@ The setup is **unsigned**: no certificate and no Windows SDK signing tools are p
 
 ### Packaging
 
-- `installer\Build-Installer.ps1 -Version 1.8.0 -ExpectedSha256 411F4CC5...` produced the portable ZIP and the
+- `installer\Build-Installer.ps1 -Version 1.8.0 -ExpectedSha256 945E2D1F...` produced the portable ZIP and the
   Inno Setup executable; the container hashes are in `dist\installer\SHA256SUMS.txt`. Nothing is
   Authenticode-signed.
 - The deployment and source ZIPs were regenerated with the new executable and the updated documents.
   `dist\SHA256SUMS.txt` and `dist\installer\SHA256SUMS.txt` are the authoritative hash records.
-- Verification: the deployment ZIP's embedded exe hashes to `411F4CC5...`; the extracted source ZIP
-  rebuilds and publishes to the byte-identical `411F4CC5...` executable (112,150,342 B).
+- Verification: the deployment ZIP's embedded exe hashes to `945E2D1F...`; the extracted source ZIP
+  rebuilds and publishes to the byte-identical `945E2D1F...` executable (112,154,438 B).
 - The portable ZIP was extracted and its own installer run with no `-SourceDir`: install returned
   `{"ok":true,...}` with the executable, manifest and uninstaller present and the HKCU key created; the
   installed uninstaller then removed the folder and key and kept `settings.json`. The first attempt failed
   with exit 3, which is the defect fixed above.
+- The final archives were rebuilt on 2026-10-25 from the `945E2D1F...` publish. The final setup was
+  installed silently into a temporary folder (installed exe hash matched), launched (exit 0) and
+  uninstalled (folder, HKCU entry and shortcuts removed; `%APPDATA%` kept); no firewall rule was created.
 
 ### Blockers and limits
 
-- A *native* 100 % desktop capture is still impossible on this host (150 % display). The 96-DPI render
-  covers the layout question; it is not a DWM-composited screenshot.
+- A *native* 100 % desktop capture is still impossible here: the active display is 3840x2160 at 200 %
+  (the earlier 150 % evidence came from the 3440x1440 configuration). The 96-DPI and 200 % renders cover
+  the layout question; neither is a DWM-composited screenshot.
 - iPhone lock / revoked USB permission still has no physical observation; the HUAWEI keeps MTP active
   while locked, so no Android lock drill applies.
 - Production licence issuer/purchase URL, Steamworks, Authenticode certificate and `signtool` remain
-  external blockers. Windows 11, 200 % scaling and audible cues remain unobserved.
+  external blockers. Windows 11 and audible cues remain unobserved; the 200 % layout is now rendered.
 
 ### Next task
 
@@ -231,7 +270,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --filter "FullyQu
 # Passed! Failed: 0, Passed: 50, Total: 50
 
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-# publish\I-Total.Transfer.exe: 112,150,342 B
+# publish\I-Total.Transfer.exe: 112,154,438 B
 # SHA-256 C953BC086CCAD9B1948DCA20634BC6F55631571A6FD033810D9AF99CFFFF26D5
 ```
 

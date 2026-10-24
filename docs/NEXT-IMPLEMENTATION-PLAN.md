@@ -107,4 +107,4 @@ What remains, in order:
    and revocation drills.
 4. **Steamworks**: confirm eligibility, then either integrate the SDK or document the signed-entitlement
    channel as the shipping model.
-5. **Presentation**: Windows 11 visual drill, 200 % DPI, a real iOS wireless sender.
+5. **Presentation**: Windows 11 visual drill and a real iOS wireless sender; 200 % DPI is now rendered.

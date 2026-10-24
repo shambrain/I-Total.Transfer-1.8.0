@@ -59,6 +59,17 @@ public class FluentCheckBox : CheckBox
         base.OnClick(e);
     }
 
+    /// <summary>
+    /// True when the caption is wider than the painted area and the control is tall enough to hold a
+    /// second line. The box is top-aligned and the text wraps in that case.
+    /// </summary>
+    private bool WrapsCaption(int box, out int textWidth, out Size oneLine)
+    {
+        textWidth = Math.Max(1, Width - box - Gap);
+        oneLine = TextRenderer.MeasureText(Text, Font, new Size(int.MaxValue, 0), TextFormatFlags.SingleLine);
+        return oneLine.Width > textWidth && Height > oneLine.Height + 2;
+    }
+
     protected override void OnPaint(PaintEventArgs e)
     {
         Graphics g = e.Graphics;
@@ -66,7 +77,8 @@ public class FluentCheckBox : CheckBox
         g.Clear(HostColor);
 
         int box = BoxSize;
-        var rect = new Rectangle(0, Math.Max(0, (Height - box) / 2), box, box);
+        bool wrap = WrapsCaption(box, out int textWidth, out Size oneLine);
+        var rect = new Rectangle(0, wrap ? 0 : Math.Max(0, (Height - box) / 2), box, box);
         int radius = Surface.Radius(this, 5);
 
         bool on = Checked || CheckState == CheckState.Indeterminate;
@@ -105,10 +117,12 @@ public class FluentCheckBox : CheckBox
         }
 
         Color fore = Enabled ? ForeColor : Theme.Blend(ForeColor, HostColor, 0.5);
-        var textArea = new Rectangle(box + Gap, 0, Math.Max(1, Width - box - Gap), Height);
-        TextRenderer.DrawText(g, Text, Font, textArea, fore,
-            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis |
-            (UseMnemonic ? 0 : TextFormatFlags.NoPrefix));
+        var textArea = new Rectangle(box + Gap, 0, textWidth, Height);
+        TextFormatFlags flags = TextFormatFlags.Left | (UseMnemonic ? 0 : TextFormatFlags.NoPrefix) |
+            (wrap
+                ? TextFormatFlags.WordBreak | TextFormatFlags.Top
+                : TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        TextRenderer.DrawText(g, Text, Font, textArea, fore, flags);
     }
 }
 
@@ -154,6 +168,14 @@ public class FluentRadioButton : RadioButton
     protected override void OnCheckedChanged(EventArgs e) { Invalidate(); base.OnCheckedChanged(e); }
     protected override void OnEnabledChanged(EventArgs e) { Invalidate(); base.OnEnabledChanged(e); }
 
+    /// <summary>True when the caption needs to wrap onto more than one line in this control.</summary>
+    private bool WrapsCaption(int box, out int textWidth, out Size oneLine)
+    {
+        textWidth = Math.Max(1, Width - box - Gap);
+        oneLine = TextRenderer.MeasureText(Text, Font, new Size(int.MaxValue, 0), TextFormatFlags.SingleLine);
+        return oneLine.Width > textWidth && Height > oneLine.Height + 2;
+    }
+
     protected override void OnPaint(PaintEventArgs e)
     {
         Graphics g = e.Graphics;
@@ -161,7 +183,8 @@ public class FluentRadioButton : RadioButton
         g.Clear(HostColor);
 
         int box = BoxSize;
-        var rect = new Rectangle(0, Math.Max(0, (Height - box) / 2), box, box);
+        bool wrap = WrapsCaption(box, out int textWidth, out Size oneLine);
+        var rect = new Rectangle(0, wrap ? 0 : Math.Max(0, (Height - box) / 2), box, box);
         using var path = new GraphicsPath();
         path.AddEllipse(rect);
 
@@ -188,9 +211,11 @@ public class FluentRadioButton : RadioButton
         }
 
         Color fore = Enabled ? ForeColor : Theme.Blend(ForeColor, HostColor, 0.5);
-        var textArea = new Rectangle(box + Gap, 0, Math.Max(1, Width - box - Gap), Height);
-        TextRenderer.DrawText(g, Text, Font, textArea, fore,
-            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis |
-            (UseMnemonic ? 0 : TextFormatFlags.NoPrefix));
+        var textArea = new Rectangle(box + Gap, 0, textWidth, Height);
+        TextFormatFlags flags = TextFormatFlags.Left | (UseMnemonic ? 0 : TextFormatFlags.NoPrefix) |
+            (wrap
+                ? TextFormatFlags.WordBreak | TextFormatFlags.Top
+                : TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        TextRenderer.DrawText(g, Text, Font, textArea, fore, flags);
     }
 }

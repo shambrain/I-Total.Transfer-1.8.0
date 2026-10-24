@@ -18,7 +18,12 @@ public partial class TransferPage : UserControl, IThemedPage
     public TransferPage()
     {
         InitializeComponent();
-        Surface.FillColumns(_queueGrid, 38, 10, 12, 14, 26);
+        Surface.FillColumns(_queueGrid, 33, 11, 12, 20, 24);
+        // Four log actions need 436 px on one row. The toolbar is a FlowLayoutPanel, so let it wrap
+        // and grow instead of hiding the last button behind its fixed 34 px height at a narrow window.
+        _logToolbar.WrapContents = true;
+        _logToolbar.AutoSize = true;
+        _logToolbar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         _theme = Theme.NeonInstance;
         _openDestinationButton.Click += (_, _) => OpenDestinationRequested?.Invoke(this, EventArgs.Empty);
         _openLogButton.Click += (_, _) => OpenLogRequested?.Invoke(this, EventArgs.Empty);

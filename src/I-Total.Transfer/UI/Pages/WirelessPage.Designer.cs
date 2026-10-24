@@ -484,7 +484,8 @@ partial class WirelessPage
         _shaColumn.Name = "_shaColumn";
         _shaColumn.ReadOnly = true;
         _shaColumn.Width = 120;
-        _receivedColumn.HeaderText = "Received (UTC)";
+        _receivedColumn.HeaderText = "Received";
+        _receivedColumn.ToolTipText = "Received (UTC)";
         _receivedColumn.Name = "_receivedColumn";
         _receivedColumn.ReadOnly = true;
         _receivedColumn.Width = 130;

@@ -15,6 +15,11 @@ public partial class HistoryPage : UserControl, IThemedPage
         // Fill mode keeps every header readable at any window width; the weights keep paths dominant.
         Surface.FillColumns(_sessionsGrid, 26, 30, 24, 20);
         Surface.FillColumns(_problemsGrid, 34, 13, 13, 13, 27);
+        // The database path needs a second row when the window is narrow; grow the toolbar instead of
+        // letting the label wrap behind the sessions card where it cannot be read.
+        _toolbar.AutoSize = true;
+        _toolbar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        _root.RowStyles[0] = new RowStyle(SizeType.AutoSize);
         _refreshButton.Click += (_, _) => RefreshRequested?.Invoke(this, EventArgs.Empty);
         _openDestinationButton.Click += (_, _) => OpenDestinationRequested?.Invoke(this, EventArgs.Empty);
         Theme.DarkInstance.ApplyAll(this);
