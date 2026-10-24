@@ -1,0 +1,90 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- Windows 10 1809+ / Windows 11 x64, built with the .NET 10 SDK.
+         net10.0-windows is the supported desktop TFM whose Windows Forms ships the finalised,
+         non-experimental light/dark colour-mode support (Application.SetColorMode), which is what
+         lets the native Win32 common controls follow the app's Fluent theme. The minimum OS is
+         declared in app.manifest. -->
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>I-Total.Transfer</AssemblyName>
+    <RootNamespace>ITotalTransfer</RootNamespace>
+    <Version>1.8.0</Version>
+    <FileVersion>1.8.0.0</FileVersion>
+    <Authors>Deveg</Authors>
+    <Product>I-Total Transfer</Product>
+    <Company>Deveg</Company>
+    <Description>Reliable, verified, bidirectional iPhone-to-Windows media transfer.</Description>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <!-- Commercial build inputs. TrialJobLimit and PurchaseUrl are compile-time settings so the shipped
+         executable cannot be talked into a longer trial by an environment variable. The public key is
+         embedded only when a maintainer drops Licensing\public-key.pem into the source tree; without it
+         direct licence activation fails closed with a clear message and the trial is unaffected. No
+         private key is ever part of this project. -->
+    <TrialJobLimit Condition="'$(TrialJobLimit)' == ''">3</TrialJobLimit>
+    <PurchaseUrl Condition="'$(PurchaseUrl)' == ''"></PurchaseUrl>
+    <!-- DPI + visual styles for a modern, accessible WinForms surface. -->
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationVisualStyles>true</ApplicationVisualStyles>
+    <ApplicationUseCompatibleTextRendering>false</ApplicationUseCompatibleTextRendering>
+    <!-- Keep the build deterministic and quiet. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <!-- The source ZIP is extracted and rebuilt as part of packaging, and it must produce the same exe.
+         A portable PDB records the absolute path of the build's object directory in the executable's
+         debug directory, so the same sources built elsewhere produced a different hash. Release ships
+         without a PDB (method names and messages remain in stack traces); the Debug/test build keeps
+         symbols and line numbers. -->
+    <DebugType>None</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Indirection-free build metadata: read once by LicenseOptions.ForThisBuild. -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>TrialJobLimit</_Parameter1>
+      <_Parameter2>$(TrialJobLimit)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>PurchaseUrl</_Parameter1>
+      <_Parameter2>$(PurchaseUrl)</_Parameter2>
+    </AssemblyAttribute>
+    <EmbeddedResource Include="Licensing\public-key.pem"
+                      Condition="Exists('Licensing\public-key.pem')"
+                      LogicalName="ITotalTransfer.Licensing.public-key.pem" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 10.x is the .NET 10-aligned line; it also moves SQLitePCLRaw.lib.e_sqlite3 past the
+         NU1903 advisory (GHSA-2m69-gcr7-jv3q) that the 8.0.x line pulled in. -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="native\dependencies.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <!-- Keep the pin manifest outside the single-file bundle: the verifier reads it from
+           AppContext.BaseDirectory\native, and a maintainer must be able to edit pins without a rebuild. -->
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </None>
+    <!-- The application icon is embedded so the header badge and window icon load from the
+         single-file executable without relying on a companion file next to it. -->
+    <EmbeddedResource Include="app.ico" LogicalName="ITotalTransfer.app.ico" />
+    <EmbeddedResource Include="app.png" LogicalName="ITotalTransfer.app.png" />
+  </ItemGroup>
+
+</Project>
