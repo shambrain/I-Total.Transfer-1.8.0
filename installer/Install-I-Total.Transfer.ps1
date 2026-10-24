@@ -64,6 +64,15 @@ if (-not $StartMenuDir) { $StartMenuDir = Join-Path $env:APPDATA 'Microsoft\Wind
 $InstallDir = [System.IO.Path]::GetFullPath($InstallDir)
 $UserDataDir = [System.IO.Path]::GetFullPath($UserDataDir)
 
+# The installed copy doubles as the uninstaller. README-INSTALL.txt tells the operator to run it from the
+# installation folder with only -Uninstall, so when no -InstallDir was given and that folder carries the
+# manifest this script itself wrote, remove that folder instead of the default one. The manifest test keeps
+# a portable package (which has no manifest) from ever being treated as an installation.
+if ($Uninstall -and -not $PSBoundParameters.ContainsKey('InstallDir') -and
+    (Test-Path -LiteralPath (Join-Path $PSScriptRoot $ManifestName))) {
+    $InstallDir = [System.IO.Path]::GetFullPath($PSScriptRoot)
+}
+
 function Write-Result($Value) {
     if ($Json) {
         Write-Output ($Value | ConvertTo-Json -Compress)

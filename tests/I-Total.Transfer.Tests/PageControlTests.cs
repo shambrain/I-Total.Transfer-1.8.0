@@ -219,4 +219,19 @@ public sealed class PageControlTests : WinFormsTestBase
         StringAssert.Contains(Find<Label>(page, "_statusLabel").Text, "no certificate");
         StringAssert.Contains(Find<FluentCheckBox>(page, "_tlsCheck").Text, "matching certificate");
     }
+
+    [TestMethod]
+    public void WirelessTlsCaptionFitsInsideItsCardAtTheDesignedWidth()
+    {
+        // A 96-DPI render of the real shell showed the caption running past the settings card, cutting
+        // the closing bracket. The caption is measured as it is painted, not from the Designer hint.
+        using var page = new WirelessPage { Size = new Size(1100, 640) };
+        page.PerformLayout();
+        FluentCheckBox tls = Find<FluentCheckBox>(page, "_tlsCheck");
+        Control card = tls.Parent ?? throw new InvalidOperationException("The TLS caption has no card.");
+        int rendered = TextRenderer.MeasureText(tls.Text, tls.Font).Width + 18; // 18 px reserves the check glyph.
+        int available = card.Width - (tls.Left * 2); // the same inset on the right edge as on the left.
+        Assert.IsTrue(rendered <= available,
+            $"\"{tls.Text}\" needs {rendered} px but only {available} px fit in {card.Name} ({card.Width} px wide).");
+    }
 }

@@ -5,7 +5,7 @@ is still open. Detailed evidence lives in `TEST-PLAN.md`, `BUILD-VALIDATION.md`,
 `PERFORMANCE-AUDIT.md`, `ARCHITECTURE-REVIEW.md`, `WIRELESS.md` and `RECOVERY.md`; this file is the index
 and the state of record.
 
-Last reconciled: 2026-10-22, against v1.8.0 source and the 448-test Release suite (446 passed, 2 skipped).
+Last reconciled: 2026-10-24, against v1.8.0 source and the 450-test Release suite (448 passed, 2 skipped).
 The UI design/token map is in `UI-DESIGN-SYSTEM.md`; the requirement-to-evidence map is in
 `UI-REQUIREMENTS-MATRIX.md`.
 
@@ -30,7 +30,7 @@ drill that closes them.
 | --- | --- | --- | --- |
 | A1 | .NET 10 WinForms desktop app, Windows 10 1809+ and Windows 11 x64 | TESTED AND PASSED (Windows 10 build 19045) | Builds and runs on this machine; manifest minimum OS declared. Windows 11 rendering remains unobserved (see D-test matrix). |
 | A2 | Banner-derived palette; Neon default, Slate, Light, System; legacy `Dark` alias | TESTED AND PASSED | `ThemeTests` pins the banner-sampled Neon values, the charcoal Slate stack with its restrained steel-blue accent, the Light palette, the full semantic token set and measured WCAG contrast. `AppearanceSettingsTests` drives the three real preview controls. The editable FigCraft source and renders are recorded in `UI-DESIGN-SYSTEM.md`; live captures are in `UI-REQUIREMENTS-MATRIX.md`. |
-| A3 | Borderless Fluent chrome, resizable, DPI-aware at 100/150/200 % | TESTED AND PASSED (100 %, 150 %) | 150 % drills recorded; the real window is 2152x1380 physical at 150 %. The Overview action row was pulled above the fold on 2026-10-22. 200 % not observed. |
+| A3 | Borderless Fluent chrome, resizable, DPI-aware at 100/150/200 % | TESTED AND PASSED (100 %, 150 %) | 150 % drills recorded; the real window is 2152x1380 physical at 150 %. A 96-DPI harness render on 2026-10-24 covers the 100 % layout (all seven pages, three themes). The Overview action row was pulled above the fold on 2026-10-22. 200 % not observed. |
 | A4 | Glossy squircle application icon | TESTED AND PASSED (asset present) | `app.ico`/`app.png` shipped; visible in window and taskbar. |
 | A5 | Single-file self-contained x64 publish | TESTED AND PASSED | Publish command and artifact hashes in `PROJECT-STATUS.md`. |
 
@@ -85,7 +85,7 @@ drill that closes them.
 | E5 | Diagnostics page and exportable, redacted log bundle | TESTED AND PASSED | `ConnectionDiagnostics`, `DiagnosticsBundle`, redaction policy. The bundle now also carries a licence/trial summary - standing, channel and the counter only, never the purchase id, ledger entries or fingerprints - which was exported from the published build and inspected on 2026-10-20. |
 | E6 | Audible UI cues, optional | IMPLEMENTED, NOT FULLY VERIFIED (audibility) | `UiSound` synthesises tones; harness cannot hear them. |
 | E7 | Theme choice is a real control path: previews select the same theme as the combo, persist, and never fake a palette | TESTED AND PASSED | `ThemeSwatch`, `SettingsPage` Appearance section, `AppearanceSettingsTests` (4 real-control tests), `ThemeTests`. Neon is the fresh default; Light and Slate are distinct; `System` resolves only to Light or Neon. |
-| E8 | Every visible control performs a real action, is disabled with a stated reason, or is documented as future work | TESTED AND PASSED at 150 % + automated; 100 % pixel capture OPEN | All seven pages are audited row by row in `UI-REQUIREMENTS-MATRIX.md` (Overview, Appearance, Backup & queue, Media library, Wireless import, History, Diagnostics). The audit fixed five real defects and added `PageControlTests` (5). The only unobserved evidence is a 100 % pixel capture because this host reports 150 %; see UI-18/KI-21. |
+| E8 | Every visible control performs a real action, is disabled with a stated reason, or is documented as future work | TESTED AND PASSED at 150 % + 96-DPI render + automated | All seven pages are audited row by row in `UI-REQUIREMENTS-MATRIX.md` (Overview, Appearance, Backup & queue, Media library, Wireless import, History, Diagnostics). The audit fixed five real defects and added `PageControlTests` (5). A 96-DPI harness render of the real shell (2026-10-24, seven pages x three themes) now covers the 100 % layout and exposed one clipped Wireless caption, fixed and pinned by test. A native 100 % desktop capture remains unavailable on this 150 % host; see UI-18/KI-21. |
 
 ## F. Wireless receiver
 

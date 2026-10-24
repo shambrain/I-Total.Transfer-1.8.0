@@ -31,7 +31,7 @@ Legend:
 | UI-15 | The design artefacts are editable, versioned sources, not flat mockups. | PASS (file present) | `i-total-transfer-design-system.figcraft` (69,239 bytes) with four pages; four exported renders. See `UI-DESIGN-SYSTEM.md`. |
 | UI-16 | Windows 11 rendering and 200 % scaling are observed. | OPEN | No Windows 11 machine and no 200 % session on this host. Tracked as KI-11 and EN2/EN3. |
 | UI-17 | Audible cues are heard on real hardware. | OPEN | `UiSound` synthesises tones; the harness cannot hear them. E6 remains IMPLEMENTED, NOT FULLY VERIFIED. |
-| UI-18 | Every control on every page is audited as action / disabled-with-reason / documented future work. | PASS at 150 % (live) + automated; 100 % pixel capture OPEN | All seven pages were walked: Overview and Appearance previously, and Backup & queue, Media library, Wireless import, History and Diagnostics on 2026-10-22 with a real `PrintWindow` capture and UIA dump (`%TEMP%\opencode\ui-audit2`). Toolbar actions were clicked; disabled controls were recorded with the reason. The live filtered Start confirmation read **`Copy 1 files (584.1 MB)`**, not the full 4,103-file scan (`%TEMP%\opencode\ui-android-confirm\02-confirm.png`). A real Stop produced the recovery bar `1 planned - 0 copied - 1 outstanding - 4,102 skipped by filter`; Resume opened the correct 584.1 MB continuation dialog (`%TEMP%\opencode\ui-android-cancel\01-cancelled-recovery.png`). `PageControlTests` (5 real-control tests) pins every page's toolbar events and the Clear-view boundary. The only unobserved scale is 100 %, because this host has no 100 % display; see UI-16/KI-21. |
+| UI-18 | Every control on every page is audited as action / disabled-with-reason / documented future work. | PASS at 150 % (live) + 96-DPI render + automated | All seven pages were walked: Overview and Appearance previously, and Backup & queue, Media library, Wireless import, History and Diagnostics on 2026-10-22 with a real `PrintWindow` capture and UIA dump (`%TEMP%\opencode\ui-audit2`). Toolbar actions were clicked; disabled controls were recorded with the reason. The live filtered Start confirmation read **`Copy 1 files (584.1 MB)`**, not the full 4,103-file scan (`%TEMP%\opencode\ui-android-confirm\02-confirm.png`). A real Stop produced the recovery bar `1 planned - 0 copied - 1 outstanding - 4,102 skipped by filter`; Resume opened the correct 584.1 MB continuation dialog (`%TEMP%\opencode\ui-android-cancel\01-cancelled-recovery.png`). `PageControlTests` (5 real-control tests) pins every page's toolbar events and the Clear-view boundary. A 96-DPI harness render of the real shell on 2026-10-24 covered all seven pages in all three themes and exposed one clipped Wireless caption, now fixed; this host has no 100 % display, so a native 100 % desktop capture is still not available. See UI-16/KI-21. |
 
 ## 2. Overview control audit (2026-10-22)
 
@@ -162,10 +162,10 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --filter "FullyQualifiedName~ThemeTests|FullyQualifiedName~CaptionButtonContrastTests|FullyQualifiedName~AppearanceSettingsTests|FullyQualifiedName~SettingsTests|FullyQualifiedName~Dashboard"
 ```
 
-Results recorded on 2026-10-22:
+Results recorded on 2026-10-24 (whole suite after the caption fix):
 
 - Release build: 0 warnings, 0 errors.
-- Full suite: 446 passed, 0 failed, 2 skipped, 448 total, 28 s.
+- Full suite: 448 passed, 0 failed, 2 skipped, 450 total, 30 s.
 - Targeted UI/theme suite: 42 passed, 0 failed, 42 total.
 
 ## 10. Evidence files
@@ -201,9 +201,21 @@ The Overview captures with no handset attached remain dated evidence of the no-d
 phones were attached again on 2026-10-22, so those captures are not used to claim a live transfer. No new
 scan or transfer was run during this UI audit.
 
+96-DPI harness render (2026-10-24, DPI-unaware, real `MainForm`, `DeviceDpi=96`, client root 1416x919).
+All seven pages in Neon, Slate and Light; 21 PNGs in `%TEMP%\opencode\ui100`:
+
+- `shell-dashboard-96dpi-{neon,slate,light}.png`, `shell-transfer-...`, `shell-library-...`,
+  `shell-wireless-...`, `shell-history-...`, `shell-settings-...`, `shell-diagnostics-...`.
+
+This is pixel evidence of the layout at 100 % logical size, not a native desktop capture. The first
+attempt captured the whole form and painted the OS caption over the client (the shell collapses the
+non-client area with `WM_NCCALCSIZE`), which produced a false "title clipped" reading; the shell root
+is rendered instead and `header-only.png` shows the full 78 px brand band. The render exposed the
+clipped Wireless TLS caption recorded in the UI-18 row.
+
 ## 11. Open gaps
 
-1. 100 % pixel capture for UI-18 remains unobserved; this host has only a 150 % display. The action/wiring audit and 150 % captures are complete.
+1. 100 % layout is now rendered at 96 DPI by the harness (2026-10-24, 21 captures, all pages and themes); a *native* 100 % desktop capture remains impossible on this host because its only display reports 150 %. The action/wiring audit and 150 % captures are complete.
 2. Windows 11 and 200 % scaling (UI-16).
 3. Audible cues (UI-17).
 4. A live iPhone-ready Overview and a mid-scan Overview in the current build; both phones are attached on 2026-10-22, but no new scan/transfer was run in this UI audit.

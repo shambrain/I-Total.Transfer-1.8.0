@@ -5,12 +5,13 @@
 - .NET SDK **10.0.302** (pinned via `global.json` to `10.0.100` with `rollForward: latestFeature`),
   `net10.0-windows`.
 - `dotnet build I-Total.Transfer.sln -c Release` → **0 warnings, 0 errors**.
-- `dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s` → **444
-  passed, 0 failed, 2 skipped (opt-in hardware tests), 448 total**, in about twenty-eight seconds.
+- `dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s` → **448
+  passed, 0 failed, 2 skipped (opt-in hardware tests), 450 total**, in about thirty seconds.
   The 2026-10-21 addition is the two-phone isolation guard (`DeviceSelectionGuardTests` 6,
   `ScanIdentityTests` 8); the 2026-10-22 additions are the Appearance preview suite (4), the expanded
-  token/contrast coverage and the no-device neutral-wording regression, the non-elevated private-LAN bind, the five page-control tests and the filtered-plan summary test; the earlier count of 385/387 is
-  superseded.
+  token/contrast coverage and the no-device neutral-wording regression, the non-elevated private-LAN bind, the five page-control tests and the filtered-plan summary test, plus the 2026-10-24 96-DPI
+  caption-fit regression and the installed-uninstaller self-location test; the earlier count of 385/387
+  is superseded.
   Includes real **loopback and private-LAN** wireless tests (binding a `TcpListener` on a genuine socket: single-use pairing,
   session-token rotation and expiry, the approval gate in both directions, upload, SHA-256 on receipt, digest
   and size disagreement, traversal and reserved-path rejection, collision renaming, `/health`, refusal of
@@ -46,7 +47,7 @@
   (5) proves the signature covers the readable half and turns ten malformed inputs into verdicts instead of
   exceptions. `TrialLedgerTests` (5) covers the file and HKCU stores and pessimistic merging.
   `SteamEntitlementTests` (4) covers app-id binding and refusal on the direct build.
-  `LicenseSettingsTests` (3) drives the real Settings controls. `InstallerScriptTests` (5) executes the
+  `LicenseSettingsTests` (3) drives the real Settings controls. `InstallerScriptTests` (6) executes the
   real PowerShell installer against temporary folders and a temporary HKCU key - install, wrong-hash refusal
   (exit 4), upgrade with settings/trial preserved, uninstall through the installed copy, and refusal to
   uninstall an unrelated folder (exit 3). The build stayed at **0 warnings, 0 errors**.
@@ -60,7 +61,7 @@
   *Export diagnostics ZIP*; the resulting `licence.txt` read `Standing: Trial`, `Jobs used: 0`,
   `Job limit: 3`, `Jobs remaining: 3`, `New job allowed: True`, and `trial.json` was absent. The README
   inside the bundle states the same boundary.
-- **The installer scripts have an encoding guard.** `InstallerScriptTests` (5) fails on any non-ASCII byte in
+- **The installer scripts have an encoding guard.** `InstallerScriptTests` (6) fails on any non-ASCII byte in
   `installer/*.ps1`, naming the file and line. This is the regression guard for the PowerShell 5.1
   ANSI/BOM defect that broke `Build-Installer.ps1` during development.- **The test suite itself was a defect source twice over, and both causes were fixed.** Creating a
   WinForms control installs a `WindowsFormsSynchronizationContext` on the calling thread, whose `Post`

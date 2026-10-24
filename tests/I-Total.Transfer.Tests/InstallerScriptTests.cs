@@ -225,6 +225,32 @@ public sealed class InstallerScriptTests
     }
 
     [TestMethod]
+    public void TheInstalledUninstallerFindsACustomInstallFolderOnItsOwn()
+    {
+        if (!File.Exists(PowerShell)) { Assert.Inconclusive("Windows PowerShell is not available."); }
+        using var box = new Sandbox();
+        box.WriteExecutable([1, 2, 3, 4, 5, 6, 7, 8]);
+
+        RunResult install = RunInstaller(
+            "-SourceDir", box.Source, "-InstallDir", box.App, "-UserDataDir", box.Data,
+            "-RegistryKey", box.RegistryKey, "-NoShortcut", "-Json");
+        Assert.AreEqual(0, install.ExitCode, install.Error);
+        Assert.IsTrue(File.Exists(Path.Combine(box.App, "install-manifest.json")));
+
+        // README-INSTALL.txt tells the operator to run the installed uninstaller with only -Uninstall, so it
+        // has to find its own folder. The default %LOCALAPPDATA% path is a different directory.
+        RunResult uninstall = RunScript(Path.Combine(box.App, "Uninstall-I-Total.Transfer.ps1"),
+            "-Uninstall", "-UserDataDir", box.Data, "-RegistryKey", box.RegistryKey, "-NoShortcut", "-Json");
+
+        Assert.AreEqual(0, uninstall.ExitCode, uninstall.Error);
+        Assert.IsFalse(Directory.Exists(box.App),
+            "An uninstaller run from a custom installation folder must remove that folder, not the default one.");
+        Assert.IsFalse(box.RegistryExists());
+        Assert.IsTrue(File.Exists(Path.Combine(box.Data, "settings.json")),
+            "User data is still kept when the uninstaller locates its own folder.");
+    }
+
+    [TestMethod]
     public void AWrongHashInstallsNothing()
     {
         if (!File.Exists(PowerShell)) { Assert.Inconclusive("Windows PowerShell is not available."); }

@@ -279,7 +279,7 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
 - [x] **Build succeeds from a clean checkout on current Visual Studio / .NET SDK.** ✅
   `docs/BUILD-VALIDATION.md`; the source zip is built from scratch at 0 warnings / 0 errors.
 - [x] **Unit and integration tests pass on Windows.** ✅
-  **446 passed, 0 failed, 2 skipped (448 total)** on 2026-10-22 (the two skips are hardware-marked Shell-backend
+  **448 passed, 0 failed, 2 skipped (450 total)** on 2026-10-24 (the two skips are hardware-marked Shell-backend
   apartment tests). The two-phone isolation guard added 14 tests on 2026-10-21; the Appearance preview
   controls added 4, the theme token/contrast coverage was expanded and the no-device neutral-wording
   regression was added on 2026-10-22. Earlier waves include 37 added with the commercial subsystem: 83 for the wireless credential model, the QR encoder,
@@ -295,7 +295,7 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
   `ShippedManifestHasNoPinnedBinaryThatCouldSilentlyEnableAfc` — the AFC backend stays inert until an operator
   deliberately pins a binary with a hash.
 - [x] **Installer upgrade and uninstall behaviour are tested.** ✓
-  `InstallerScriptTests` (5) executes the real per-user installer against temporary folders and a temporary
+  `InstallerScriptTests` (6) executes the real per-user installer against temporary folders and a temporary
   HKCU key: install creates the executable, manifest, uninstaller and uninstall entry; upgrade replaces the
   executable while settings and the trial ledger survive; uninstall through the installed copy removes the
   folder and key but keeps user data; a wrong hash exits 4 without writing anything; uninstalling an unrelated

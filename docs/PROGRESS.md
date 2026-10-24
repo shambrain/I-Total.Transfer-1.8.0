@@ -6,6 +6,104 @@ start from here without re-reading the whole conversation.
 
 ---
 
+## 2026-10-24 - 96-DPI shell render, clipped Wireless caption fixed, release refreshed
+
+### Starting point
+
+The tree was clean at `60a97a2 Complete v1.8.0 hardware validation and release artifacts`; the published
+exe was `C953BC08...` (112,150,342 B) and both handsets were attached. The one remaining internal UI gap was
+the 100 % pixel capture (KI-21): the host's only display reports 150 % (`AppliedDPI=144`).
+
+### 96-DPI render harness
+
+`%TEMP%\opencode\ui100` is a DPI-unaware WinForms executable (`HighDpiMode.DpiUnaware`) that constructs the
+real `MainForm` at a 1400x880 client and renders the shell root `_root` (1416x919) with `DrawToBitmap`;
+`DeviceDpi` reads 96. All seven pages were captured in Neon, Slate and Light (21 PNGs).
+
+A first attempt captured the whole form. Because the shell collapses its non-client area with
+`WM_NCCALCSIZE`, that capture painted the OS caption over the client and looked like a clipped title.
+Rendering `_header` on its own showed the full 78 px band with the complete title and subtitle, so the
+harness now renders the shell root. This is 96-DPI pixel evidence of the layout, not a native desktop
+capture, and it is labelled that way in `UI-REQUIREMENTS-MATRIX.md`, `KNOWN_ISSUES.md` and
+`PROJECT-STATUS.md`.
+
+### Real defect found and fixed
+
+At 1416 px the Wireless `Require TLS` caption measured 422 px of text (440 px with the check glyph) inside a
+450 px card with 36 px of inset, so the closing bracket was cut. The caption is now
+`Require TLS (private-network HTTP if no matching certificate)` (330 px). The new
+`WirelessTlsCaptionFitsInsideItsCardAtTheDesignedWidth` measures the painted text against the card and
+fails on the old wording (`440 px needed, 414 px available`), which was confirmed by temporarily restoring
+the old string and watching the test fail.
+
+### Commands and exact results
+
+```powershell
+dotnet build I-Total.Transfer.sln -c Release --no-incremental
+# Build succeeded. 0 Warning(s), 0 Error(s)
+
+dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s
+# Passed! - Failed: 0, Passed: 448, Skipped: 2, Total: 450, Duration: 30 s
+
+dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+# publish\I-Total.Transfer.exe: 112,150,342 B
+# SHA-256 42C6C9754D458832BC374AFDCB8D9EAF463C98AF0813F628E336BD3EB689B7B3
+```
+
+### Second real defect found during release packaging
+
+A real portable run (extract `dist\installer\...-portable-win-x64.zip`, install, uninstall) exposed that the
+installed `Uninstall-I-Total.Transfer.ps1` ignored its own folder: with a custom `-InstallDir` it still
+looked at `%LOCALAPPDATA%\Programs\I-Total Transfer` and refused with exit 3, so the command printed in
+`README-INSTALL.txt` did not work. The uninstaller is the installer script copied into the installation, so
+it now uses its own folder when no `-InstallDir` was passed and that folder holds the `install-manifest.json`
+it wrote; a portable package (which has no manifest) is never treated as an installation.
+`TheInstalledUninstallerFindsACustomInstallFolderOnItsOwn` runs the installed copy with only `-Uninstall`;
+it failed with exit 3 before the fix and passes now.
+
+### Files changed
+
+```
+src/I-Total.Transfer/UI/Pages/WirelessPage.Designer.cs
+tests/I-Total.Transfer.Tests/PageControlTests.cs
+tests/I-Total.Transfer.Tests/InstallerScriptTests.cs
+installer/Install-I-Total.Transfer.ps1
+CHANGELOG.md, PROJECT-STATUS.md, README.md
+docs/PROGRESS.md, docs/UI-REQUIREMENTS-MATRIX.md, docs/KNOWN_ISSUES.md
+docs/BUILD-VALIDATION.md, docs/RELEASE-ACCEPTANCE.md, docs/PERFORMANCE-AUDIT.md
+docs/MASTER_IMPLEMENTATION_PLAN.md
+```
+
+### Packaging
+
+- `installer\Build-Installer.ps1 -Version 1.8.0 -ExpectedSha256 42C6C975...` rebuilt the portable ZIP;
+  `SETUP SKIPPED` because Inno Setup 6 is still absent. Nothing is Authenticode-signed.
+- The deployment and source ZIPs were regenerated with the new executable and the updated documents.
+  `dist\SHA256SUMS.txt` and `dist\installer\SHA256SUMS.txt` are the authoritative hash records.
+- Verification: the deployment ZIP's embedded exe hashes to `42C6C975...`; the extracted source ZIP
+  rebuilds and publishes to the byte-identical `42C6C975...` executable (112,150,342 B).
+- The portable ZIP was extracted and its own installer run with no `-SourceDir`: install returned
+  `{"ok":true,...}` with the executable, manifest and uninstaller present and the HKCU key created; the
+  installed uninstaller then removed the folder and key and kept `settings.json`. The first attempt failed
+  with exit 3, which is the defect fixed above.
+
+### Blockers and limits
+
+- A *native* 100 % desktop capture is still impossible on this host (150 % display). The 96-DPI render
+  covers the layout question; it is not a DWM-composited screenshot.
+- iPhone lock / revoked USB permission still has no physical observation; the HUAWEI keeps MTP active
+  while locked, so no Android lock drill applies.
+- Production licence issuer/purchase URL, Steamworks, Inno Setup 6, Authenticode certificate and
+  `signtool` remain external blockers. Windows 11, 200 % scaling and audible cues remain unobserved.
+
+### Next task
+
+1. No internal UI, transfer or packaging task is outstanding; only the external items above remain.
+2. Any further source edit invalidates the published hash: rebuild, retest, republish, repackage and
+   refresh `dist\SHA256SUMS.txt`. Docs-only edits still require new archives because they ship inside them.
+
+---
+
 ## 2026-10-22 - non-elevated wireless LAN, UI-18 page audit, honest status text
 
 ### Starting point
@@ -205,7 +303,7 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 
 ### Blockers and limits
 
-- **100 % pixel capture of UI-18 remains open.** This host has only a 150 % display; the page actions and
+- **100 % pixel capture of UI-18 was open at this cut.** This host has only a 150 % display; the page actions and
   150 % pixels were observed, and the wiring is tested, but no 100 % session exists here.
 - **Physical evidence:** the iPhone scan/filtered copy, Android cancel/resume, PTP-only warning, mid-scan unplug
   and selected-phone-disappearance drills are live. The HUAWEI lock does not disable MTP, so no abort drill is
@@ -216,7 +314,7 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 
 ### Next task
 
-1. If a 100 % display is available, repeat the page capture set; otherwise keep the 100 % limitation recorded.
+1. See the 2026-10-24 entry: the 96-DPI harness render covers the layout question; a native 100 % capture still needs a 100 % display.
 2. Run a device throughput benchmark when a stable USB setup is available; no lock/abort drill is required on this
    MTP stack.
 3. Any further source edit invalidates the published hash: rebuild, retest, republish, repackage and refresh

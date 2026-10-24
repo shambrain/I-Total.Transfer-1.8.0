@@ -172,17 +172,21 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 - **To close:** no further action needed for the timing honesty; a second cold pass on a different phone is
   optional evidence, not a release blocker.
 
-### KI-21 - The 100 % pixel capture of the UI-18 audit is still missing
+### KI-21 - No native 100 % desktop capture (layout now rendered at 96 DPI)
 
-- **Impact:** all seven pages were audited row by row at the host's native 150 % scaling on 2026-10-22:
-  Overview, Appearance, Backup & queue, Media library, Wireless import, History and Diagnostics. The live
-  audit clicked the page actions, recorded disabled controls with their reason, and found and fixed five
-  real defects (clipped Wireless status, mojibake, ambiguous `Clear`, false dependency verdict, misleading
-  empty step). `PageControlTests` (5) and the existing page tests pin the wiring. The remaining gap is the
-  **100 % pixel capture**, which this machine cannot produce because its only display reports 150 %
-  (`AppliedDPI=144`).
-- **Mitigation:** UI-18 is recorded as PASS at 150 % plus automated, with the 100 % capture named as open;
-  no control is knowingly a placeholder. The 100 % layout remains a code/test claim, not a pixel observation.
-- **To close:** run the page walk on a 96 DPI host or a 100 % session and attach the captures; no new control
-  audit is required.
+- **Impact:** all seven pages were audited row by row at the host's native 150 % scaling on 2026-10-22.
+  The live audit clicked the page actions, recorded disabled controls with their reason, and found and fixed
+  five real defects (clipped Wireless status, mojibake, ambiguous `Clear`, false dependency verdict,
+  misleading empty step). The host's only display reports 150 % (`AppliedDPI=144`), so a native 100 %
+  desktop capture cannot be produced here.
+- **Mitigation:** on 2026-10-24 the real `MainForm` was rendered by a DPI-unaware harness at
+  `DeviceDpi=96` (1416x919 client root) for all seven pages in Neon, Slate and Light. The brand band keeps
+  its 78 px height with the full title and subtitle, and no page clips or overlaps a control at 100 %
+  logical size. The render found one real defect: the Wireless `Require TLS` caption was wider than its
+  card and lost the closing bracket. It is reworded to `Require TLS (private-network HTTP if no matching
+  certificate)` and pinned by `WirelessTlsCaptionFitsInsideItsCardAtTheDesignedWidth`, which fails on the
+  old wording (440 px needed, 414 px available). The captures are a 96-DPI render of the real controls,
+  not a DWM-composited desktop screenshot; they are labelled that way in `UI-REQUIREMENTS-MATRIX.md`.
+- **To close:** only a native 100 % desktop capture remains, and it needs a 100 % display; no layout or
+  control-audit work is outstanding.
 
