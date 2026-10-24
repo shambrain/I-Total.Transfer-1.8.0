@@ -1,2 +1,10 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Canonical text policy: LF in the working tree and in the index, so a clean clone compiles to
+# the same binary as the published tree. Visual Studio solution files and Windows batch files keep CRLF.
+* text=auto eol=lf
+*.sln text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.zip binary
+*.png binary
+*.ico binary
+*.dmp binary
