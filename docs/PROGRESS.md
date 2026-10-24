@@ -139,6 +139,12 @@ The window is larger than the logical desktop (1920x1080), so these are **200 % 
 At 200 % the `Received (UTC)` header wrapped past its row, so the column is now `Received` with the UTC
 wording in its tooltip.
 
+A real window capture of the published exe was taken with a DPI-aware `PrintWindow`: **2866x1871 device**
+(1433x936 logical at 200 %), centred on the 3840x2160 screen, with the whole layout visible
+(`%TEMP%\opencode\real200\published-200-aware.png`). A first attempt from a DPI-unaware PowerShell process
+measured 1433x936 *device* and looked clipped; that was the capture tool's virtualisation, not the app
+(`GetDpiForWindow` reports 192).
+
 ### Files changed
 
 ```
@@ -188,6 +194,10 @@ The setup is **unsigned**: no certificate and no Windows SDK signing tools are p
   `{"ok":true,...}` with the executable, manifest and uninstaller present and the HKCU key created; the
   installed uninstaller then removed the folder and key and kept `settings.json`. The first attempt failed
   with exit 3, which is the defect fixed above.
+- An upgrade over a running installation was tested with the same setup: install (exit 0), launch the app,
+  run the setup again - it closed the app (Inno `CloseApplications`), exited 0, kept the HKCU entry and
+  left the installed exe at `945E2D1F...`; the uninstaller then removed the folder and key and kept
+  `%APPDATA%`.
 - The final archives were rebuilt on 2026-10-25 from the `945E2D1F...` publish. The final setup was
   installed silently into a temporary folder (installed exe hash matched), launched (exit 0) and
   uninstalled (folder, HKCU entry and shortcuts removed; `%APPDATA%` kept); no firewall rule was created.
