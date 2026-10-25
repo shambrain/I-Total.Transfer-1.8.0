@@ -128,7 +128,8 @@ old layout. Suite: **453 passed, 2 skipped, 455 total, 27 s**.
 
 ### 200 % DPI render
 
-This session's active display is 3840x2160 at **192 DPI (200 %)**. A PerMonitorV2 harness rendered the
+During the 200 % pass the active display was 3840x2160 at **192 DPI (200 %)** (the session later returned
+to 3440x1440 at 150 %). A PerMonitorV2 harness rendered the
 real `MainForm` at the minimum logical window (2320x1480 device) and at the design size (2840x1800) for
 all seven pages: text, cards, chips and the reflowed toolbars scale uniformly and nothing clips.
 
@@ -136,6 +137,10 @@ The window is larger than the logical desktop (1920x1080), so these are **200 % 
 200 % desktop screenshots. Captures: `%TEMP%\opencode\ui200\*-200-min.png` and `*-200-design.png`. The
 200 % check in `DEVICE_TEST_MATRIX.md` (EN3) and UI-16 now records the pass; Windows 11 remains open.
 
+
+The caption **maximize/restore** was also re-checked on the 150 % configuration with the app's own button:
+2152x1380 at 644,0 was restored exactly after two maximize cycles. (A direct `ShowWindow(SW_RESTORE)`
+bypasses the app's `SC_RESTORE` handler and grows the frame; that is not the product path.)
 At 200 % the `Received (UTC)` header wrapped past its row, so the column is now `Received` with the UTC
 wording in its tooltip.
 
@@ -225,9 +230,9 @@ The setup is **unsigned**: no trusted certificate is present (signtool 10.0.2610
 
 ### Blockers and limits
 
-- A *native* 100 % desktop capture is still impossible here: the active display is 3840x2160 at 200 %
-  (the earlier 150 % evidence came from the 3440x1440 configuration). The 96-DPI and 200 % renders cover
-  the layout question; neither is a DWM-composited screenshot.
+- A *native* 100 % desktop capture is still impossible here: the display used for the 200 % pass was
+  3840x2160 at 200 %, and the session later returned to 3440x1440 at 150 %. The 96-DPI and 200 % renders
+  cover the layout question; neither is a DWM-composited screenshot.
 - Both handsets were detached at the end of this session (Windows keeps only stale records), so the
   4 GB+ video, locked-phone and cloud-optimised drills could not run; they need the phones reattached.
 - iPhone lock / revoked USB permission still has no physical observation; the HUAWEI keeps MTP active

@@ -112,8 +112,8 @@
   either an installed certificate thumbprint or a PFX (imported into `CurrentUser\My` only for the run so its
   password never reaches a command line), signs with SHA-256 and an RFC 3161 timestamp, then runs
   `signtool verify /pa` on every artifact and aborts on the first failure. No certificate, key or password is
-  part of the source tree or a package. This machine has neither the Windows SDK signing tools nor a
-  certificate, so **nothing in 1.8.0 is Authenticode-signed**; the release notes and `INSTALL.txt` say so
+  part of the source tree or a package. No trusted certificate exists, so **nothing in 1.8.0 is
+  Authenticode-signed**; the release notes and `INSTALL.txt` say so
   rather than implying otherwise. `docs/RELEASE-SIGNING.md` records the exact procedure and checklist.
 - **The diagnostics bundle now includes a licence/trial summary.** `licence.txt` carries the standing
   (Trial / TrialExhausted / Licensed), the channel, jobs used/limit/remaining and whether a new job may start.

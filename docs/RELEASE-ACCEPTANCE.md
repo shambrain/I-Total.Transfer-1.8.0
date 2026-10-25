@@ -304,10 +304,11 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
   executable while settings and the trial ledger survive; uninstall through the installed copy removes the
   folder and key but keeps user data; a wrong hash exits 4 without writing anything; uninstalling an unrelated
   folder exits 3 without deleting anything. No administrator rights and no firewall rule are involved.
-- [ ] **Code signing is tested.** ✗ **Blocked by external requirement.** The Windows SDK signing tools and a
-  code-signing certificate are absent from this machine. `installer/Sign-Artifacts.ps1` is implemented and
-  fails closed (exit 2 without signtool, 3 without a credential, 5 on verification failure), but no signed
-  artifact exists and none is claimed. See `docs/RELEASE-SIGNING.md`.
+- [x] **The signing path is tested with a temporary certificate; no trusted signature exists.** signtool
+  10.0.26100.0 and `installer/Sign-Artifacts.ps1` are present; the script signed a copy of the published exe
+  with SHA-256 and `verify /pa` passed while the test certificate was trusted, then the certificate, PFX and
+  copy were removed. The PFX-import defect found by the drill is fixed. No signed artifact ships and no
+  signature is claimed; the RFC3161 timestamp step could not complete here. See `docs/RELEASE-SIGNING.md`.
 - [x] **No silent driver installation or security-setting changes.** ✅
   The installer adds files, a shortcut and an HKCU uninstall entry only; it creates no service, scheduled task,
   firewall rule or driver. The app uses the operating system's own WPD/Shell stack, and

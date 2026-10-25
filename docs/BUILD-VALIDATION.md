@@ -56,8 +56,8 @@
   setup was installed silently into a temporary folder (`/VERYSILENT /DIR=...`): the installed exe hashed to
   the published executable, the HKCU uninstall entry, uninstaller and Start Menu group existed, no firewall
   rule was created, the installed app launched and exited 0, and the silent uninstaller removed the folder,
-  key and shortcuts while `%APPDATA%` survived. An upgrade over a running installation exited 0 after Inno closed the app. `Sign-Artifacts.ps1` still fails closed (no signtool, no
-  certificate), so nothing is signed.
+  key and shortcuts while `%APPDATA%` survived. An upgrade over a running installation exited 0 after Inno closed the app. `Sign-Artifacts.ps1` still fails closed without a trusted
+  certificate (signtool itself is present), so nothing is signed.
 - **The support bundle now carries the trial counter, and the boundary is tested.** `DiagnosticsBundleTests`
   (5) builds a bundle from a 2-of-3 snapshot and asserts that the counter and standing are present while the
   purchase id is absent and `trial.json` is not copied. The published build was then driven through
