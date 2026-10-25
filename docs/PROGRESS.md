@@ -153,6 +153,17 @@ Settings and the rest show no clipping; the same seven pages were rendered at th
 measured 1433x936 *device* and looked clipped; that was the capture tool's virtualisation, not the app
 (`GetDpiForWindow` reports 192).
 
+### Audible cues
+
+`UiSound` was inspected through its real private `Build` path: the three cues are genuine 16-bit mono
+44.1 kHz PCM - success 0.200 s, peak 7100, gliding 784-1175 Hz; click 0.028 s, peak 4371, 1620 Hz; error
+0.240 s, peak 8312, 392-196 Hz (`%TEMP%\opencode\audio-drill2\*.wav`, `synthesis.txt`).
+
+A WASAPI loopback capture on the default endpoint (BEHRINGER UMC 202HD, active) recorded peak 0.986 / RMS
+0.310 in every 250 ms window, before and after the cues: a continuous full-scale signal dominates that
+endpoint and masks them. Audibility by a person therefore remains unconfirmed; the evidence is recorded as
+PCM + endpoint, not as a listening test.
+
 ### Signing drill and PFX-import defect
 
 The Windows SDK signing tools are present (`signtool.exe` 10.0.26100.0), contrary to the earlier note, so

@@ -79,7 +79,7 @@ a filtered HEIC/MOV copy also completed through the shared engine (8 files, hash
 | EN1 | Windows 10 22H2 build 19045, 150 % scaling | LIVE PASS |
 | EN2 | Windows 11 rendering (build 22000+) | NOT OBSERVED (no such machine) |
 | EN3 | 200 % scaling | LIVE PASS (2026-10-24; real 192-DPI render at minimum and design sizes plus 200 % window captures of all seven pages from the published exe) |
-| EN4 | Audible UI cues | NOT VERIFIABLE from the harness |
+| EN4 | Audible UI cues | PARTIAL (PCM verified; endpoint active; loopback masked; no listening test) |
 | EN5 | Wireless receive end-to-end from a real iOS browser | NOT RUN (no physical iOS sender) |
 | EN6 | Wireless TLS-fallback refusal drill | LIVE PASS (2026-10-22, current build) |
 | EN7 | Theme preview and Overview action-row drill at 150 % (real executable) | LIVE PASS (2026-10-22) |

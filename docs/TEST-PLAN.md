@@ -93,7 +93,7 @@ Run these on both Windows 10 and Windows 11, at 100% and 150% scaling:
    and corners — borderless must not cost the standard resize and Snap behaviour.
 10. **Sounds.** With *Play interface sounds* on, buttons tick and check boxes toggle; a transfer/scan
     completion plays a completion tone and an attention state plays a lower tone. With the setting off,
-    the app is silent. (Confirm audibly — this cannot be checked by a screenshot.)
+    the app is silent. (Confirm audibly - a screenshot cannot show it. On 2026-10-25 the synthesised PCM was verified as 16-bit mono 44.1 kHz with the expected durations and tones, and the default endpoint is active; a loopback capture was masked by a continuous full-scale signal, so a human listening check is still required.)
 11. **Theme apply-on-save.** Changing the theme combo repaints the shell immediately *and* persists;
     reload the app and the saved theme is still applied. `"Dark"` in an existing `settings.json` must
     migrate to Neon.
