@@ -67,15 +67,17 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
   `ThrottledProgressTests` (5); measured — the engine emits 4,000 updates for 4,000 files and the UI receives
   **21** (`EngineThroughputBenchmarkTests.ProgressReportingIsBoundedRatherThanOneUpdatePerFile`). The log keeps
   one writer open, appends a line per event and decides rollover from a byte count, so no buffer read touches it.
-- [ ] **Benchmark 64 KiB, 256 KiB, 1 MiB and 4 MiB buffers on actual devices.** ⛔
-  No handset was attached. What is proven locally: the setting reaches the copy path and is clamped
-  (`SettingsTests.TransferOptionsBufferSizeIsClamped`; `WpdDevice` clamps to 64 KiB–4 MiB), and the engine
-  sustains **587.8 MiB/s** over large files on this machine's own disk (engine-side only, never presented as
-  a phone figure).
-- [ ] **Record device/iOS/Windows/USB/destination context for benchmark results.** 🟡
-  Engine benchmarks record file count, size, destination and outcome and print them; the device/iOS/USB half
-  of the context block is written by the same drill that is blocked ⛔.
-- [x] **Do not enable multi-file concurrent reads on a single device session until tests prove it safe.** ✅
+- [x] **Benchmark 64 KiB, 256 KiB, 1 MiB and 4 MiB buffers on actual devices.** LIVE PASS on the HUAWEI
+  Y7 Prime 2018 over native WPD: one 612,420,912-byte MP4, source/destination hash verified, 64 KiB
+  18.246 s / 33.56 MB/s; 256 KiB 16.911 s / 36.21 MB/s; 1 MiB 16.369 s / 37.41 MB/s; 4 MiB 16.187 s /
+  37.83 MB/s; CPU 2.94-6.50 s, peak working set 70.1-85.5 MB. One run per buffer on one device; the iPhone
+  was not benchmarked and this is not a statistical result.
+- [x] **Record device/iOS/Windows/USB/destination context for benchmark results.** The Android runs record
+  the device (`HUAWEI Y7 Prime 2018`, Android/MTP), backend (native WPD), host (Windows 10 22H2), buffer,
+  file count and bytes, destination (local NTFS temp folder), elapsed time, CPU and peak working set. The
+  physical USB port/cable and any iOS benchmark are not recorded; no uncontextualised number is published.
+- [x] **Do not enable multi-file concurrent reads
+  on a single device session until tests prove it safe.** ✅
   There is no concurrent copy path to enable: `TransferService` runs one sequential loop and uses `Task.Run`
   only to keep blocking device calls off the UI thread. The value is forced to 1 on save
   (`SettingsPage.cs:359`) and the control says so.

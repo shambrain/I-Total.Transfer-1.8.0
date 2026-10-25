@@ -148,7 +148,8 @@ A real window capture of the published exe was taken with a DPI-aware `PrintWind
 (1433x936 logical at 200 %), centred on the 3840x2160 screen, with the whole layout visible
 (`%TEMP%\opencode\real200\published-200-aware.png`). All seven pages were then driven through UI Automation
 and captured from the same published exe at 200 % (`%TEMP%\opencode\real200\pages\*.png`); Wireless,
-Settings and the rest show no clipping. A first attempt from a DPI-unaware PowerShell process
+Settings and the rest show no clipping; the same seven pages were rendered at the 150 % minimum
+(1740x1110 device, `%TEMP%\opencode\ui150-min2\*.png`) with no clipping. A first attempt from a DPI-unaware PowerShell process
 measured 1433x936 *device* and looked clipped; that was the capture tool's virtualisation, not the app
 (`GetDpiForWindow` reports 192).
 

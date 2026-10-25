@@ -211,7 +211,7 @@ Do not label a release device-tested until these tests pass on actual Windows 10
     and confirm the configured policy behaves as stated (skip / keep both / replace only if different /
     replace only if newer), that nothing already verified is overwritten, and that a same-size file with
     no saved digest is reported **unverifiable** rather than verified.
-22. **A real interrupted transfer is offered and can be continued (outstanding).** Start a real transfer to
+22. **A real interrupted transfer is offered and can be continued (live pass 2026-10-24 on Android; per-file re-read timing and refusal cases outstanding).** Start a real transfer to
     a scratch destination, press **Stop** part-way, and confirm: the Overview shows the interrupted-session
     bar with counts that match the folder; the log records `CANCELLED`; and every file the run reported as
     verified is present and complete. Then reattach/unlock and press **Resume transfer** and confirm from
@@ -226,6 +226,10 @@ Do not label a release device-tested until these tests pass on actual Windows 10
     lookup is walking the album per file again, which is the defect `Core/FolderNameIndex.cs` was written to
     remove - the tests pin the logic, but only the device can confirm the saving.
 
+
+    On 2026-10-24 the Android drill stopped a 612,420,912-byte copy, showed the recovery bar and resumed the
+    one outstanding file to source/destination SHA-256 equality. The assertion that verified files are not
+    re-read and the two refusal cases were not separately observed on hardware.
 23. **A real iOS sender delivers over the LAN (outstanding).** With the handset on the same private network,
     build the Shortcut in [`WIRELESS.md`](WIRELESS.md) 5 and confirm the whole contract against a real client:
     the QR scans and `/pair` returns a session token; a second scan of the **same** ticket fails, so a
@@ -280,7 +284,7 @@ Do not label a release device-tested until these tests pass on actual Windows 10
     PTP mode now shows the camera-only warning; a lock does not disable MTP, so no abort is expected; the single-file buffer sweep is recorded above; no
     multi-file Android throughput number may be published as a device benchmark.
 
-26. **A phone unplugged mid-scan must not produce a complete scan (outstanding: fixed after a live failure).**
+26. **A phone unplugged mid-scan must not produce a complete scan (LIVE PASS 2026-10-24; fixed after a live failure).**
     Start a scan of a large camera roll and pull the cable while it is still walking. Expected after the fix:
     the run stops by itself with *the phone stopped answering during the scan* naming the folder and the
     reconnect instruction; the library shows no new "complete" listing; the scan cache is not overwritten;
@@ -289,7 +293,7 @@ Do not label a release device-tested until these tests pass on actual Windows 10
     of the tree (observed 2026-10-20). Also check the weaker case: one genuinely unreadable object makes the
     scan `Incomplete` and is named in the report, rather than being folded into a complete result.
 
-27. **Two phones attached: the preference decides, the other is named (live pass 2026-10-21; disappearance drill outstanding).**
+27. **Two phones attached: the preference decides, the other is named (live pass 2026-10-21; disappearance drill LIVE PASS 2026-10-24).**
     With both attached, `AndroidFirst` selected the HUAWEI and `AppleFirst` selected the Apple iPhone; the
     connection message and Diagnostics named both. Choosing a family that is not attached still reads the
     attached phone (the preference only reorders). The same session found the cross-device scan defect: the

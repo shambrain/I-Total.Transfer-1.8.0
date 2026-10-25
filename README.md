@@ -38,14 +38,15 @@ the Alt+Space system menu.
 | Phone unplugged mid-scan (live, 2026-10-20) | **the run exposed a real defect**: the scan reported `status=Complete` while the disconnected phone made every later object unreadable. Objects that cannot be read now make the scan `Incomplete`, twenty consecutive failures abort the walk with an instruction to reconnect, and no incomplete listing is cached |
 | Trial and licensing rules (automated, 2026-10-20) | **35 new tests**: the trial counts only completed, uncancelled transfers that wrote a file; failed/cancelled/empty/already-present runs are free; a repeated report is free; the counter survives a restart and the loss of one of its two stores; a clock moved back cannot reset it; a signed entitlement lifts the limit; tampered, expired, refunded, revoked, wrong-product, wrong-channel and wrong-app-id entitlements are refused with their own verdict; no public key means `NotConfigured`, never acceptance; one wireless sender session costs one job. No private key is shipped |
 | Per-user installer (automated, 2026-10-20) | **install, upgrade, hash refusal and uninstall run against the real PowerShell script**: no admin rights, no firewall rule; upgrade keeps `settings.json`/`trial.json`; uninstall through the installed copy removes the folder and HKCU entry but keeps user data; a wrong hash exits 4 and installs nothing; uninstalling an unrelated folder exits 3 and deletes nothing; the portable ZIP installs from its own folder without an explicit `-SourceDir` |
-| Release packaging (2026-10-24) | **portable ZIP and Inno Setup `setup.exe` produced from the publish output with `SHA256SUMS.txt`**; the setup installs per-user with no firewall rule and preserves `%APPDATA%`, and it is **unsigned** because no code-signing certificate or Windows SDK signing tools are available here |
+| Release packaging (2026-10-24) | **portable ZIP and Inno Setup `setup.exe` produced from the publish output with `SHA256SUMS.txt`**; the setup installs per-user with no firewall rule and preserves `%APPDATA%`, and it is **unsigned** because no trusted code-signing certificate is available here |
 
 Both handsets have now been read by the app: the iPhone through native WPD and the HUAWEI through the Android
-volume walk and a filtered copy (see the table). Still **hardware-unverified** and labelled as such: a multi-file/mixed-size
-device benchmark, the *attached* branch of the USB diagnosis, and wireless from a real iOS sender. The
-mid-scan unplug, selected-phone disappearance, Android cancel/resume, PTP warning and a single-file buffer
-sweep are live. A screen lock does not disable MTP, so no lock-abort is expected on that stack. No device
-result is fabricated.
+volume walk and a filtered copy (see the table). Still **hardware-unverified** and labelled as such: a
+statistical multi-file benchmark and an iPhone-side benchmark, a locked iPhone, a cloud-optimised library, a
+physical cable pull mid-copy, and wireless from a real iOS sender. The mid-scan unplug, selected-phone
+disappearance, attached USB diagnosis, Android cancel/resume, PTP warning, single-file buffer sweep and
+30-file mixed batch are live. A screen lock does not disable MTP, so no Android lock-abort is expected. No
+device result is fabricated.
 
 ---
 
@@ -337,8 +338,7 @@ signing procedure in [`docs/RELEASE-SIGNING.md`](docs/RELEASE-SIGNING.md).
   `Internal storage\Sounds\.pictures\*.jpg` entries, so the run correctly ended **COPIED WITH
   UNVERIFIABLE FILES - NOT A VERIFIED COMPLETE BACKUP** rather than claiming a verified backup. Resuming
   that destination preserved the 108 unverified entries with 0 failures. The run was therefore **not** a
-  meaningful completed job and did not consume a trial job. The Android cancel/resume, PTP and single-file buffer sweep are now live; a multi-file benchmark remains
-  open, and a screen lock is not a disconnect on this MTP stack. The classifier,
+  meaningful completed job and did not consume a trial job. The Android cancel/resume, PTP, single-file buffer sweep and 30-file mixed batch are live; no statistical benchmark is claimed, and a screen lock is not a disconnect on this MTP stack. The classifier,
   the generic-MTP storage policy (whole volumes, the `Android\data`/`Android\obb` skips, the PTP warning),
   the two-phone preference order and the family-aware diagnostics rows are pinned by tests; TEST-PLAN
   hardware checks 24-27 and the matrix's remaining rows are the open items.
