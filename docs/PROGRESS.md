@@ -116,6 +116,14 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
     applies it after building the pages. Two tests pin it: one asserts every page has no unnamed interactive
     control, one asserts the fallback order. A Narrator/NVDA audit has not been run (KI-24).
 
+14. **FigCraft design artifacts verified and revised.** The FigCraft MCP workspace was discovered
+    (`C:\Users\Administrator\I-Total-Transfer-FigCraft`, headless). The canonical editable design system
+    (`designs/i-total-transfer-design-system.figcraft`, 4 pages, 620 layers, created 2026-10-22) was opened,
+    its token pages re-checked against `UI/Theme.cs`, and a `04 · 1.8.0 revision` page added recording the
+    states changed this session. The file was saved and the revision page exported to
+    `renders/i-total-transfer-1.8.0-revision.png`, copied into the repository as
+    `docs/figcraft/i-total-transfer-1.8.0-revision.png`. Mapping and limits are in
+    `docs/FIGCRAFT-ARTIFACTS.md`; pixel parity with the running app is not claimed.
 ### Gate H - candidate build and packaging
 
 ```text
@@ -241,6 +249,14 @@ CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
     applies it after building the pages. Two tests pin it: one asserts every page has no unnamed interactive
     control, one asserts the fallback order. A Narrator/NVDA audit has not been run (KI-24).
 
+14. **FigCraft design artifacts verified and revised.** The FigCraft MCP workspace was discovered
+    (`C:\Users\Administrator\I-Total-Transfer-FigCraft`, headless). The canonical editable design system
+    (`designs/i-total-transfer-design-system.figcraft`, 4 pages, 620 layers, created 2026-10-22) was opened,
+    its token pages re-checked against `UI/Theme.cs`, and a `04 · 1.8.0 revision` page added recording the
+    states changed this session. The file was saved and the revision page exported to
+    `renders/i-total-transfer-1.8.0-revision.png`, copied into the repository as
+    `docs/figcraft/i-total-transfer-1.8.0-revision.png`. Mapping and limits are in
+    `docs/FIGCRAFT-ARTIFACTS.md`; pixel parity with the running app is not claimed.
 ### Gate H - candidate build and packaging
 
 ```text
@@ -559,6 +575,14 @@ The setup is **unsigned**: no trusted certificate is present (signtool 10.0.2610
     applies it after building the pages. Two tests pin it: one asserts every page has no unnamed interactive
     control, one asserts the fallback order. A Narrator/NVDA audit has not been run (KI-24).
 
+14. **FigCraft design artifacts verified and revised.** The FigCraft MCP workspace was discovered
+    (`C:\Users\Administrator\I-Total-Transfer-FigCraft`, headless). The canonical editable design system
+    (`designs/i-total-transfer-design-system.figcraft`, 4 pages, 620 layers, created 2026-10-22) was opened,
+    its token pages re-checked against `UI/Theme.cs`, and a `04 · 1.8.0 revision` page added recording the
+    states changed this session. The file was saved and the revision page exported to
+    `renders/i-total-transfer-1.8.0-revision.png`, copied into the repository as
+    `docs/figcraft/i-total-transfer-1.8.0-revision.png`. Mapping and limits are in
+    `docs/FIGCRAFT-ARTIFACTS.md`; pixel parity with the running app is not claimed.
 ### Gate H - candidate build and packaging
 
 ```text
@@ -826,6 +850,14 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
     applies it after building the pages. Two tests pin it: one asserts every page has no unnamed interactive
     control, one asserts the fallback order. A Narrator/NVDA audit has not been run (KI-24).
 
+14. **FigCraft design artifacts verified and revised.** The FigCraft MCP workspace was discovered
+    (`C:\Users\Administrator\I-Total-Transfer-FigCraft`, headless). The canonical editable design system
+    (`designs/i-total-transfer-design-system.figcraft`, 4 pages, 620 layers, created 2026-10-22) was opened,
+    its token pages re-checked against `UI/Theme.cs`, and a `04 · 1.8.0 revision` page added recording the
+    states changed this session. The file was saved and the revision page exported to
+    `renders/i-total-transfer-1.8.0-revision.png`, copied into the repository as
+    `docs/figcraft/i-total-transfer-1.8.0-revision.png`. Mapping and limits are in
+    `docs/FIGCRAFT-ARTIFACTS.md`; pixel parity with the running app is not claimed.
 ### Gate H - candidate build and packaging
 
 ```text

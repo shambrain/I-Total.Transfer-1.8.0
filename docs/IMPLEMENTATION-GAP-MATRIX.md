@@ -95,6 +95,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | F3 | DPI 100/125/150/200 and minimum/normal/wide sizes | theme/layout code, 125 screenshots | 96/150/200 renders; LIVE 150 % | PHYSICAL DEVICE VERIFIED (150 %) | 125 % render not captured |
 | F4 | Green dot only when media is accessible; distinct states | `StatusBlip`, `DeviceStates` | AT `DeviceStateTests` | AUTOMATED TEST VERIFIED | — |
 | F5 | Keyboard/focus/accessible names | `UI/Accessibility.cs`, `MainForm` | AT `EveryInteractiveControlOnEveryPageGetsAnAccessibleName`, `AnUnnamedTextBoxFallsBackToItsDesignerName` | AUTOMATED TEST VERIFIED (names) | focus order / Narrator audit (KI-24) |
+| F7 | Real editable FigCraft artifacts mapped to app screens | `designs/i-total-transfer-design-system.figcraft`, `docs/FIGCRAFT-ARTIFACTS.md`, `docs/figcraft/` | Artifact opened, edited, saved and exported on 2026-10-29 | IMPLEMENTED — NOT VERIFIED (pixel parity) | runtime is the source of truth; no parity assertion | 
 | F6 | Every control acts, is disabled with a reason, or is documented | UI audit 2026-10-22 | LIVE audit record | PHYSICAL DEVICE VERIFIED (historical) | re-audit after UI edits |
 
 ## Gate G — wireless
