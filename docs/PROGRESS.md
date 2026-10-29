@@ -129,7 +129,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 91A4DE630421AACE1D90A803B47B6DED7C5C9EC1115DBD1B080835E797857066 (112,195,398 B)
+  -> 24AB3B614EB5DFFB3C07B10EB1D07A80CB5340C3050C38DAFA0127E6C1B06A28 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -295,7 +295,7 @@ CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 91A4DE630421AACE1D90A803B47B6DED7C5C9EC1115DBD1B080835E797857066 (112,195,398 B)
+  -> 24AB3B614EB5DFFB3C07B10EB1D07A80CB5340C3050C38DAFA0127E6C1B06A28 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -654,7 +654,7 @@ The setup is **unsigned**: no trusted certificate is present (signtool 10.0.2610
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 91A4DE630421AACE1D90A803B47B6DED7C5C9EC1115DBD1B080835E797857066 (112,195,398 B)
+  -> 24AB3B614EB5DFFB3C07B10EB1D07A80CB5340C3050C38DAFA0127E6C1B06A28 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -962,7 +962,7 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 91A4DE630421AACE1D90A803B47B6DED7C5C9EC1115DBD1B080835E797857066 (112,195,398 B)
+  -> 24AB3B614EB5DFFB3C07B10EB1D07A80CB5340C3050C38DAFA0127E6C1B06A28 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the

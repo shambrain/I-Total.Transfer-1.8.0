@@ -166,6 +166,8 @@ public sealed class ReconciliationReportTests
             Assert.IsTrue(File.Exists(csvPath), "the reconciliation must be exported as CSV too");
             string csv = File.ReadAllText(csvPath);
             StringAssert.Contains(csv, "Metric,Value");
+            string perFile = File.ReadAllText(Path.Combine(destination, "I-total-session-report.csv"));
+            StringAssert.StartsWith(perFile, "RelativePath,CommittedPath,", "the per-file CSV records where each copy landed");
             StringAssert.Contains(csv, "CopiedFiles,1");
             StringAssert.Contains(csv, "FailedFiles,1");
             StringAssert.Contains(csv, "ExcludedByFilterFiles,1");

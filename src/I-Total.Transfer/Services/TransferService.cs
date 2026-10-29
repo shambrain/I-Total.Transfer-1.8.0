@@ -1135,9 +1135,9 @@ public sealed class TransferService
             manifest.Entries
         };
         LogService.ExportJson(Path.Combine(destination, "I-total-session-report.json"), report);
-        var csv = new StringBuilder("RelativePath,ExpectedBytes,SizeKnown,BytesWritten,State,Outcome,Attempts,Verification,SourceSha256,DestinationSha256,Error\r\n");
+        var csv = new StringBuilder("RelativePath,CommittedPath,ExpectedBytes,SizeKnown,BytesWritten,State,Outcome,Attempts,Verification,SourceSha256,DestinationSha256,Error\r\n");
         foreach (TransferEntry e in manifest.Entries)
-            csv.Append(Csv(e.RelativePath)).Append(',').Append(e.ExpectedBytes).Append(',').Append(e.SizeKnown ? 1 : 0).Append(',')
+            csv.Append(Csv(e.RelativePath)).Append(',').Append(Csv(e.CommittedPath ?? "")).Append(',').Append(e.ExpectedBytes).Append(',').Append(e.SizeKnown ? 1 : 0).Append(',')
                .Append(e.BytesWritten).Append(',').Append(e.State).Append(',').Append(e.Outcome).Append(',').Append(e.Attempts).Append(',')
                .Append(e.Verification).Append(',').Append(Csv(e.SourceSha256 ?? "")).Append(',')
                .Append(Csv(e.DestinationSha256 ?? "")).Append(',').Append(Csv(e.Error ?? "")).Append("\r\n");
