@@ -24,6 +24,45 @@ public sealed class TransferEngineTests
     }
 
     [TestMethod]
+    public async Task ATruncatedStageIsRejectedAndNothingIsCommitted()
+    {
+        // A provider that ends the stream early must not produce a destination file: the staged size is
+        // checked against the measured source size before the commit.
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1, bytesPerFile: 1024);
+        backend.TruncatePaths.Add("DCIM\\IMG_0000.bin");
+        string destination = TempDestination();
+        try
+        {
+            TransferSummary summary = await RunCopyAsync(backend, destination, retries: 1);
+
+            Assert.AreEqual(0, summary.Copied);
+            Assert.AreEqual(1, summary.Failed);
+            Assert.IsFalse(File.Exists(Path.Combine(destination, "DCIM", "IMG_0000.bin")),
+                "a short stage must never be committed");
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
+    public async Task ACorruptSqliteFileDoesNotStopTheRun()
+    {
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1);
+        string destination = TempDestination();
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(destination, ".i-total"));
+            File.WriteAllBytes(Path.Combine(destination, ".i-total", "session.db"), [1, 2, 3, 4, 5, 6, 7, 8]);
+
+            TransferSummary summary = await RunCopyAsync(backend, destination);
+
+            Assert.IsTrue(summary.Completed);
+            Assert.AreEqual(1, summary.Copied);
+            Assert.IsTrue(File.Exists(Path.Combine(destination, "DCIM", "IMG_0000.bin")));
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
     public async Task ATransferStillCompletesWhenTheSqliteDatabaseCannotBeOpened()
     {
         // SQLite is the queryable history; the JSON manifest is the recovery plan. If the database is

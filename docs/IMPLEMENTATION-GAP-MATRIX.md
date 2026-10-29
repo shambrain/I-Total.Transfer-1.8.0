@@ -38,6 +38,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | B9 | Unplug mid-scan produces Incomplete and no cache | `ScanCacheStore`, WPD folder outcomes | AT simulated; LIVE iPhone (2026-10-24) | PHYSICAL DEVICE VERIFIED (historical) | re-run after publish |
 | B10 | iCloud/cloud-only scope warning, no false coverage claim | `WpdDevice` probe messages, README | STATIC; LIVE message observed | IMPLEMENTED — NOT VERIFIED | needs an Optimize-Storage device |
 | B11 | Scan stability detects changes between two passes | `ScanStability.ChangedPaths` (path, size, size-known, timestamps) | AT `ScanStabilityTests` (10) | AUTOMATED TEST VERIFIED | — |
+| B14 | Unknown-size completeness arithmetic cannot overflow | `TransferRules.ClassifyEnumeration` (64-bit) | AT `AnAbsurdUnknownSizeCountCannotWrapIntoComplete` | AUTOMATED TEST VERIFIED | — |
 | B13 | A run with nothing to copy is reported as a no-op, not a fresh verified copy | `CopyCoreAsync` verdict, `TransferSummary.AlreadyPresent` | AT `ARerunWhereEverythingIsAlreadyPresentIsANoOpNotAFreshVerifiedCopy` | AUTOMATED TEST VERIFIED | — || B12 | Enumeration duration and items/second recorded | `ScanProgressReporter`, scan log line | STATIC; LIVE 55,185 files / 23.3 min | PHYSICAL DEVICE VERIFIED (historical) | — |
 
 ## Gate C — planner, persistence and recovery
@@ -53,6 +54,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | C7 | Crash/kill recovery reconciles DB with files | `SessionRecovery`, `ManifestStore.LoadOrCreate` | AT recovery suite | AUTOMATED TEST VERIFIED | SQLite hashes (C2) |
 | C8 | Resume only when source identity and destination state reconcile | `SourceIdentityProblem`, `HandleExistingAsync` | AT | AUTOMATED TEST VERIFIED | — |
 | C9 | Unknown-size resume does not become a collision | `ClassifyExistingDestination`, digest-first rule | AT `EnumerationAccountingTests` | AUTOMATED TEST VERIFIED | — |
+| C13 | A corrupt SQLite file does not stop the run and its handle is released | `TryOpenDatabase` (dispose on failure), `ManifestStore` | AT `ACorruptSqliteFileDoesNotStopTheRun` | AUTOMATED TEST VERIFIED | — |
 | C12 | A renamed copy is verified at its committed path and not duplicated on rerun | `TransferEntry.CommittedPath`, `HandleExistingAsync`, `VerifyCoreAsync` | AT `RenameConflictTests` (4) | AUTOMATED TEST VERIFIED | — |
 | C11 | A run continues on the JSON manifest when SQLite cannot be opened | `TryOpenDatabase`, `ManifestStore` | AT `ATransferStillCompletesWhenTheSqliteDatabaseCannotBeOpened` | AUTOMATED TEST VERIFIED | — |
 | C10 | Source is never deleted | all backends | STATIC (no delete API on source paths) | AUTOMATED TEST VERIFIED | — |
@@ -69,6 +71,8 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | D6 | Checked arithmetic for byte totals | `ScanAccounting.Of` (`checked`), `Enumerable.Sum` | STATIC + AT | AUTOMATED TEST VERIFIED | extend to report totals (D8) |
 | D7 | JSON/CSV report with reconciliation counts and bytes | `ReconciliationReport`, `ExportReports` (JSON + `I-total-reconciliation.csv`) | AT `ReconciliationReportTests` (5) | AUTOMATED TEST VERIFIED | — |
 | D8 | Unknown size stays unknown in reports and totals | `TransferEntry.SizeKnown/BytesWritten`, `ScanAccounting` | AT engine tests | AUTOMATED TEST VERIFIED | include in reconciliation report |
+| D12 | A truncated stage is rejected before commit | `CopyCoreAsync` staged-size check | AT `ATruncatedStageIsRejectedAndNothingIsCommitted` | AUTOMATED TEST VERIFIED | — |
+| D13 | Verification honours cancellation and writes no completed report | `VerifyCoreAsync` token checks | AT `VerificationHonoursCancellationAndWritesNoCompletedReport` | AUTOMATED TEST VERIFIED | — |
 | D11 | Verification verdict is durable in SQLite, not only JSON | `PersistVerification` | AT `ACorruptedDestinationIsPersistedAsFailedInSqliteAsWellAsJson` | AUTOMATED TEST VERIFIED | — || D9 | Unicode, long paths, reserved names | `TransferRules.ValidateRelativePath/SanitizeSegment` | AT reserved-name and traversal tests | AUTOMATED TEST VERIFIED | long-path (>260) drill not run |
 | D10 | Zero-byte files verify | engine + `EnumerationAccountingTests` | AT | AUTOMATED TEST VERIFIED | live confirmation |
 

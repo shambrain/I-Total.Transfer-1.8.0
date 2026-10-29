@@ -66,6 +66,14 @@ public sealed class EnumerationAccountingTests
     }
 
     [TestMethod]
+    public void AnAbsurdUnknownSizeCountCannotWrapIntoComplete()
+    {
+        // unknownSizeCount * 10 would overflow Int32 and become negative, passing the completeness test.
+        Assert.AreEqual(EnumerationStatus.Incomplete,
+            TransferRules.ClassifyEnumeration(1, 0, int.MaxValue, 0, int.MaxValue));
+    }
+
+    [TestMethod]
     public void AScanWithNoFilesIsEmptyAndAFailedFolderIsIncomplete()
     {
         Assert.AreEqual(EnumerationStatus.Empty, ScanAccounting.BuildReport("test", [], [], 0, []).Status);

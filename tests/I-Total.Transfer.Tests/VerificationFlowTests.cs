@@ -80,6 +80,29 @@ public sealed class VerificationFlowTests
     }
 
     [TestMethod]
+    public async Task VerificationHonoursCancellationAndWritesNoCompletedReport()
+    {
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 60);
+        string destination = TempDestination();
+        try
+        {
+            var service = new TransferService(backend, new LogService(destination));
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+            await service.CopyAsync(scan, destination, 1, Quiet(), CancellationToken.None);
+            string report = Path.Combine(destination, "I-total-verification.json");
+            File.Delete(report);
+
+            using var cts = new CancellationTokenSource();
+            var progress = new CancelOnFirstReport(cts);
+            await Assert.ThrowsExceptionAsync<OperationCanceledException>(() =>
+                service.VerifyAsync(scan, destination, progress, cts.Token));
+
+            Assert.IsFalse(File.Exists(report), "a cancelled verification must not write a completion report");
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
     public async Task ASizeChangeOnTheDestinationIsNotAMatch()
     {
         using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1);
@@ -244,4 +267,15 @@ public sealed class VerificationFlowTests
         finally { Directory.Delete(destination, true); }
     }
 
+/// <summary>Cancels the token synchronously on the first progress report, so the test cannot race the loop.</summary>
+internal sealed class CancelOnFirstReport : IProgress<TransferProgress>
+{
+    private readonly CancellationTokenSource _cts;
+    private int _fired;
+    public CancelOnFirstReport(CancellationTokenSource cts) => _cts = cts;
+    public void Report(TransferProgress value)
+    {
+        if (Interlocked.Exchange(ref _fired, 1) == 0) _cts.Cancel();
+    }
+}
 }

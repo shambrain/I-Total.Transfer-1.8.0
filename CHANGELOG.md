@@ -1,5 +1,12 @@
 ## 1.8.0 — 2026-10-20 — borderless chrome, honest device detection, unfinished-session recovery, Android storage
 
+- **Truncated stages, corrupt queues and cancellation are handled explicitly (2026-10-29).** A backend
+  that ends a stream early now fails the staged-size check and nothing is committed; a corrupt
+  `session.db` is disposed rather than left to the finalizer, so the run continues on the JSON manifest
+  and the file is not left locked; verification honours cancellation and writes no completed report; and
+  the unknown-size completeness rule uses 64-bit arithmetic so an absurd count cannot wrap into
+  "complete". Four tests were added; the suite is 499 passed, 2 skipped, 501 total.
+
 - **A renamed copy is now verified where it was actually stored (2026-10-29).** With the rename conflict
   policy, the copy landed beside the colliding file but the manifest kept the original path, so a later
   verification compared the untouched original with the copy digest and reported a mismatch. Entries now

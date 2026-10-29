@@ -200,7 +200,8 @@ public static class TransferRules
         // A handset that disappears during enumeration can still return names while every later
         // property read yields zero. A small number of genuine zero-byte files is normal; a large
         // fraction is not a complete listing. Ten percent is deliberately conservative.
-        if (unknownSizeCount > 0 && unknownSizeCount * 10 >= fileCount) return EnumerationStatus.Incomplete;
+        // Long arithmetic: a hostile or corrupt count must not wrap negative and pass as complete.
+        if (unknownSizeCount > 0 && (long)unknownSizeCount * 10 >= fileCount) return EnumerationStatus.Incomplete;
         return EnumerationStatus.Complete;
     }
 

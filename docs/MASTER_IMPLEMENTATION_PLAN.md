@@ -62,7 +62,11 @@ drill that closes them.
 | C11 | Locked phone / revoked USB permission | TESTED AND PASSED (simulated); lock not applicable on tested MTP | `RecoveryFlowTests` covers backend faults. The HUAWEI keeps MTP active while locked, so no lock-abort is expected on this stack. |
 | C12 | Restart app or Windows with jobs incomplete | TESTED AND PASSED | Interrupted-session recovery; dismissal persisted by destination+mtime+counts. |
 | C13 | Continue from session record without re-reading already verified files | TESTED AND PASSED | Resume rebuilds the plan from outstanding entries only. |
-| C14 | Never delete or modify original phone media | TESTED AND PASSED (design + tests) | Read-only source streams; device write path is the only mutating one and is explicit. |
+| C15 | Zero-byte files are measured, unreadable sizes stay unknown | TESTED AND PASSED | `MediaFile.SizeKnown`, `ScanAccounting`, all three backends; nine accounting tests and three engine tests. No phone attached for the current build. |
+| C16 | A renamed copy is verified where it was stored and not duplicated | TESTED AND PASSED | `TransferEntry.CommittedPath`, verification `STORED AS`, rerun reuse, changed-source guard; `RenameConflictTests` (4). |
+| C17 | A run with nothing to copy is reported as a no-op | TESTED AND PASSED | `ALREADY PRESENT - NO FILES NEEDED COPYING` verdict; `TransferSummary.AlreadyPresent`; engine test. |
+| C18 | Reconciliation and durable integrity record | TESTED AND PASSED | `ReconciliationReport` to JSON + `I-total-reconciliation.csv`; SQLite hash/verification/outcome/committed-path columns with idempotent migration; `SessionDatabaseTests`, `ReconciliationReportTests`. |
+| C19 | A truncated stage is never committed; corrupt SQLite falls back to JSON; verification is cancelable | TESTED AND PASSED | `ATruncatedStageIsRejectedAndNothingIsCommitted`, `ACorruptSqliteFileDoesNotStopTheRun`, `VerificationHonoursCancellationAndWritesNoCompletedReport`; the half-open database is disposed on failure. || C14 | Never delete or modify original phone media | TESTED AND PASSED (design + tests) | Read-only source streams; device write path is the only mutating one and is explicit. |
 
 ## D. Simulation and test infrastructure
 

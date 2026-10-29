@@ -129,7 +129,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 24AB3B614EB5DFFB3C07B10EB1D07A80CB5340C3050C38DAFA0127E6C1B06A28 (112,195,398 B)
+  -> 3EDE82DBE942ABABD7247C22F6062A5FB5E3AE8507DC9102B5E5AB428FA387CA (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -160,6 +160,13 @@ smoke test only.
     bytes still match. A changed source is never served from the old renamed copy: the reuse check now
     requires `!SourceChanged`, so the new bytes are stored under a fresh name. Four tests:
     storage/preservation, verification of the renamed copy, the unchanged rerun, and the changed source.
+16. **Four robustness gaps closed.** A provider that ends the stream early now fails the staged-size check
+    and nothing is committed (`ATruncatedStageIsRejectedAndNothingIsCommitted`). A corrupt `session.db` is
+    disposed instead of being left to the finalizer, so the run continues on the JSON manifest and the
+    locked file no longer blocks cleanup (`ACorruptSqliteFileDoesNotStopTheRun`). Verification honours
+    cancellation and writes no completed report (`VerificationHonoursCancellationAndWritesNoCompletedReport`).
+    The unknown-size completeness rule uses 64-bit arithmetic, so an absurd count cannot wrap negative and
+    pass as complete (`AnAbsurdUnknownSizeCountCannotWrapIntoComplete`).
 ### Runtime UI audit and README reconciliation
 
 - The published candidate was driven through UI Automation with no device attached: the window was found,
@@ -176,7 +183,7 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **495 passed, 2 skipped, 497 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **499 passed, 2 skipped, 501 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.
@@ -295,7 +302,7 @@ CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 24AB3B614EB5DFFB3C07B10EB1D07A80CB5340C3050C38DAFA0127E6C1B06A28 (112,195,398 B)
+  -> 3EDE82DBE942ABABD7247C22F6062A5FB5E3AE8507DC9102B5E5AB428FA387CA (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -326,6 +333,13 @@ smoke test only.
     bytes still match. A changed source is never served from the old renamed copy: the reuse check now
     requires `!SourceChanged`, so the new bytes are stored under a fresh name. Four tests:
     storage/preservation, verification of the renamed copy, the unchanged rerun, and the changed source.
+16. **Four robustness gaps closed.** A provider that ends the stream early now fails the staged-size check
+    and nothing is committed (`ATruncatedStageIsRejectedAndNothingIsCommitted`). A corrupt `session.db` is
+    disposed instead of being left to the finalizer, so the run continues on the JSON manifest and the
+    locked file no longer blocks cleanup (`ACorruptSqliteFileDoesNotStopTheRun`). Verification honours
+    cancellation and writes no completed report (`VerificationHonoursCancellationAndWritesNoCompletedReport`).
+    The unknown-size completeness rule uses 64-bit arithmetic, so an absurd count cannot wrap negative and
+    pass as complete (`AnAbsurdUnknownSizeCountCannotWrapIntoComplete`).
 ### Runtime UI audit and README reconciliation
 
 - The published candidate was driven through UI Automation with no device attached: the window was found,
@@ -342,7 +356,7 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **495 passed, 2 skipped, 497 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **499 passed, 2 skipped, 501 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.
@@ -654,7 +668,7 @@ The setup is **unsigned**: no trusted certificate is present (signtool 10.0.2610
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 24AB3B614EB5DFFB3C07B10EB1D07A80CB5340C3050C38DAFA0127E6C1B06A28 (112,195,398 B)
+  -> 3EDE82DBE942ABABD7247C22F6062A5FB5E3AE8507DC9102B5E5AB428FA387CA (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -685,6 +699,13 @@ smoke test only.
     bytes still match. A changed source is never served from the old renamed copy: the reuse check now
     requires `!SourceChanged`, so the new bytes are stored under a fresh name. Four tests:
     storage/preservation, verification of the renamed copy, the unchanged rerun, and the changed source.
+16. **Four robustness gaps closed.** A provider that ends the stream early now fails the staged-size check
+    and nothing is committed (`ATruncatedStageIsRejectedAndNothingIsCommitted`). A corrupt `session.db` is
+    disposed instead of being left to the finalizer, so the run continues on the JSON manifest and the
+    locked file no longer blocks cleanup (`ACorruptSqliteFileDoesNotStopTheRun`). Verification honours
+    cancellation and writes no completed report (`VerificationHonoursCancellationAndWritesNoCompletedReport`).
+    The unknown-size completeness rule uses 64-bit arithmetic, so an absurd count cannot wrap negative and
+    pass as complete (`AnAbsurdUnknownSizeCountCannotWrapIntoComplete`).
 ### Runtime UI audit and README reconciliation
 
 - The published candidate was driven through UI Automation with no device attached: the window was found,
@@ -701,7 +722,7 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **495 passed, 2 skipped, 497 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **499 passed, 2 skipped, 501 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.
@@ -962,7 +983,7 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 24AB3B614EB5DFFB3C07B10EB1D07A80CB5340C3050C38DAFA0127E6C1B06A28 (112,195,398 B)
+  -> 3EDE82DBE942ABABD7247C22F6062A5FB5E3AE8507DC9102B5E5AB428FA387CA (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -993,6 +1014,13 @@ smoke test only.
     bytes still match. A changed source is never served from the old renamed copy: the reuse check now
     requires `!SourceChanged`, so the new bytes are stored under a fresh name. Four tests:
     storage/preservation, verification of the renamed copy, the unchanged rerun, and the changed source.
+16. **Four robustness gaps closed.** A provider that ends the stream early now fails the staged-size check
+    and nothing is committed (`ATruncatedStageIsRejectedAndNothingIsCommitted`). A corrupt `session.db` is
+    disposed instead of being left to the finalizer, so the run continues on the JSON manifest and the
+    locked file no longer blocks cleanup (`ACorruptSqliteFileDoesNotStopTheRun`). Verification honours
+    cancellation and writes no completed report (`VerificationHonoursCancellationAndWritesNoCompletedReport`).
+    The unknown-size completeness rule uses 64-bit arithmetic, so an absurd count cannot wrap negative and
+    pass as complete (`AnAbsurdUnknownSizeCountCannotWrapIntoComplete`).
 ### Runtime UI audit and README reconciliation
 
 - The published candidate was driven through UI Automation with no device attached: the window was found,
@@ -1009,7 +1037,7 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **495 passed, 2 skipped, 497 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **499 passed, 2 skipped, 501 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.

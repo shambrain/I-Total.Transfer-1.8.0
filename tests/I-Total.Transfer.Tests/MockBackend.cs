@@ -72,6 +72,12 @@ public sealed class MockBackend : ITransferBackend
     /// </summary>
     public HashSet<string> CorruptPaths { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Relative paths whose staged file is written short of the reported size, emulating a provider
+    /// that ends the stream early. The engine must notice the size mismatch and refuse to commit.
+    /// </summary>
+    public HashSet<string> TruncatePaths { get; } = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>Every relative path the engine actually asked the device to fetch, in order.</summary>
     public List<string> FetchedPaths { get; } = new();
 
@@ -119,6 +125,8 @@ public sealed class MockBackend : ITransferBackend
         if (!_contentByRelativePath.TryGetValue(file.RelativePath, out byte[]? bytes))
             return new CopyResult(false, null, "source disappeared");
         Directory.CreateDirectory(stagingDirectory);
+        if (TruncatePaths.Contains(file.RelativePath) && bytes.Length > 0)
+            bytes = bytes[..(bytes.Length / 2)];
         File.WriteAllBytes(Path.Combine(stagingDirectory, file.Name), bytes);
         if (CorruptPaths.Contains(file.RelativePath))
         {

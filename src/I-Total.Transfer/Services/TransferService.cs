@@ -1043,9 +1043,10 @@ public sealed class TransferService
     // ------------------------------------------------------------------ Infrastructure
     private SessionDatabase? TryOpenDatabase(string destination, string sessionId, ScanResult scan, Dictionary<string, TransferEntry> entries)
     {
+        SessionDatabase? database = null;
         try
         {
-            var database = new SessionDatabase(Path.Combine(destination, ".i-total", "session.db"), _log);
+            database = new SessionDatabase(Path.Combine(destination, ".i-total", "session.db"), _log);
             database.Initialize();
             database.BeginSession(sessionId, scan.DeviceName, destination, "RUNNING",
                 _device.Name, scan.Family.ToString(), scan.Status.ToString());
@@ -1058,6 +1059,9 @@ public sealed class TransferService
         }
         catch (Exception ex)
         {
+            // Dispose the half-opened connection: leaving it to the finalizer keeps the corrupt file
+            // (and its WAL sidecars) locked, which can block cleanup or a later repair.
+            database?.Dispose();
             _log.Write($"SQLite database unavailable; JSON manifest remains the recovery source. {ex.Message}", "WARN");
             return null;
         }
