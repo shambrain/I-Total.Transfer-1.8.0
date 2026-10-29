@@ -180,11 +180,11 @@ The app claims, at most, the strongest verification level it actually achieved p
 (`SizeOnly` → `DestinationHash` → `SourceAndDestinationHash`). A size match is never reported as
 byte identity, and an item that cannot be re-read is reported **unverifiable**, not successful.
 
-## Release artifacts (built here, 2026-10-24)
+## Release artifacts (built here, 2026-10-29)
 
 | Artifact | Size | SHA-256 |
 | --- | --- | --- |
-| `publish\I-Total.Transfer.exe` (self-contained, single file, win-x64) | 112,158,534 B | `8FCB2B5095365995813AF028EFE4A27E6EC538A32ADEA12F153919AD0E61CABB` |
+| `publish\I-Total.Transfer.exe` (self-contained, single file, win-x64) | 112,191,302 B | `1C62B2B18AA488939E3DC747C9D7B5772436C376E6AEC27C10ECE5986EC97D7E` |
 | `dist\I-Total.Transfer-1.8.0-win-x64.zip` (deployment) | see `dist\SHA256SUMS.txt` | see `dist\SHA256SUMS.txt` |
 | `dist\installer\I-Total.Transfer-1.8.0-portable-win-x64.zip` (portable package) | see `dist\installer\SHA256SUMS.txt` | see `dist\installer\SHA256SUMS.txt` |
 | `dist\installer\I-Total.Transfer-1.8.0-setup.exe` (Inno Setup, per-user, unsigned) | see `dist\installer\SHA256SUMS.txt` | see `dist\installer\SHA256SUMS.txt` |
@@ -220,7 +220,7 @@ scripts - and it was smoke-tested through its own UI, including the Licence row.
 licence/trial summary to the diagnostics bundle and the installer ASCII guard; `772DEC2C.` added
 filtered-plan byte accounting and preserved `CopiedUnverified` on resume; `5A0DC3CC.` added the two-phone
 isolation guard (`DeviceSelectionGuard`, `ScanResult.BelongsTo`, UI and cache refusals); `4179C72E.` was the
-2026-10-21 deterministic Release publish, `24944655.` and `13251D4B.` are previous 2026-10-22 publishes, and `C953BC08.` was the 2026-10-24 publish (filtered-plan confirmation plus the TcpListener/UI-18 fixes); `42C6C975.` was the 96-DPI caption-fit publish, `411F4CC5.` carried the AFC-status fix, `945E2D1F.` carried the minimum-window layout and 200 % render, `25397B1F.` carried the copy-path fixes, and `8FCB2B50.` is the current publish (verification fixes) (static Regex
+2026-10-21 deterministic Release publish, `24944655.` and `13251D4B.` are previous 2026-10-22 publishes, and `C953BC08.` was the 2026-10-24 publish (filtered-plan confirmation plus the TcpListener/UI-18 fixes); `42C6C975.` was the 96-DPI caption-fit publish, `411F4CC5.` carried the AFC-status fix, `945E2D1F.` carried the minimum-window layout and 200 % render, `25397B1F.` carried the copy-path fixes, and `8FCB2B50.` carried the verification fixes and `1C62B2B1.` is the current publish (size truth, SQLite integrity columns, reconciliation report, retry classification, stability timestamps, WPD COM cleanup, accessible names) (static Regex
 redaction and no Release PDB, so a rebuild from the source ZIP should match byte for byte). Every earlier hash listed
 here was a real, separately published build rather than a rebuild of the same bytes. The deployment
 ZIP's embedded copy of the exe was **extracted and hash-compared against `publish\`** during packaging — they

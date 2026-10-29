@@ -8,6 +8,15 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
 **Legend** — ✅ proven (evidence named) · 🟡 proven in part, or proven only against a mock / by inspection ·
 ⛔ blocked on the handset (nothing attached at audit time) · ❌ not implemented.
 
+## Candidate note (2026-10-29)
+
+A new candidate executable (`1C62B2B1...`, 112,191,302 B) was built from the master-directive work:
+zero-byte/unknown-size separation, shared enumeration accounting, SQLite integrity columns with migration,
+the reconciliation report, retry classification, stability timestamps, WPD COM cleanup and accessible
+control names. Build 0/0, suite 488 passed / 2 skipped / 490, source-ZIP rebuild byte-identical, installer
+install/uninstall re-verified. **No physical device was attached for this candidate**, so every hardware
+row below keeps its earlier status and none is promoted by this build. The checklist itself has not been
+re-audited line by line for this candidate.
 ## Correctness
 
 - [x] **Empty scan cannot start a backup.** ✅

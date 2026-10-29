@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ITotalTransfer.Core;
 using ITotalTransfer.Services;
+using ITotalTransfer.UI;
 using ITotalTransfer.UI.Controls;
 using ITotalTransfer.UI.Pages;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -310,4 +311,47 @@ public sealed class PageControlTests : WinFormsTestBase
             "Clear view must be inside the grown toolbar, not clipped by the log box.");
     }
 
+    [TestMethod]
+    public void EveryInteractiveControlOnEveryPageGetsAnAccessibleName()
+    {
+        // A custom-painted button can reach a screen reader as an unnamed "button". The helper fills
+        // the gap from the visible caption (or the designer name), and this test fails if any page
+        // still exposes an interactive control without a name.
+        Control[] pages = [new DashboardPage(), new TransferPage(), new LibraryPage(), new WirelessPage(),
+            new HistoryPage(), new SettingsPage(), new DiagnosticsPage()];
+        try
+        {
+            foreach (Control page in pages)
+            {
+                AccessibleNames.Ensure(page);
+                foreach (Control control in Walk(page))
+                {
+                    if (control is ButtonBase or TextBoxBase or ComboBox or ListBox or ListView or ProgressBar)
+                    {
+                        Assert.IsFalse(string.IsNullOrWhiteSpace(control.AccessibleName),
+                            $"{page.GetType().Name} exposes {control.GetType().Name} '{control.Name}' without an accessible name.");
+                    }
+                }
+            }
+        }
+        finally
+        {
+            foreach (Control page in pages) page.Dispose();
+        }
+    }
+
+    [TestMethod]
+    public void AnUnnamedTextBoxFallsBackToItsDesignerName()
+    {
+        using var panel = new Panel();
+        var box = new TextBox { Name = "_destinationBox" };
+        var button = new Button { Text = "Start backup" };
+        panel.Controls.Add(box);
+        panel.Controls.Add(button);
+
+        AccessibleNames.Ensure(panel);
+
+        Assert.AreEqual("_destinationBox", box.AccessibleName, "with no caption, the designer name is better than nothing");
+        Assert.AreEqual("Start backup", button.AccessibleName);
+    }
 }

@@ -95,6 +95,41 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
   after D6:    Passed! Failed: 0, Passed: 485, Skipped: 2, Total: 487
 ```
 
+### Gate E - WPD COM ownership
+
+9. **Enumeration leaked COM objects.** `EnumerateChildren` created an `IEnumPortableDeviceObjectIDs` per
+   folder and never released it; `GetProps` created a key collection and a values object per object;
+   `TryGetValue` leaked its key collection and each per-key reader leaked its values object; and
+   `ListDevices` never released the device manager. On a 26,000-object camera roll that is tens of
+   thousands of provider objects left to finalization. All five paths now release deterministically in
+   `finally` blocks (`ReleaseCom`). This is static evidence plus a clean build; no phone was attached to
+   measure the effect, and none is claimed.
+
+### Gate F - Designer and accessibility
+
+10. **Designer coverage verified statically.** All seven pages have a `.Designer.cs` with a real
+    `InitializeComponent` (37, 20, 20, 22, 41, 24 and 39 designer fields respectively) and `MainForm.Designer.cs`
+    declares 36. No page builds its visual tree at runtime. Visual Studio is not installed on this host, so
+    the open/save/reopen round-trip is not claimed.
+11. **Interactive controls now have accessible names.** `UI/Accessibility.cs` fills `AccessibleName` from the
+    caption, then the designer name, for buttons, text boxes, lists, combos and progress bars; `MainForm`
+    applies it after building the pages. Two tests pin it: one asserts every page has no unnamed interactive
+    control, one asserts the fallback order. A Narrator/NVDA audit has not been run (KI-24).
+
+### Gate H - candidate build and packaging
+
+```text
+dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
+  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+  -> 1C62B2B18AA488939E3DC747C9D7B5772436C376E6AEC27C10ECE5986EC97D7E (112,191,302 B)
+```
+
+The source ZIP was extracted into a clean folder and published there: the resulting executable has the
+same SHA-256, so the source-only rebuild is byte-identical. `Build-Installer.ps1` produced portable
+`96E773D3...` and setup `41A2F4A3...`; the setup was installed silently into a temporary folder (exe and
+README hashes matched), then uninstalled: folder, HKCU entry and shortcuts removed, `%APPDATA%` kept. `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`, `RELEASE-ACCEPTANCE.md`,
+`PERFORMANCE-AUDIT.md` and `KNOWN_ISSUES.md` were updated for the candidate; no hardware or performance
+claim was added.
 ### Blockers
 
 No phone attached, so no hardware claim is made for the new size handling. AFC remains inert (empty
@@ -172,6 +207,41 @@ CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
   user data kept.
 - The source ZIP was rebuilt and published byte-identically; a clean clone of the release commit was checked.
 
+### Gate E - WPD COM ownership
+
+9. **Enumeration leaked COM objects.** `EnumerateChildren` created an `IEnumPortableDeviceObjectIDs` per
+   folder and never released it; `GetProps` created a key collection and a values object per object;
+   `TryGetValue` leaked its key collection and each per-key reader leaked its values object; and
+   `ListDevices` never released the device manager. On a 26,000-object camera roll that is tens of
+   thousands of provider objects left to finalization. All five paths now release deterministically in
+   `finally` blocks (`ReleaseCom`). This is static evidence plus a clean build; no phone was attached to
+   measure the effect, and none is claimed.
+
+### Gate F - Designer and accessibility
+
+10. **Designer coverage verified statically.** All seven pages have a `.Designer.cs` with a real
+    `InitializeComponent` (37, 20, 20, 22, 41, 24 and 39 designer fields respectively) and `MainForm.Designer.cs`
+    declares 36. No page builds its visual tree at runtime. Visual Studio is not installed on this host, so
+    the open/save/reopen round-trip is not claimed.
+11. **Interactive controls now have accessible names.** `UI/Accessibility.cs` fills `AccessibleName` from the
+    caption, then the designer name, for buttons, text boxes, lists, combos and progress bars; `MainForm`
+    applies it after building the pages. Two tests pin it: one asserts every page has no unnamed interactive
+    control, one asserts the fallback order. A Narrator/NVDA audit has not been run (KI-24).
+
+### Gate H - candidate build and packaging
+
+```text
+dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
+  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+  -> 1C62B2B18AA488939E3DC747C9D7B5772436C376E6AEC27C10ECE5986EC97D7E (112,191,302 B)
+```
+
+The source ZIP was extracted into a clean folder and published there: the resulting executable has the
+same SHA-256, so the source-only rebuild is byte-identical. `Build-Installer.ps1` produced portable
+`96E773D3...` and setup `41A2F4A3...`; the setup was installed silently into a temporary folder (exe and
+README hashes matched), then uninstalled: folder, HKCU entry and shortcuts removed, `%APPDATA%` kept. `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`, `RELEASE-ACCEPTANCE.md`,
+`PERFORMANCE-AUDIT.md` and `KNOWN_ISSUES.md` were updated for the candidate; no hardware or performance
+claim was added.
 ### Blockers and limits
 
 - A statistical multi-file benchmark, an iPhone-side benchmark, a locked iPhone, a cloud-optimised library,
@@ -442,6 +512,41 @@ The setup is **unsigned**: no trusted certificate is present (signtool 10.0.2610
   installed silently into a temporary folder (installed exe hash matched), launched (exit 0) and
   uninstalled (folder, HKCU entry and shortcuts removed; `%APPDATA%` kept); no firewall rule was created.
 
+### Gate E - WPD COM ownership
+
+9. **Enumeration leaked COM objects.** `EnumerateChildren` created an `IEnumPortableDeviceObjectIDs` per
+   folder and never released it; `GetProps` created a key collection and a values object per object;
+   `TryGetValue` leaked its key collection and each per-key reader leaked its values object; and
+   `ListDevices` never released the device manager. On a 26,000-object camera roll that is tens of
+   thousands of provider objects left to finalization. All five paths now release deterministically in
+   `finally` blocks (`ReleaseCom`). This is static evidence plus a clean build; no phone was attached to
+   measure the effect, and none is claimed.
+
+### Gate F - Designer and accessibility
+
+10. **Designer coverage verified statically.** All seven pages have a `.Designer.cs` with a real
+    `InitializeComponent` (37, 20, 20, 22, 41, 24 and 39 designer fields respectively) and `MainForm.Designer.cs`
+    declares 36. No page builds its visual tree at runtime. Visual Studio is not installed on this host, so
+    the open/save/reopen round-trip is not claimed.
+11. **Interactive controls now have accessible names.** `UI/Accessibility.cs` fills `AccessibleName` from the
+    caption, then the designer name, for buttons, text boxes, lists, combos and progress bars; `MainForm`
+    applies it after building the pages. Two tests pin it: one asserts every page has no unnamed interactive
+    control, one asserts the fallback order. A Narrator/NVDA audit has not been run (KI-24).
+
+### Gate H - candidate build and packaging
+
+```text
+dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
+  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+  -> 1C62B2B18AA488939E3DC747C9D7B5772436C376E6AEC27C10ECE5986EC97D7E (112,191,302 B)
+```
+
+The source ZIP was extracted into a clean folder and published there: the resulting executable has the
+same SHA-256, so the source-only rebuild is byte-identical. `Build-Installer.ps1` produced portable
+`96E773D3...` and setup `41A2F4A3...`; the setup was installed silently into a temporary folder (exe and
+README hashes matched), then uninstalled: folder, HKCU entry and shortcuts removed, `%APPDATA%` kept. `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`, `RELEASE-ACCEPTANCE.md`,
+`PERFORMANCE-AUDIT.md` and `KNOWN_ISSUES.md` were updated for the candidate; no hardware or performance
+claim was added.
 ### Blockers and limits
 
 - A *native* 100 % desktop capture is still impossible here: the display used for the 200 % pass was
@@ -661,6 +766,41 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
   hashes above match it.
 
 
+### Gate E - WPD COM ownership
+
+9. **Enumeration leaked COM objects.** `EnumerateChildren` created an `IEnumPortableDeviceObjectIDs` per
+   folder and never released it; `GetProps` created a key collection and a values object per object;
+   `TryGetValue` leaked its key collection and each per-key reader leaked its values object; and
+   `ListDevices` never released the device manager. On a 26,000-object camera roll that is tens of
+   thousands of provider objects left to finalization. All five paths now release deterministically in
+   `finally` blocks (`ReleaseCom`). This is static evidence plus a clean build; no phone was attached to
+   measure the effect, and none is claimed.
+
+### Gate F - Designer and accessibility
+
+10. **Designer coverage verified statically.** All seven pages have a `.Designer.cs` with a real
+    `InitializeComponent` (37, 20, 20, 22, 41, 24 and 39 designer fields respectively) and `MainForm.Designer.cs`
+    declares 36. No page builds its visual tree at runtime. Visual Studio is not installed on this host, so
+    the open/save/reopen round-trip is not claimed.
+11. **Interactive controls now have accessible names.** `UI/Accessibility.cs` fills `AccessibleName` from the
+    caption, then the designer name, for buttons, text boxes, lists, combos and progress bars; `MainForm`
+    applies it after building the pages. Two tests pin it: one asserts every page has no unnamed interactive
+    control, one asserts the fallback order. A Narrator/NVDA audit has not been run (KI-24).
+
+### Gate H - candidate build and packaging
+
+```text
+dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
+  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+  -> 1C62B2B18AA488939E3DC747C9D7B5772436C376E6AEC27C10ECE5986EC97D7E (112,191,302 B)
+```
+
+The source ZIP was extracted into a clean folder and published there: the resulting executable has the
+same SHA-256, so the source-only rebuild is byte-identical. `Build-Installer.ps1` produced portable
+`96E773D3...` and setup `41A2F4A3...`; the setup was installed silently into a temporary folder (exe and
+README hashes matched), then uninstalled: folder, HKCU entry and shortcuts removed, `%APPDATA%` kept. `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`, `RELEASE-ACCEPTANCE.md`,
+`PERFORMANCE-AUDIT.md` and `KNOWN_ISSUES.md` were updated for the candidate; no hardware or performance
+claim was added.
 ### Blockers and limits
 
 - **100 % pixel capture of UI-18 was open at this cut.** This host has only a 150 % display; the page actions and

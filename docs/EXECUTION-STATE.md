@@ -23,11 +23,14 @@ Updated: 2026-10-29 (session 1). Read this first on resume.
 - Gate A: **complete for the audit portion** — `docs/AUDIT-1.8.0.md`, this file,
   `docs/IMPLEMENTATION-GAP-MATRIX.md`, `docs/DEVICE-COMPATIBILITY-MATRIX.md`,
   `docs/TRANSFER-ENGINE-DESIGN.md` written from inspection and executed commands.
-- Gate B: **complete for the defects found** — D1/D2/D3/D6 fixed and tested (size truth, shared
-  enumeration accounting, unknown-size resume, stability timestamps).
+- Gate B: **complete for the defects found** — D1/D2/D3/D6 fixed and tested.
 - Gate C/D: **complete for the defects found** — D4 (SQLite hashes + migration), D5 (retry
   classification), D8 (reconciliation report) fixed and tested.
-- Next: Gate E/F audits, then Gate H release refresh (rebuild, republish, repackage, update claims).
+- Gate E: **WPD COM leaks fixed** (enumerator, key collection, values, manager); static evidence only.
+- Gate F: **Designer coverage verified statically; accessible names added and tested**; Visual Studio
+  round-trip not run (not installed).
+- Gate H: **candidate built and packaged** — exe `1C62B2B1...`, source-ZIP rebuild identical, installer
+  install/uninstall re-verified. Physical hardware, Windows 11 and signing remain blocked.
 
 ## Evidence — commands actually run
 
@@ -41,26 +44,29 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
   after D4/D8:        Passed! Failed: 0, Passed: 481, Skipped: 2, Total: 483, Duration: 29 s
   after D5:           Passed! Failed: 0, Passed: 482, Skipped: 2, Total: 484, Duration: 31 s
   after D6:           Passed! Failed: 0, Passed: 485, Skipped: 2, Total: 487, Duration: 31 s
+  after Gate E/F:     Passed! Failed: 0, Passed: 488, Skipped: 2, Total: 490, Duration: 31 s
 ```
 
 Artifacts at baseline (unchanged by this session so far):
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `publish/I-Total.Transfer.exe` | `8FCB2B5095365995813AF028EFE4A27E6EC538A32ADEA12F153919AD0E61CABB` |
-| `dist/I-Total.Transfer-1.8.0-win-x64.zip` | `0E41DEC310CEFAD3FD71C5181407B236E14F52F9E3684D4FE7F1C951F7513374` |
-| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `21742374A48BC0FA6A7A5DDD3291CD87A8BC2ED472300F5DFE08628F53C21653` |
-| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `2E34EED05F69B04AD019C6E1641CB846BC7B08D6BE3C44BCE644314B49AEBC76` |
-| `dist/I-Total.Transfer-1.8.0-source.zip` | `3412D03B111CCF6CD5740A1AB011F18E92198EB45AC58059A67F2C8D3F112BE7` |
+| `publish/I-Total.Transfer.exe` (candidate) | `1C62B2B18AA488939E3DC747C9D7B5772436C376E6AEC27C10ECE5986EC97D7E` (112,191,302 B) |
+| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `96E773D3B4B1217750648E39B577F07084E880EB9B1B7E70FD240798F70CE0DD` |
+| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `41A2F4A3FE00A7DA9C34CDCAEB3926529D6B7EE080D23DDCF6BAF68C2DE51A36` |
+| `dist/I-Total.Transfer-1.8.0-win-x64.zip` and source ZIP | see `dist/SHA256SUMS.txt` after the final rebuild |
 
-A candidate executable has **not** been published from this session's source yet. The shipped 1.8.0 build
-therefore still lacks D1–D3 and must not be described as containing them.
+The baseline artifacts (`8FCB2B50...` exe, `0E41DEC3...` deployment, `21742374...` portable,
+`2E34EED0...` setup, `3412D03B...` source) remain recoverable in the repository history at `17c0b1a`.
+
+The candidate executable **has** been published to `publish/` and packaged. It is not signed and has not
+been run against a phone.
 
 ## Last passing checkpoint
 
-- Commit: see `git log --oneline -3` on `work/master-directive`; the checkpoint message is
-  `Record the Gate A audit and fix zero-byte/unknown-size accounting`.
-- State at checkpoint: build 0/0, 472 passed, 2 skipped, 474 total.
+- Commits on `work/master-directive`: `0c13df2` (Gate A + size truth), `2917be1` (SQLite, reconciliation,
+  retries, stability), and the final commit that carries Gate E/F/H and the rebuilt archives.
+- State: build 0/0, 488 passed, 2 skipped, 490 total, candidate exe `1C62B2B1...`.
 
 ## Blockers and their evidence
 
@@ -74,17 +80,18 @@ therefore still lacks D1–D3 and must not be described as containing them.
 
 ## Single next concrete action
 
-Gate E: audit `WpdDevice` COM ownership (ResetSession, WpdStream.Dispose, ListDevices), the two iPhone
-layouts and the Android volume walk for a concrete defect, fix it with a test where the logic is testable,
-then run the suite. Then Gate F (Designer verification) and Gate H (release refresh).
+Rebuild the deployment and source archives from the final tree, refresh `dist/SHA256SUMS.txt`, run the
+full suite once more, commit the checkpoint, and push `work/master-directive`. After that, the next
+unblocked work is hardware: attach the phones and run IP02/IP03/AN02/AN05/AN11 plus the 4 GB+ and
+mid-copy-pull drills on the candidate build.
 
 ## Ordered remaining actions
 
-1. Gate E audit + fixes.
-2. Gate F Designer verification and documentation.
-3. Gate H: rebuild, full suite, publish candidate, update `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`,
-   `PERFORMANCE-AUDIT.md`, `RELEASE-ACCEPTANCE.md`, refresh archives and hashes.
-4. Update `docs/PROGRESS.md`, this file and the ledger before any stop.
+1. Final archive rebuild + hashes + suite + commit + push.
+2. Physical drills on the candidate (blocked: no phone).
+3. Windows 11 visual/device drills (blocked: no Windows 11 host).
+4. Visual Studio Designer open/save/reopen (blocked: VS not installed).
+5. Trusted signing, Steam, AFC native binaries (blocked externally).
 
 ## Uncommitted changes to preserve
 

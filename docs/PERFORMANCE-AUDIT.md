@@ -361,3 +361,12 @@ Design references for a copy engine (patterns only — nothing copied, and none 
   detached before a device-to-disk benchmark could be run, so no before/after MB/s figure exists. What is
   in place is the instrumentation to produce one (measured throughput, elapsed and remaining time are
   already surfaced) and the two measured-cost fixes listed above.
+
+## 2026-10-29 candidate: no performance claim
+
+The master-directive changes do not touch the copy buffer policy, the staging loop's read/write pattern or
+the hashing path. The one resource-relevant change is COM cleanup in the WPD enumeration path: the folder
+enumerator, the per-object key collection and the per-object values object are now released deterministically
+instead of accumulating until finalization. That should reduce provider-side handle pressure on a large
+walk, but **it was not measured** — no phone was attached and no benchmark was run for this candidate.
+No speed claim is made here.

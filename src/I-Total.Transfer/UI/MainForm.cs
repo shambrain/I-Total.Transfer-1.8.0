@@ -84,6 +84,8 @@ public sealed partial class MainForm : Form
         // carries the real counter instead of a placeholder that changes a moment later.
         _license = LicenseService.ForThisBuild(message => _log?.Write("Licence: " + message, "INFO"));
         BuildPages();
+        // Every action must be announceable, including the controls painted by the custom button class.
+        AccessibleNames.Ensure(this);
         WireNavigation();
         WirePageEvents();
         InstallChromeBehaviour();

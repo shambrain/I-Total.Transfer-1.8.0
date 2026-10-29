@@ -111,6 +111,12 @@ The UI and reports never upgrade a file beyond the level actually achieved. A sa
 saved digest is reported **unverifiable**, not verified. Existing destination files are never
 overwritten by default; different-size or hash-mismatched collisions are preserved and reported.
 
+A zero-byte file is a measurement, not a missing one: it is hashed and verified like any other file. A
+size the device does not report stays **unknown** — it is never turned into 0 bytes — and a copy with no
+size and no source-byte hash is reported unverifiable. Every session writes `I-total-reconciliation.csv`
+beside the JSON and per-file CSV, counting each exposed object once as copied, already present, excluded,
+failed, inaccessible or outstanding, with the verification grade it reached.
+
 Copy pipeline: stream → **staging** (hash while streaming) → **atomic commit** → destination hash →
 compare against the strongest digest available (the streamed source digest, or the staged payload read
 back when the backend cannot hash source bytes). A mismatch fails the item and removes the new commit.

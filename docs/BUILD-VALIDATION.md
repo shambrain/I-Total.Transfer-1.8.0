@@ -291,6 +291,33 @@
 - `"Follow Windows"` resolution was checked against the live registry flag (`AppsUseLightTheme = 0`).
   `ThemeTests` assert the sampled banner palette values, the default and the legacy-`Dark` migration.
 
+## Master-directive candidate build (2026-10-29)
+
+Executed in this workspace after the size-truth, SQLite, reconciliation, retry, stability, COM and
+accessibility changes:
+
+```text
+dotnet build I-Total.Transfer.sln -c Release --no-incremental
+  -> Build succeeded. 0 Warning(s), 0 Error(s)
+
+dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s
+  -> Passed! Failed: 0, Passed: 488, Skipped: 2, Total: 490, Duration: 31 s
+
+dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
+  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+  -> publish\I-Total.Transfer.exe, 112,191,302 bytes
+     SHA-256 1C62B2B18AA488939E3DC747C9D7B5772436C376E6AEC27C10ECE5986EC97D7E
+```
+
+The source ZIP was extracted into a clean folder, published there, and produced the **same** executable
+hash, so the source-only rebuild is byte-identical to this publish.
+
+The two skipped tests are the documented Shell apartment tests. The installer was rebuilt from this
+executable (`portable` and `setup`), silently installed into a temporary folder, checked (exe and README
+hashes match), and uninstalled; the folder, HKCU entry and shortcuts were removed and `%APPDATA%` was kept.
+
+No physical device was attached for this build, so no hardware row is claimed for it. No performance
+measurement was taken for these changes and none is claimed.
 ## Clean-clone reproducibility (2026-10-24)
 
 A fresh `git clone` of the committed tree to a temporary folder was built, tested and published:

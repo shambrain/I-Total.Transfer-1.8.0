@@ -46,11 +46,22 @@ public sealed record ReconciliationReport(
             if (!byPath.ContainsKey(entry.RelativePath)) byPath[entry.RelativePath] = entry;
         }
 
+
         ScanAccounting accounting = ScanAccounting.Of(scan.Files);
         int eligible = 0, excluded = 0, conflictSkipped = 0, alreadyPresent = 0, copied = 0;
         int sourceVerified = 0, destinationVerified = 0, sizeVerified = 0, unverifiable = 0;
         int inaccessible = 0, failed = 0, outstanding = 0;
         long eligibleBytes = 0, alreadyPresentBytes = 0, copiedBytes = 0, failedBytes = 0;
+
+        void CountGrade(VerificationLevel grade)
+        {
+            switch (grade)
+            {
+                case VerificationLevel.SourceAndDestinationHash: sourceVerified++; break;
+                case VerificationLevel.DestinationHash: destinationVerified++; break;
+                case VerificationLevel.SizeOnly: sizeVerified++; break;
+            }
+        }
 
         foreach (MediaFile file in scan.Files)
         {
@@ -74,7 +85,7 @@ public sealed record ReconciliationReport(
                 continue;
             }
 
-            switch (entry.Outcome)
+            switch (EffectiveOutcome(entry))
             {
                 case OutcomeReason.FilterExcluded:
                     excluded++;
@@ -87,12 +98,7 @@ public sealed record ReconciliationReport(
                 case OutcomeReason.Copied:
                     copied++;
                     copiedBytes = checked(copiedBytes + (entry.BytesWritten > 0 ? entry.BytesWritten : measured));
-                    switch (entry.Verification)
-                    {
-                        case VerificationLevel.SourceAndDestinationHash: sourceVerified++; break;
-                        case VerificationLevel.DestinationHash: destinationVerified++; break;
-                        case VerificationLevel.SizeOnly: sizeVerified++; break;
-                    }
+                    CountGrade(entry.Verification);
                     if (entry.State == TransferState.CopiedUnverified) unverifiable++;
                     break;
 
@@ -100,6 +106,7 @@ public sealed record ReconciliationReport(
                     alreadyPresent++;
                     alreadyPresentBytes = checked(alreadyPresentBytes +
                         (entry.SizeKnown ? measured : Math.Max(0, entry.BytesWritten)));
+                    CountGrade(entry.Verification);
                     if (entry.State == TransferState.CopiedUnverified) unverifiable++;
                     break;
 
@@ -129,6 +136,24 @@ public sealed record ReconciliationReport(
             inaccessible, failed, failedBytes, outstanding,
             scan.Report?.DuplicatePathCount ?? 0,
             scan.Report?.FailedFolderCount ?? 0);
+    }
+
+    /// <summary>
+    /// Older manifests and databases predate <see cref="TransferEntry.Outcome"/>; their terminal states
+    /// are still evidence of what happened, so they are mapped rather than counted as outstanding.
+    /// </summary>
+    private static OutcomeReason EffectiveOutcome(TransferEntry entry)
+    {
+        if (entry.Outcome != OutcomeReason.None) return entry.Outcome;
+        return entry.State switch
+        {
+            TransferState.IntegrityVerified or TransferState.SizeVerified => OutcomeReason.AlreadyPresent,
+            TransferState.CopiedUnverified => OutcomeReason.AlreadyPresent,
+            TransferState.Skipped => OutcomeReason.ConflictSkipped,
+            TransferState.Failed => OutcomeReason.Failed,
+            TransferState.Inaccessible => OutcomeReason.Inaccessible,
+            _ => OutcomeReason.Planned
+        };
     }
 
     /// <summary>CSV rows for the reconciliation file: one metric per line, no interpretation.</summary>

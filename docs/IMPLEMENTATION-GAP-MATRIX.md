@@ -76,7 +76,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | --- | --- | --- | --- | --- | --- |
 | E1 | WPD device manager + real interfaces, connected vs remembered | `WpdDevice.Probe`, `ListDevices` | STATIC; LIVE both phones | PHYSICAL DEVICE VERIFIED (historical) | — |
 | E2 | Opaque, session-scoped object IDs; re-resolve after reconnect | `ResolveObjectId`, `_nameIndex.Clear()` | STATIC | IMPLEMENTED — NOT VERIFIED | reconnect drill |
-| E3 | Deterministic COM release on success/cancel/exception | `ResetSession`, `ReleaseCom`, `using` in `CopyToStage` | STATIC | IMPLEMENTED — NOT VERIFIED | COM leak drill not available |
+| E3 | Deterministic COM release on success/cancel/exception | `ResetSession`, `ReleaseCom`; enumerator/keys/values/manager released in `finally` | STATIC — five leaks found and fixed | IMPLEMENTED — NOT VERIFIED | no phone to measure handle counts |
 | E4 | Device-supported buffer size / bounded default | `OpenStream(out optimalBufferSize)`, `_copyBufferBytes` | STATIC; AT buffer clamp | AUTOMATED TEST VERIFIED | benchmark sweep at Gate H |
 | E5 | Short reads, EOF, unknown size, source disappearance handled | `CopyToStage` read loop; engine size rules | AT partial-read/unknown-size tests | AUTOMATED TEST VERIFIED | live pull drill |
 | E6 | Android volumes walked, private trees skipped, PTP warning | `WpdDevice.Scan` Android branch, `PortableStorage` | AT `PortableStorageTests`; LIVE | PHYSICAL DEVICE VERIFIED (Android) | — |
@@ -93,7 +93,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | F2 | No runtime `BuildLayout()` visual tree | page constructors | STATIC: layout in Designer files | AUTOMATED TEST VERIFIED (static) | — |
 | F3 | DPI 100/125/150/200 and minimum/normal/wide sizes | theme/layout code, 125 screenshots | 96/150/200 renders; LIVE 150 % | PHYSICAL DEVICE VERIFIED (150 %) | 125 % render not captured |
 | F4 | Green dot only when media is accessible; distinct states | `StatusBlip`, `DeviceStates` | AT `DeviceStateTests` | AUTOMATED TEST VERIFIED | — |
-| F5 | Keyboard/focus/accessible names | control properties | STATIC, partial | IMPLEMENTED — NOT VERIFIED | accessibility pass |
+| F5 | Keyboard/focus/accessible names | `UI/Accessibility.cs`, `MainForm` | AT `EveryInteractiveControlOnEveryPageGetsAnAccessibleName`, `AnUnnamedTextBoxFallsBackToItsDesignerName` | AUTOMATED TEST VERIFIED (names) | focus order / Narrator audit (KI-24) |
 | F6 | Every control acts, is disabled with a reason, or is documented | UI audit 2026-10-22 | LIVE audit record | PHYSICAL DEVICE VERIFIED (historical) | re-audit after UI edits |
 
 ## Gate G — wireless

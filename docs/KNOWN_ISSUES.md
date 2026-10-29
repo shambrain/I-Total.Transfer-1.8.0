@@ -194,14 +194,38 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 - **To close:** only a native 100 % desktop capture remains, and it needs a 100 % display; no layout or
   control-audit work is outstanding.
 
-### KI-22 - Git history still carries the old test crash dumps
+### KI-22 - Resolved: the test crash dumps are out of history
 
-- **Impact:** four testhost hang dumps (about 1.1 GB) and their `.trx`/sequence files were committed on
-  2026-10-18 and stayed tracked until 2026-10-24. They are now removed from the working tree and ignored
-  (`**/TestResults/`, `*.dmp`), so a checkout is 146 MB instead of 1.37 GB, but the objects remain in the
-  history pack: a clone still downloads them.
-- **Mitigation:** `HEAD` no longer tracks them, and the source ZIP never included `TestResults`. The
-  remaining cost is clone size/time, not release correctness.
-- **To close:** rewrite history with `git filter-repo --path tests/I-Total.Transfer.Tests/TestResults
-  --invert-paths` on a mirror, then force-push and re-clone. That is a deliberate repository operation,
-  not something a release build should do unattended.
+- **Resolution (2026-10-29):** the history was rewritten with `git filter-repo --path
+  tests/I-Total.Transfer.Tests/TestResults --invert-paths` before publication. The largest reachable blob
+  is now a 44.9 MB release ZIP; a fresh clone no longer downloads the four 230-313 MB dumps.
+- **Note:** commit hashes quoted in `docs/PROGRESS.md` before the publication note identify the
+  pre-publication history. The repository still grows with each committed archive revision; publishing
+  archives as release assets instead of commits would keep it lean.
+
+### KI-23 - The new size/reconciliation behaviour is not hardware-tested
+
+- **Impact:** zero-byte files now verify at hash level, unknown sizes stay unknown, and the report
+  reconciles every object. These are covered by automated tests against the mock backend and by static
+  inspection of all three backends, but no phone was attached for this build.
+- **Mitigation:** the previous hardware evidence (Android 4,103-file walk, iPhone 55,185-file walk, MP4
+  resume) predates the change and is not claimed for it.
+- **To close:** run `docs/DEVICE_TEST_MATRIX.md` IP02/IP03/AN02/AN05/AN11 on the candidate build and
+  record the exact result, including any zero-byte or unknown-size items the handset exposes.
+
+### KI-24 - Accessible names were added, but no screen-reader audit was run
+
+- **Impact:** every interactive control on every page now gets an `AccessibleName` from its caption or
+  designer name (`UI/Accessibility.cs`, called from `MainForm`), and a test fails if a page exposes an
+  unnamed button, text box, list or progress bar. Focus order and announcement quality have not been
+  checked with Narrator/NVDA.
+- **To close:** run a Narrator pass over the seven pages and record what it announces.
+
+### KI-25 - Old SQLite/manifest rows have no explicit outcome
+
+- **Impact:** rows written before `OutcomeReason` existed carry `Outcome = None`. The reconciliation maps
+  them from their state (verified -> already present, failed -> failed, queued -> outstanding), which is
+  correct for the states the engine writes, but it is a derivation rather than a recorded fact.
+- **Mitigation:** `ALegacyRowWithoutAnOutcomeIsMappedFromItsStateRatherThanCountedAsOutstanding` pins the
+  mapping; new rows always record the outcome.
+- **To close:** nothing to fix; a future schema version may backfill the column.

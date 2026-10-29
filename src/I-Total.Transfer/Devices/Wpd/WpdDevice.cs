@@ -525,6 +525,8 @@ public sealed class WpdDevice : ITransferBackend
         var devices = new List<PortableDevice>();
         unrecognised = [];
         IPortableDeviceManager manager = WpdFactory.CreateManager();
+        try
+        {
         uint count = 0;
         manager.GetDevices(IntPtr.Zero, ref count);
         if (count == 0) return devices;
@@ -557,6 +559,8 @@ public sealed class WpdDevice : ITransferBackend
         }
         finally { Marshal.FreeCoTaskMem(buffer); }
         return devices;
+        }
+        finally { ReleaseCom(manager); }
     }
 
     /// <summary>
@@ -901,26 +905,35 @@ public sealed class WpdDevice : ITransferBackend
     {
         var result = new List<string>();
         _content!.EnumObjects(WpdKeys.WpdFlagNone, parentId, IntPtr.Zero, out IEnumPortableDeviceObjectIDs enumerator);
-        const uint batch = 16;
-        IntPtr array = Marshal.AllocCoTaskMem(IntPtr.Size * (int)batch);
         try
         {
-            while (true)
+            const uint batch = 16;
+            IntPtr array = Marshal.AllocCoTaskMem(IntPtr.Size * (int)batch);
+            try
             {
-                enumerator.Next(batch, array, out uint fetched);
-                if (fetched == 0) break;
-                for (int i = 0; i < fetched; i++)
+                while (true)
                 {
-                    IntPtr p = Marshal.ReadIntPtr(array, i * IntPtr.Size);
-                    if (p == IntPtr.Zero) continue;
-                    string? id = Marshal.PtrToStringUni(p);
-                    Marshal.FreeCoTaskMem(p);
-                    if (!string.IsNullOrEmpty(id)) result.Add(id);
+                    enumerator.Next(batch, array, out uint fetched);
+                    if (fetched == 0) break;
+                    for (int i = 0; i < fetched; i++)
+                    {
+                        IntPtr p = Marshal.ReadIntPtr(array, i * IntPtr.Size);
+                        if (p == IntPtr.Zero) continue;
+                        string? id = Marshal.PtrToStringUni(p);
+                        Marshal.FreeCoTaskMem(p);
+                        if (!string.IsNullOrEmpty(id)) result.Add(id);
+                    }
+                    if (fetched < batch) break;
                 }
-                if (fetched < batch) break;
             }
+            finally { Marshal.FreeCoTaskMem(array); }
         }
-        finally { Marshal.FreeCoTaskMem(array); }
+        finally
+        {
+            // One enumerator per folder. A camera roll has thousands of folders, so leaving these to
+            // the finalizer exhausts the provider's object table long before the walk ends.
+            ReleaseCom(enumerator);
+        }
         return result;
     }
 
@@ -928,11 +941,13 @@ public sealed class WpdDevice : ITransferBackend
     {
         PropertyKey kN = WpdKeys.ObjectName, kO = WpdKeys.ObjectOriginalFileName, kS = WpdKeys.ObjectSize,
             kC = WpdKeys.ObjectContentType, kM = WpdKeys.ObjectDateModified, kF = WpdKeys.FunctionalObjectCategory;
+        IPortableDeviceKeyCollection? keys = null;
+        IPortableDeviceValues? values = null;
         try
         {
-            IPortableDeviceKeyCollection keys = WpdFactory.CreateKeyCollection();
+            keys = WpdFactory.CreateKeyCollection();
             keys.Add(ref kN); keys.Add(ref kO); keys.Add(ref kS); keys.Add(ref kC); keys.Add(ref kM); keys.Add(ref kF);
-            _properties!.GetValues(objectId, keys, out IPortableDeviceValues values);
+            _properties!.GetValues(objectId, keys, out values);
             return ReadProps(values, objectId);
         }
         catch (Exception ex) when (ex is COMException or InvalidCastException or ArgumentException)
@@ -953,6 +968,13 @@ public sealed class WpdDevice : ITransferBackend
             long size = ReadULong(objectId, WpdKeys.ObjectSize, out bool sizeKnown);
             DateTimeOffset? modified = ReadDate(objectId, WpdKeys.ObjectDateModified);
             return new ObjectProps(string.IsNullOrWhiteSpace(name) ? objectId : name, size, isFolder, modified, sizeKnown);
+        }
+        finally
+        {
+            // Both are COM objects created per object; the values would otherwise accumulate one per
+            // file for the whole walk.
+            ReleaseCom(values);
+            ReleaseCom(keys);
         }
     }
 
@@ -978,9 +1000,10 @@ public sealed class WpdDevice : ITransferBackend
     private bool TryGetValue(string objectId, PropertyKey key, out IPortableDeviceValues values)
     {
         values = null!;
+        IPortableDeviceKeyCollection? keys = null;
         try
         {
-            IPortableDeviceKeyCollection keys = WpdFactory.CreateKeyCollection();
+            keys = WpdFactory.CreateKeyCollection();
             keys.Add(ref key);
             _properties!.GetValues(objectId, keys, out values);
             return true;
@@ -989,24 +1012,37 @@ public sealed class WpdDevice : ITransferBackend
         {
             return false;
         }
+        finally { ReleaseCom(keys); }
     }
 
-    private string ReadString(string objectId, PropertyKey key) =>
-        TryGetValue(objectId, key, out IPortableDeviceValues values) ? GetString(values, key) : "";
+    private string ReadString(string objectId, PropertyKey key)
+    {
+        if (!TryGetValue(objectId, key, out IPortableDeviceValues values)) return "";
+        try { return GetString(values, key); } finally { ReleaseCom(values); }
+    }
 
-    private Guid ReadGuid(string objectId, PropertyKey key) =>
-        TryGetValue(objectId, key, out IPortableDeviceValues values) ? GetGuid(values, key) : Guid.Empty;
+    private Guid ReadGuid(string objectId, PropertyKey key)
+    {
+        if (!TryGetValue(objectId, key, out IPortableDeviceValues values)) return Guid.Empty;
+        try { return GetGuid(values, key); } finally { ReleaseCom(values); }
+    }
 
     private long ReadULong(string objectId, PropertyKey key, out bool known)
     {
-        if (TryGetValue(objectId, key, out IPortableDeviceValues values))
-            return (long)GetULong(values, key, out known);
-        known = false;
-        return 0;
+        if (!TryGetValue(objectId, key, out IPortableDeviceValues values))
+        {
+            known = false;
+            return 0;
+        }
+        try { return (long)GetULong(values, key, out known); }
+        finally { ReleaseCom(values); }
     }
 
-    private DateTimeOffset? ReadDate(string objectId, PropertyKey key) =>
-        TryGetValue(objectId, key, out IPortableDeviceValues values) ? GetDate(values, key) : null;
+    private DateTimeOffset? ReadDate(string objectId, PropertyKey key)
+    {
+        if (!TryGetValue(objectId, key, out IPortableDeviceValues values)) return null;
+        try { return GetDate(values, key); } finally { ReleaseCom(values); }
+    }
 
     private static bool LooksLikeFileName(string value) => value.Contains('.');
 

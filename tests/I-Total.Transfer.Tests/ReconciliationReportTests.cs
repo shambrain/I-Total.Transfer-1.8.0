@@ -49,7 +49,7 @@ public sealed class ReconciliationReportTests
         Assert.AreEqual(1, report.ExcludedFiles);
         Assert.AreEqual(1, report.CopiedFiles);
         Assert.AreEqual(100, report.CopiedBytes);
-        Assert.AreEqual(1, report.SourceHashVerifiedFiles);
+        Assert.AreEqual(2, report.SourceHashVerifiedFiles, "the copied file and the already-present file both carry that grade");
         Assert.AreEqual(1, report.AlreadyPresentFiles);
         Assert.AreEqual(200, report.AlreadyPresentBytes);
         Assert.AreEqual(1, report.FailedFiles);
@@ -110,6 +110,26 @@ public sealed class ReconciliationReportTests
         Assert.AreEqual(1, report.UnverifiableFiles);
         Assert.AreEqual(0, report.SourceHashVerifiedFiles);
         Assert.AreEqual(0, report.DestinationHashVerifiedFiles);
+    }
+
+    [TestMethod]
+    public void ALegacyRowWithoutAnOutcomeIsMappedFromItsStateRatherThanCountedAsOutstanding()
+    {
+        var scan = new ScanResult("iPhone", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, [Media("a.jpg", 100)], []);
+        var legacy = new TransferEntry
+        {
+            RelativePath = "DCIM\\a.jpg",
+            ExpectedBytes = 100,
+            State = TransferState.IntegrityVerified,
+            Verification = VerificationLevel.SourceAndDestinationHash,
+            Outcome = OutcomeReason.None
+        };
+
+        ReconciliationReport report = ReconciliationReport.Build(scan, [legacy]);
+
+        Assert.AreEqual(1, report.AlreadyPresentFiles, "a verified row from an older manifest was already present");
+        Assert.AreEqual(0, report.OutstandingFiles);
+        Assert.AreEqual(1, report.SourceHashVerifiedFiles, "the persisted verification grade still counts");
     }
 
     [TestMethod]
