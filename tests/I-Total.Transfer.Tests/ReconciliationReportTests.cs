@@ -133,6 +133,38 @@ public sealed class ReconciliationReportTests
     }
 
     [TestMethod]
+    public async Task AChangedInventoryScopeIsWrittenToTheReportAndDoesNotBlockTheCopy()
+    {
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1);
+        string destination = Path.Combine(Path.GetTempPath(), "itotal-scope-report", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(destination);
+        try
+        {
+            var service = new TransferService(backend, new LogService(destination));
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+            scan = scan with
+            {
+                Scope = new InventoryScope(InventoryScopeStatus.Changed, 57731, 1,
+                    [new FolderInventory("DCIM\\202610_a", 2543, 100)], [], "scope changed in test")
+            };
+
+            TransferSummary summary = await service.CopyAsync(scan, destination, 1,
+                new Progress<TransferProgress>(_ => { }), CancellationToken.None);
+
+            Assert.IsTrue(summary.Completed, "a scope warning is not an enumeration failure");
+            Assert.AreEqual(1, summary.Copied);
+
+            using JsonDocument document = JsonDocument.Parse(
+                File.ReadAllText(Path.Combine(destination, "I-total-session-report.json")));
+            JsonElement scope = document.RootElement.GetProperty("InventoryScope");
+            Assert.AreEqual((int)InventoryScopeStatus.Changed, scope.GetProperty("Status").GetInt32());
+            Assert.AreEqual(57731, scope.GetProperty("PreviousFiles").GetInt32());
+            StringAssert.Contains(scope.GetProperty("Detail").GetString(), "scope changed in test");
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
     public async Task TheWrittenReportCarriesTheReconciliationAndAMatchingCsv()
     {
         using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 3);

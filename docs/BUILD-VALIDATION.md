@@ -301,7 +301,7 @@ dotnet build I-Total.Transfer.sln -c Release --no-incremental
   -> Build succeeded. 0 Warning(s), 0 Error(s)
 
 dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s
-  -> Passed! Failed: 0, Passed: 510, Skipped: 2, Total: 512, Duration: 31 s
+  -> Passed! Failed: 0, Passed: 511, Skipped: 2, Total: 513, Duration: 31 s
 
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish

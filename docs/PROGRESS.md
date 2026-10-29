@@ -38,9 +38,9 @@ deleted, and no cause is asserted.
 - A changed-scope scan does **not** replace the cached baseline (`ScanCachePolicy`), so the larger listing
   remains the comparison for the next scan.
 - `CopyCoreAsync` logs the scope warning when a transfer starts from a changed scope.
-- Nine tests (`ScanScopeTests`): unknown without history, stable identical, missing album named, small
+- Ten tests (`ScanScopeTests` plus the report-wiring test): unknown without history, stable identical, missing album named, small
   change tolerated, material drop detected, new folder alone not a warning, case-insensitive folders, and
-  the cache-baseline policy.
+  the cache-baseline policy, and the session report carrying the scope without blocking the copy.
 
 ### Mid-stream failure path tested (automated, not physical)
 
@@ -58,7 +58,7 @@ deleted, and no cause is asserted.
 
 ```text
 dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
-dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 510 passed, 2 skipped, 512 total
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 511 passed, 2 skipped, 513 total
                                                                    (six consecutive runs)
 ```
 
