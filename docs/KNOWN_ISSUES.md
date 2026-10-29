@@ -234,7 +234,7 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 
 - **Observation:** the test has failed twice in full-suite runs: 2026-10-29 (490 passed, 1 failed) and
   2026-10-30 (509 passed, 1 failed). Both times it passed immediately in isolation; on 2026-10-30 it then
-  passed **20 isolated runs** and **six consecutive full runs** (510 passed, 2 skipped, 512 total each).
+  passed **20 isolated runs** and **six consecutive full runs** (511 passed, 2 skipped, 513 total each).
   The assertion message was not captured by the filtered output either time.
 - **Impact:** the licensing rule itself is deterministic (RSA-PSS verification over a tampered signature)
   and the test uses an in-memory trial store, so no persisted state is involved. The failure could not be
