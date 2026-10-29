@@ -18,7 +18,7 @@ Updated: 2026-10-30. Read this file first when resuming. This checkpoint records
 | Repository | `shambrain/I-Total.Transfer-1.8.0` (GitHub repository) |
 | Working branch | `work/master-directive` |
 | Last product-source/build/artifact checkpoint reported | `9ae20fdd1f9522d9349b5662cd27aa08d45eda87` — `Cover the scope field in the session report and refresh the archives` |
-| Documentation follow-up after that checkpoint | `032c993177f44f9f779ece5922c26f0f85faf762` updates the README test count; `383b0dc0043c05c7f5838d44a79709f517ef9c64` reconciles KI-26's final suite count. This execution-state update is another documentation-only follow-up. |
+| Documentation follow-up after that checkpoint | `032c993177f44f9f779ece5922c26f0f85faf762` updates the README test count; `383b0dc0043c05c7f5838d44a79709f517ef9c64` reconciles KI-26's final suite count; `5119935fac2dbb4e376855aecfec7b3431221444` and `ce4e428e74eb609e6a565153b00473e7e8e2a5c6` distinguish the historical AN06 PTP pass from current-candidate revalidation in both device matrices. The execution-state itself is updated through documentation-only commits. |
 | Local workspace recorded in the prior checkpoint | `C:\Users\Administrator\Documents\GitHub\I-Total.Transfer-v1.5.0-source` — confirm it still points to this repository before running commands. |
 | Local working-tree status | The user/OpenCode report says the tree was clean at `9ae20fd` before the documentation follow-ups. This assistant session accessed the GitHub repository through file/commit APIs, not the local Windows filesystem; therefore it did not independently run `git status`, build, or tests. Fetch the updated branch in the Windows workspace and verify status before editing further. |
 
