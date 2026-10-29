@@ -12,7 +12,7 @@ Evidence classes: **LIVE** recorded physical run in this repository, **SIM** aut
 | iPhone 13 Pro | iOS 27.0.1 | AFC (`AfcDevice`) | STATIC | STATIC only; backend inert | STATIC only | STATIC only | BLOCKED (empty dependency hashes) |
 | iPhone 13 Pro | iOS 27.0.1 | Shell (`ShellIPhoneDevice`) | LIVE (fallback) | LIVE historical | size-only by design (no source stream) | not supported | IMPLEMENTED — NOT VERIFIED after the latest changes |
 | HUAWEI Y7 Prime 2018 | Android 8 (MTP) | WPD | LIVE | LIVE: 4,103 files / 14.54 GiB (2026-10-22) | LIVE: 612,420,912-byte MP4 resumed to hash equality | not supported (read-only MTP path) | PHYSICAL DEVICE VERIFIED |
-| Android phone in PTP mode | — | WPD | LIVE | camera-only warning shown (2026-10-24) | n/a (warning state) | n/a | PHYSICAL DEVICE VERIFIED |
+| Android phone in PTP mode | — | WPD | LIVE (historical, 2026-10-24) | camera-only warning shown (2026-10-24); revalidation on the current candidate is pending | n/a (warning state) | n/a | HISTORICAL PHYSICAL PASS; CURRENT-CANDIDATE REVALIDATION PENDING |
 | Android, other vendors/versions | — | WPD | SIM | SIM | SIM | not supported | NOT VERIFIED — no second Android model tested |
 | iPhone/iPad, other models | — | WPD | SIM | SIM | SIM | n/a | NOT VERIFIED |
 | Any device, wireless | — | HTTP receiver | LIVE receiver only | sender-side enumeration not implemented | receiver stores + verifies uploads | n/a | BLOCKED — no sender application |
