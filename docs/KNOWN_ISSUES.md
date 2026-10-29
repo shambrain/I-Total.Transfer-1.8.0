@@ -242,3 +242,17 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 - **Mitigation:** the suite is run with `--blame-hang`; the result is recorded here rather than hidden.
 - **To close:** if it recurs, capture the full MSTest failure (assert name, expected/actual) and the
   sequence file; do not mark the suite green until the cause is known.
+
+### KI-27 - Two app instances can contend for the WPD provider
+
+- **Observation (2026-10-29):** the iPhone cold scan and an Android copy were run in two separate
+  processes at the same time. The WPD provider returned "Insufficient memory to continue the execution of
+  the program" and "The requested resource is in use" (0x800700AA); the iPhone scan aborted safely with
+  `DeviceStoppedAnsweringException` and wrote no report. Re-run alone, the same scan completed
+  (57,731 files / 181.52 GiB).
+- **Impact:** the application reads one device at a time by design, but nothing stops a user from
+  launching a second copy of the app; the two then share the provider and one may abort. The abort is
+  safe and visible (no false completion), but confusing.
+- **Mitigation:** the failure is reported as "the phone stopped answering"; completed files are preserved.
+- **To close:** decide whether to add a single-instance guard (a named mutex plus "bring the existing
+  window forward") and test it with two launches.

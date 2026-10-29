@@ -20,6 +20,47 @@ a filtered HEIC/MOV copy also completed through the shared engine (8 files, hash
 
 
 
+## 2026-10-29 candidate drill (`3EDE82DB...`, before the two hardware fixes below)
+
+Both handsets were attached. The published candidate was driven through a new reproducible harness,
+`tools/DeviceDrill` (console, references the real `WpdDevice` and `TransferService`; outside the solution so
+the deterministic suite never touches a phone). Source is read-only throughout.
+
+| Drill | Result | Evidence |
+| --- | --- | --- |
+| iPhone probe | `Ready`, Apple, iOS 27.0.1, native WPD, hash-capable | `%TEMP%\opencode\drill-2026-10-29\probe-apple.json` |
+| iPhone cold scan | **57,731 files / 194,908,848,302 bytes (181.52 GiB)**, `Complete`, 13 folders, 0 failed, 0 warnings, 0 unknown sizes, 0 zero-byte, 1,207 live-photo pairs, **1,267.2 s (21.1 min)**, 45.6 files/s | `...\scan-iphone.json` |
+| iPhone warm scan (after the cold pass) | 57,731 files in 12.8-13.2 s — warm provider cache, not a cold benchmark | `...\scan-iphone2.*`, drill logs |
+| iPhone HEIC/MOV copy | **8 files (6 HEIC + 2 MOV), 369,415,047 bytes**, all `SourceAndDestinationHash`, 0 failed, 0 unverified; verification 8/8, no wrong size or hash | `...\copy-iphone-heic-mov8.json` |
+| Android probe | `Ready`, Android, LDN-L21, native WPD, hash-capable | `...\probe-android.json` |
+| Android scan | **4,131 files / 18,653,277,179 bytes (17.37 GiB)**, `Complete`, 307 folders, 0 failed, 0 warnings, 0 unknown sizes, **263 zero-byte files**, 10.09 s, 409 files/s | `...\scan-android.json` |
+| Android zero-byte copy | **20 zero-byte files copied and all 20 `SourceAndDestinationHash`**, 0 unverifiable, verification 20/20 | `...\copy-zero-android.json` |
+| Android bulk copy | 2,056 files / 6,266,740,006 bytes (5.84 GiB), all `SourceAndDestinationHash`, 0 failed; verification 2,056/2,056 (2,055 live source re-hashes, one destination-digest match). This was a wider selection than planned because the harness argument containing a space was split; it is reported as what actually ran | `...\copy-camera-android.json` |
+| Android rename conflict | collision preserved, copy stored as `VID_20260730_175333 (1).mp4`; verification reports `STORED AS` and passes; a third run reports `ALREADY PRESENT - NO FILES NEEDED COPYING` and adds no `(2)` copy | `...\rename-run3.json` |
+| Android cancel | cancelled after 3.7 s: manifest `CANCELLED`, no `.partial`, no destination file | `...\cancel-android2.json`, `...\cancel-android2\.i-total\session.json` |
+| Android resume | 184,296,485-byte MP4 copied to completion, `HASH-VERIFIED COMPLETE (source-to-destination)`, verification 1/1 | `...\resume-android2.json` |
+
+### Two defects found by these drills and fixed
+
+1. **Every WPD copy failed at the commit.** `WpdDevice.CopyToStage` deleted the `.partial` in a `finally`
+   block that ran *before* the move to the final staging name, so the move threw "could not find
+   .partial"; the failure then reset the session and every later file failed with "WPD session is not
+   open". The cleanup now runs only on failure, and `CopyToStage`/`OpenSourceRead` reopen the bound
+   device instead of throwing. The 2,056-file Android copy, the 20 zero-byte copy, the 8-file iPhone copy
+   and the 184 MB resume above are the proof.
+2. **The Android family was cleared by the first session open.** `EnsureOpen` calls `ResetSession`, which
+   set `_family = Unknown` after `Probe`/`Scan` had already recorded Android. `Capabilities` therefore
+   advertised only Photos/Videos for the HUAWEI, and the resume path would have taken the iPhone branch.
+   `ResetSession` now restores the family from the bound selection. Probe now reports four categories
+   (Photos, Videos, Music, Files) for Android and two for the iPhone.
+
+### Observation, not a product claim
+
+Running the iPhone cold scan and an Android copy **in two processes at the same time** made the WPD
+provider return "Insufficient memory" and "The requested resource is in use"; the iPhone scan aborted
+safely with `DeviceStoppedAnsweringException` and wrote no report (no false completion). Re-run alone, the
+same scan completed. The application is designed to read one device at a time; two app instances are not
+coordinated. Recorded as KI-27.
 ## iPhone 13 Pro (Apple / WPD)
 
 | # | Drill | Status | Evidence / note |

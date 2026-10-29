@@ -1,0 +1,26 @@
+{
+  "Action": "copy",
+  "Device": {
+    "Status": 5,
+    "Family": 2,
+    "Name": "HUAWEI Y7 Prime 2018",
+    "StableId": "\\\\?\\usb#vid_12d1\u0026pid_1082\u0026mi_00#8\u0026219e05d9\u00262\u00260000#{6ac27878-a6fa-4155-ba85-f98f491d4f33}"
+  },
+  "Backend": "Windows Portable Devices (native)",
+  "Destination": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\opencode\\drill-2026-10-29\\cancel-android2",
+  "ConflictPolicy": "PreserveAndReport",
+  "Scan": {
+    "Status": 0,
+    "Files": 4131,
+    "KnownBytes": 18653277179
+  },
+  "Runs": [
+    {
+      "Run": 1,
+      "Cancelled": true,
+      "ElapsedSeconds": 3.7
+    }
+  ],
+  "Cancelled": true,
+  "Verification": null
+}

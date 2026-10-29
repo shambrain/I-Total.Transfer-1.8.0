@@ -12,6 +12,69 @@ start from here without re-reading the whole conversation.
 > hashes quoted in this log before this note identify the pre-publication history; the file contents, tests
 > and evidence are unchanged. The release executable is unaffected.
 
+## 2026-10-29 - hardware drills on the master-directive candidate
+
+### Starting point
+
+Both handsets were attached: iPhone 13 Pro (iOS 27.0.1, native WPD) and HUAWEI Y7 Prime 2018
+(LDN-L21, native WPD/MTP). The candidate executable was `3EDE82DB...` (the build from the Gate A-H work,
+before the two hardware fixes below). A reproducible harness, `tools/DeviceDrill`, was added outside the
+solution so the deterministic suite never touches a phone; it drives the real `WpdDevice` and
+`TransferService` and writes JSON evidence.
+
+### Two real defects found and fixed
+
+1. **Every WPD copy failed at the commit.** `WpdDevice.CopyToStage` deleted the `.partial` file in a
+   `finally` block that ran before `File.Move(stagePath, finalPath)`, so the move threw "could not find
+   .partial"; the failure then reset the session and every later file failed with "WPD session is not
+   open". Cleanup now runs only on failure, and `CopyToStage`/`OpenSourceRead` reopen the bound device
+   instead of throwing. Proven by the 2,056-file Android copy, the 20 zero-byte copy, the 8-file iPhone
+   copy and the 184 MB resume.
+2. **The first session open cleared the device family.** `EnsureOpen` calls `ResetSession`, which set
+   `_family = Unknown` after `Probe`/`Scan` had recorded Android. `Capabilities` therefore advertised only
+   Photos/Videos for the HUAWEI, and the resume path would have taken the iPhone branch. `ResetSession`
+   now restores the family from the bound selection; probe reports four categories for Android and two
+   for the iPhone.
+
+### Hardware results (all with both phones attached, source read-only)
+
+```text
+iPhone probe      Ready, Apple, iOS 27.0.1, native WPD, hash-capable
+iPhone cold scan  57,731 files / 194,908,848,302 bytes (181.52 GiB), Complete, 13 folders,
+                  0 failed, 0 warnings, 0 unknown, 0 zero-byte, 1,207 live pairs, 1,267.2 s, 45.6 files/s
+iPhone copy       8 files (6 HEIC + 2 MOV), 369,415,047 bytes, 8/8 SourceAndDestinationHash,
+                  verification 8/8, 0 wrong size/hash
+Android probe     Ready, Android, LDN-L21, native WPD, 4 categories after the family fix
+Android scan      4,131 files / 18,653,277,179 bytes (17.37 GiB), Complete, 307 folders,
+                  0 failed, 0 unknown, 263 zero-byte, 10.09 s, 409 files/s
+Android zero copy 20 zero-byte files, 20/20 SourceAndDestinationHash, 0 unverifiable, verification 20/20
+Android bulk copy 2,056 files / 6,266,740,006 bytes (5.84 GiB), all SourceAndDestinationHash, 0 failed,
+                  verification 2,056/2,056
+Android rename    collision preserved; copy stored as "(1).mp4"; verification "STORED AS" passed;
+                  third run "ALREADY PRESENT - NO FILES NEEDED COPYING", no second copy
+Android cancel    cancelled after 3.7 s, manifest CANCELLED, no .partial, no target
+Android resume    184,296,485-byte MP4, HASH-VERIFIED COMPLETE, verification 1/1
+```
+
+### Observation
+
+Running the iPhone cold scan and an Android copy in two processes at once made the WPD provider return
+"Insufficient memory" and "resource in use"; the iPhone scan aborted safely with no report. Re-run alone,
+it completed. Recorded as KI-27 (two app instances are not coordinated).
+
+### Commands and results
+
+```text
+dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 499 passed, 2 skipped, 501 total
+```
+
+### Next
+
+Republish the candidate with the two WPD fixes, repackage, update the hashes and records, and leave the
+manual lock/unplug drills (IP08, IP07, AN07) pending until an operator can perform them.
+
+---
 ## 2026-10-29 - master directive: Gate A audit and size-truth fixes
 
 ### Starting point
@@ -129,7 +192,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 3EDE82DBE942ABABD7247C22F6062A5FB5E3AE8507DC9102B5E5AB428FA387CA (112,195,398 B)
+  -> F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -302,7 +365,7 @@ CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 3EDE82DBE942ABABD7247C22F6062A5FB5E3AE8507DC9102B5E5AB428FA387CA (112,195,398 B)
+  -> F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -668,7 +731,7 @@ The setup is **unsigned**: no trusted certificate is present (signtool 10.0.2610
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 3EDE82DBE942ABABD7247C22F6062A5FB5E3AE8507DC9102B5E5AB428FA387CA (112,195,398 B)
+  -> F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -983,7 +1046,7 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 3EDE82DBE942ABABD7247C22F6062A5FB5E3AE8507DC9102B5E5AB428FA387CA (112,195,398 B)
+  -> F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the

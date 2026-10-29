@@ -1,0 +1,2176 @@
+{
+  "Action": "scan",
+  "Device": {
+    "Status": 5,
+    "Family": 2,
+    "Name": "HUAWEI Y7 Prime 2018",
+    "StableId": "\\\\?\\usb#vid_12d1\u0026pid_1082\u0026mi_00#8\u0026219e05d9\u00262\u00260000#{6ac27878-a6fa-4155-ba85-f98f491d4f33}",
+    "Model": "LDN-L21",
+    "OperatingSystem": "1.0"
+  },
+  "Backend": "Windows Portable Devices (native)",
+  "Status": 0,
+  "IsComplete": true,
+  "FileCount": 4131,
+  "KnownBytes": 18653277179,
+  "ZeroByteFiles": 263,
+  "UnknownSizeFiles": 0,
+  "DuplicatePaths": 0,
+  "FailedFolders": 0,
+  "FolderCount": 307,
+  "LivePhotoPairs": 0,
+  "DurationSeconds": 10.09,
+  "FilesPerSecond": 409.4,
+  "Warnings": [],
+  "Folders": [
+    {
+      "RelativePath": "SD card\\Download",
+      "FileCount": 11,
+      "Bytes": 36112995,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\hiddenAlbum",
+      "FileCount": 1,
+      "Bytes": 8,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\config",
+      "FileCount": 5,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\0",
+      "FileCount": 1,
+      "Bytes": 2697052,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\1",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\2",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\3",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\4",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\5",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\6",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\7",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\8",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\9",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\10",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\11",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\12",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\13",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\14",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\15",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\16",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\17",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\18",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\19",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\20",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\21",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\22",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\23",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\24",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\25",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\26",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\27",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\28",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\29",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\30",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\31",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\32",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\33",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\34",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\35",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\36",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\37",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\38",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\39",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\40",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\41",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\42",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins\\43",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle\\bins",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\recycle",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2\\copy",
+      "FileCount": 1,
+      "Bytes": 53,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\.Gallery2",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\MyHouse",
+      "FileCount": 2,
+      "Bytes": 426545,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\MODiCK",
+      "FileCount": 39,
+      "Bytes": 324579691,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\fam",
+      "FileCount": 20,
+      "Bytes": 6452733,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\compy",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\shaz bday",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\Telegram",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\cokc",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\PicsArt",
+      "FileCount": 1,
+      "Bytes": 179591,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\GoddessBubby",
+      "FileCount": 13,
+      "Bytes": 67365717,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\Threads",
+      "FileCount": 2,
+      "Bytes": 458083,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\VideoEditor",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\memez",
+      "FileCount": 3,
+      "Bytes": 1164451,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures\\Unblur",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Pictures",
+      "FileCount": 7,
+      "Bytes": 1352219,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\music\\hunter x hunter",
+      "FileCount": 2,
+      "Bytes": 499497,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\music\\ringtone",
+      "FileCount": 1,
+      "Bytes": 442167,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\music\\SpotiDownloader.com - Coolie (Original Backgound Score)",
+      "FileCount": 16,
+      "Bytes": 71438050,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\music\\SpotiDownloader.com - Rockstrumentals 2",
+      "FileCount": 5,
+      "Bytes": 47123827,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\music\\The Vault_SpotifyDown_com",
+      "FileCount": 6,
+      "Bytes": 50313703,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\music",
+      "FileCount": 1036,
+      "Bytes": 7993608355,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Ringtones",
+      "FileCount": 2,
+      "Bytes": 23224394,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Movies",
+      "FileCount": 1,
+      "Bytes": 78929729,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Android\\media\\com.instagram.android",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Android\\media\\com.huawei.hwid",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Android\\media",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Android",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\File_Restore\\temp",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\File_Restore",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.photoShare\\thumb\\thumb\\PhotoShareDb",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.photoShare\\thumb\\thumb",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.photoShare\\thumb",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.photoShare",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\WhatsApp\\.Shared",
+      "FileCount": 621,
+      "Bytes": 214917134,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\WhatsApp\\.Thumbs",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\WhatsApp\\Backups\\Wallpapers",
+      "FileCount": 9,
+      "Bytes": 1875301,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\WhatsApp\\Backups\\Stickers",
+      "FileCount": 181,
+      "Bytes": 22512116,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\WhatsApp\\Backups",
+      "FileCount": 5,
+      "Bytes": 183186,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\WhatsApp\\.trash",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\WhatsApp\\.StickerThumbs",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\WhatsApp\\Databases",
+      "FileCount": 10,
+      "Bytes": 437576646,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\WhatsApp",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\MxPlayerAd\\RecycleBin",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\MxPlayerAd",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.File_Recycle\\1763568748988\\storage\\3832-6234\\hw_recycle_content",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.File_Recycle\\1763568748988\\storage\\3832-6234",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.File_Recycle\\1763568748988\\storage",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.File_Recycle\\1763568748988",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.File_Recycle\\1682720918526\\storage\\3832-6234\\Download\\hw_recycle_content",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.File_Recycle\\1682720918526\\storage\\3832-6234\\Download",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.File_Recycle\\1682720918526\\storage\\3832-6234",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.File_Recycle\\1682720918526\\storage",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.File_Recycle\\1682720918526",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.File_Recycle",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\PicsArt\\editor\\.projects\\1fc9adf6-a26c-4fdb-aa66-d4dae59a6a32\\history\\93f1c4aa-63c6-4492-a6c0-7d50cbf95c94",
+      "FileCount": 1,
+      "Bytes": 1254416,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\PicsArt\\editor\\.projects\\1fc9adf6-a26c-4fdb-aa66-d4dae59a6a32\\history\\7dc89984-9aa4-4ce2-b076-046c42a7c938",
+      "FileCount": 1,
+      "Bytes": 983376,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\PicsArt\\editor\\.projects\\1fc9adf6-a26c-4fdb-aa66-d4dae59a6a32\\history",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\PicsArt\\editor\\.projects\\1fc9adf6-a26c-4fdb-aa66-d4dae59a6a32\\gif\\aspect",
+      "FileCount": 1,
+      "Bytes": 180,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\PicsArt\\editor\\.projects\\1fc9adf6-a26c-4fdb-aa66-d4dae59a6a32\\gif",
+      "FileCount": 2,
+      "Bytes": 910958,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\PicsArt\\editor\\.projects\\1fc9adf6-a26c-4fdb-aa66-d4dae59a6a32",
+      "FileCount": 4,
+      "Bytes": 1052629,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\PicsArt\\editor\\.projects",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\PicsArt\\editor",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\PicsArt",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Huawei\\Themes\\themecache",
+      "FileCount": 6,
+      "Bytes": 65172,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Huawei\\Themes\\HWFonts",
+      "FileCount": 6,
+      "Bytes": 918952,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Huawei\\Themes",
+      "FileCount": 3,
+      "Bytes": 16565761,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Huawei\\CloudDrive\\UploadCloudDrive",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Huawei\\CloudDrive\\DownLoad",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Huawei\\CloudDrive\\.cache\\ba5d09fbdf9f22a5a24fcf22ee965bfc7644e3f062f9fa88135f5c5e820aac9f\\.file",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Huawei\\CloudDrive\\.cache\\ba5d09fbdf9f22a5a24fcf22ee965bfc7644e3f062f9fa88135f5c5e820aac9f",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Huawei\\CloudDrive\\.cache",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Huawei\\CloudDrive",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Huawei\\MagazineUpdate\\download",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Huawei\\MagazineUpdate",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Huawei",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Sounds\\.vtdata",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Sounds\\.backup",
+      "FileCount": 3,
+      "Bytes": 917,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Sounds\\CallRecord",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Sounds",
+      "FileCount": 6,
+      "Bytes": 13771805,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Documents\\.config\\4kdownload.com",
+      "FileCount": 1,
+      "Bytes": 81,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Documents\\.config",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Documents\\NotePad",
+      "FileCount": 1,
+      "Bytes": 3427,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Documents",
+      "FileCount": 3,
+      "Bytes": 16798625,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\EditedOnlinePhotos",
+      "FileCount": 1,
+      "Bytes": 1054334,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.UTSystemConfig",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\Wallpz",
+      "FileCount": 19,
+      "Bytes": 21827416,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.DataStorage",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\.gs_file",
+      "FileCount": 1,
+      "Bytes": 54,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\backup\\App",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\backup\\Data",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\backup",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\DCIM\\Camera",
+      "FileCount": 9,
+      "Bytes": 2927895827,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card\\DCIM",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "SD card",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Music",
+      "FileCount": 174,
+      "Bytes": 3853948033,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Podcasts",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Ringtones",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Alarms",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Notifications",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Pictures\\.Gallery2\\recycle",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Pictures\\.Gallery2",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Pictures",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Movies",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Download\\Music",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Download",
+      "FileCount": 3,
+      "Bytes": 26220660,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\DCIM\\Facebook",
+      "FileCount": 55,
+      "Bytes": 6983709,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\DCIM\\100PINT\\Pins",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\DCIM\\100PINT",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\DCIM\\Camera\\cache",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\DCIM\\Camera",
+      "FileCount": 1,
+      "Bytes": 823523,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\DCIM",
+      "FileCount": 1,
+      "Bytes": 5961,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Android\\media\\com.huawei.hwid",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Android\\media",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Android\\framework\\clrunpath\\1116977142\\oat\\arm",
+      "FileCount": 6,
+      "Bytes": 4545154,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Android\\framework\\clrunpath\\1116977142\\oat",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Android\\framework\\clrunpath\\1116977142",
+      "FileCount": 3,
+      "Bytes": 3800655,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Android\\framework\\clrunpath",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Android\\framework",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Android",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\MagazineUnlock",
+      "FileCount": 24,
+      "Bytes": 22045002,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\themecache",
+      "FileCount": 232,
+      "Bytes": 28812659,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\Default.hwt\\preview",
+      "FileCount": 4,
+      "Bytes": 1489783,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\Default.hwt\\wallpaper",
+      "FileCount": 4,
+      "Bytes": 1945252,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\Default.hwt",
+      "FileCount": 1,
+      "Bytes": 297,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\Dubai Font.hwt\\fonts",
+      "FileCount": 2,
+      "Bytes": 162575,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\Dubai Font.hwt\\preview",
+      "FileCount": 5,
+      "Bytes": 3001057,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\Dubai Font.hwt\\wallpaper",
+      "FileCount": 2,
+      "Bytes": 5663108,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\Dubai Font.hwt",
+      "FileCount": 1,
+      "Bytes": 313,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\HWFont.hwt\\fonts",
+      "FileCount": 8,
+      "Bytes": 659312,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\HWFont.hwt\\preview",
+      "FileCount": 2,
+      "Bytes": 56521,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\HWFont.hwt",
+      "FileCount": 1,
+      "Bytes": 375,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\a7a278a64ab14e5c8c5153c8cc65e269.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\b18d3efa3cf34d5c8a8bea5ad574663d.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\b57519d7134347e1913350e6587cc154.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\149f792cb1294c5d8305e332076178db.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\11330246C5639F90585664847C927323.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\dab71222ec7c4c0a933fedee65f53e08.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\2E7C5A0ECE5B6D9D873AF16D4A1CB431.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\f254b2285a4f4c91839dc32c9a0ec4ce.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\85ED54826BD199DCDE8224486D101014.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\91137d5ccedf4311adc4627142dc2cd5.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\64929b5ffad64b10b7134032edf778b7.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\b328324013694766a6fbe67c197128de.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\4F3B8D47BB1C99BFDE91E1F2EBB40624.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\4e4e48f140f34100a0b640063d971a50.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\49d8396b7287405abb0a6887b01905cf.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\3d49b96adc8149bfae33ff88eb8e17ab.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\0768A24E1902060FB3D177B71E4E2581.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\1ea5e6c1b62946ea9151607c7f0aff6a.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\250def04ac6043d6a891d61ec226b620.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\e71742b3383649d9b61cea9809c3911f.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\85d8aa201fe543f7a5c9d6c39aed1650.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\3276df16326146d3897e6318bf5592b9.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\5D53A61F3236445F5F0B630E59497E46.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\f6786384f63f47329f68b90e748e8650.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\4beed5f01e1d43c6983bf52676456364.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\0EC6E9949B1D4879664711A7FAF2B51B.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\18E53AD9167FEFED5A9AAABF2964A899.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\C57BD8EDFB4A5FCA2D3E60F5017BB8F1.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\568e0f6c272744b9b0ffd48268ca95cf.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\039a9290180346929330290f35bd263a.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\43cbab2d5b15447295975b9f34333bf4.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\EE91817B4F4ED9E944CDB826B8D10A88.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\445e2fb71a6b484aa177386c26d7ef45.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\9D8D81D4DFB4DA5F35E273DEE6081747.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview\\5a754f7d874d4cfa9a100698f03586ea.hwt",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover\\onlinethemepreview",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\cover",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\diycache",
+      "FileCount": 198,
+      "Bytes": 29447485,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\85ED54826BD199DCDE8224486D101014.hwt\\preview",
+      "FileCount": 5,
+      "Bytes": 1154950,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\85ED54826BD199DCDE8224486D101014.hwt\\wallpaper",
+      "FileCount": 3,
+      "Bytes": 8190009,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\85ED54826BD199DCDE8224486D101014.hwt",
+      "FileCount": 1,
+      "Bytes": 490,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\b328324013694766a6fbe67c197128de.hwt\\preview",
+      "FileCount": 6,
+      "Bytes": 862931,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\b328324013694766a6fbe67c197128de.hwt\\wallpaper",
+      "FileCount": 2,
+      "Bytes": 684045,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\b328324013694766a6fbe67c197128de.hwt",
+      "FileCount": 1,
+      "Bytes": 320,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\18E53AD9167FEFED5A9AAABF2964A899.hwt\\preview",
+      "FileCount": 5,
+      "Bytes": 782171,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\18E53AD9167FEFED5A9AAABF2964A899.hwt\\wallpaper",
+      "FileCount": 3,
+      "Bytes": 5737697,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache\\18E53AD9167FEFED5A9AAABF2964A899.hwt",
+      "FileCount": 1,
+      "Bytes": 470,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\.cache",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes\\HWWallpapers",
+      "FileCount": 33,
+      "Bytes": 26571862,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\Themes",
+      "FileCount": 3,
+      "Bytes": 21716552,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\CloudClone",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\CloudDrive\\DownLoad\\Huawei Drive",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\CloudDrive\\DownLoad",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\CloudDrive\\.cache\\f708a6917aedb28727657c193049cb9bf83af1fb12738b49bed98a0c1616fe39\\.file",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\CloudDrive\\.cache\\f708a6917aedb28727657c193049cb9bf83af1fb12738b49bed98a0c1616fe39",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\CloudDrive\\.cache",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei\\CloudDrive",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Huawei",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\HuaweiSystem",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Sounds\\.pictures",
+      "FileCount": 123,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Sounds\\.backup",
+      "FileCount": 3,
+      "Bytes": 917,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Sounds\\CallRecord",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Sounds\\.nomedia",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Sounds\\.vtdata",
+      "FileCount": 3,
+      "Bytes": 231328000,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Sounds",
+      "FileCount": 3,
+      "Bytes": 136073555,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Wi-Fi Direct",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\backup\\App",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\backup\\Data",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\backup",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp AI Media\\WhatsApp AI Editor Cache",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp AI Media",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Audio\\Sent",
+      "FileCount": 2,
+      "Bytes": 1601952,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Audio\\Private",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Audio",
+      "FileCount": 12,
+      "Bytes": 4225355,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Animated Gifs\\Sent",
+      "FileCount": 6,
+      "Bytes": 209930,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Animated Gifs\\Private",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Animated Gifs",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Voice Notes\\202620",
+      "FileCount": 61,
+      "Bytes": 1413303,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Voice Notes\\202621",
+      "FileCount": 45,
+      "Bytes": 1200557,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Voice Notes\\202622",
+      "FileCount": 52,
+      "Bytes": 1113695,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Voice Notes\\202618",
+      "FileCount": 45,
+      "Bytes": 1214509,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Voice Notes\\202619",
+      "FileCount": 79,
+      "Bytes": 2519764,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Voice Notes\\202617",
+      "FileCount": 50,
+      "Bytes": 1214581,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Voice Notes\\202625",
+      "FileCount": 116,
+      "Bytes": 4257656,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Voice Notes\\202624",
+      "FileCount": 38,
+      "Bytes": 1210076,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Voice Notes\\202623",
+      "FileCount": 36,
+      "Bytes": 753847,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Voice Notes",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Video Notes",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Video\\Sent",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Video\\Private",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Video",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Images\\Sent",
+      "FileCount": 52,
+      "Bytes": 22661783,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Images\\Private",
+      "FileCount": 9,
+      "Bytes": 910041,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Images",
+      "FileCount": 52,
+      "Bytes": 5754006,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Documents\\Sent",
+      "FileCount": 4,
+      "Bytes": 616838,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Documents\\Private",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Documents",
+      "FileCount": 40,
+      "Bytes": 66716262,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WallPaper",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Profile Photos",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\.Links",
+      "FileCount": 21,
+      "Bytes": 987853,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\.Statuses",
+      "FileCount": 15,
+      "Bytes": 3031530,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\.udDHFY8K4Eqg",
+      "FileCount": 4,
+      "Bytes": 456985,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\.wamocache",
+      "FileCount": 3,
+      "Bytes": 3249,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Bug Report Attachments",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Stickers",
+      "FileCount": 63,
+      "Bytes": 5551165,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Sticker Packs",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media\\WhatsApp Backup Excluded Stickers",
+      "FileCount": 1,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Media",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\.Shared",
+      "FileCount": 128,
+      "Bytes": 10602859,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Backups\\Stickers",
+      "FileCount": 156,
+      "Bytes": 22268473,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Backups\\Wallpapers",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Backups",
+      "FileCount": 7,
+      "Bytes": 389715,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\Databases",
+      "FileCount": 3,
+      "Bytes": 189022918,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\.Thumbs",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\.StickerThumbs",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp\\.trash",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\WhatsApp",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\ZCamera\\.resource",
+      "FileCount": 3,
+      "Bytes": 20480,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\ZCamera\\image\\cache",
+      "FileCount": 14,
+      "Bytes": 785024,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\ZCamera\\image",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\ZCamera\\.data",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\ZCamera",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\commerce\\statistics",
+      "FileCount": 1,
+      "Bytes": 19,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\commerce",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage\\Camera",
+      "FileCount": 4,
+      "Bytes": 1493310178,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "Internal storage",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    }
+  ]
+}

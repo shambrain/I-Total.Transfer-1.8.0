@@ -1,5 +1,20 @@
 ## 1.8.0 — 2026-10-20 — borderless chrome, honest device detection, unfinished-session recovery, Android storage
 
+- **WPD copies were broken and are fixed (2026-10-29).** `WpdDevice.CopyToStage` deleted its `.partial`
+  file in a `finally` block that ran before the move to the final staging name, so every WPD copy failed
+  with "could not find .partial" and the failure reset the session, making every later file fail with
+  "WPD session is not open". Cleanup now runs only on failure, and the backend reopens the bound phone
+  instead of throwing. Hardware proof: 2,056 Android files (5.84 GiB) copied with source-and-destination
+  SHA-256, 20 zero-byte files verified, 8 iPhone HEIC/MOV files verified, and a cancelled 184 MB MP4
+  resumed to a verified complete copy.
+- **The Android family survived the first session open (2026-10-29).** `ResetSession` cleared `_family`
+  after `Probe`/`Scan` had recorded Android, so `Capabilities` advertised only Photos/Videos and the
+  resume path would have taken the iPhone branch. It now restores the family from the bound selection;
+  the HUAWEI probe reports Photos, Videos, Music and Files, the iPhone two.
+- **Hardware drill harness (2026-10-29).** `tools/DeviceDrill` drives the real WPD backend and the shared
+  engine for probe/scan/copy/verify drills with JSON evidence; it stays outside the solution so the
+  deterministic suite never touches a phone.
+
 - **Truncated stages, corrupt queues and cancellation are handled explicitly (2026-10-29).** A backend
   that ends a stream early now fails the staged-size check and nothing is committed; a corrupt
   `session.db` is disposed rather than left to the finalizer, so the run continues on the JSON manifest

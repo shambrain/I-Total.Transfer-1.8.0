@@ -1,0 +1,23 @@
+{
+  "Action": "probe",
+  "Backend": "Windows Portable Devices (native)",
+  "Status": "Ready",
+  "Family": 1,
+  "Name": "Apple iPhone",
+  "Model": "Apple iPhone",
+  "OperatingSystem": "27.0.1",
+  "StableId": "\\\\?\\usb#vid_05ac\u0026pid_12a8\u0026mi_00#9\u0026321a23f6\u00260\u00260000#{6ac27878-a6fa-4155-ba85-f98f491d4f33}",
+  "BackendName": "Windows Portable Devices (native)",
+  "Message": "iPhone media is accessible through native WPD (hash-verified transfers available).",
+  "Capabilities": {
+    "CanEnumerate": true,
+    "CanReadSource": true,
+    "CanHashSourceBytes": true,
+    "CanReadBackCommitted": true,
+    "CanWriteToDevice": false,
+    "Categories": [
+      "Photos",
+      "Videos"
+    ]
+  }
+}

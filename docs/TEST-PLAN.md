@@ -335,3 +335,37 @@ Do not label a release device-tested until these tests pass on actual Windows 10
     24-hex fingerprint may appear in any entry; and the README must state the same boundary. With the trial
     exhausted, repeat and confirm the standing reads `TrialExhausted` and that exporting did not change the
     counter.
+
+## Reproducible hardware drill harness (2026-10-29)
+
+`tools/DeviceDrill` is a console harness that references the real application project and drives the
+native WPD backend and the shared engine. It is deliberately **outside the solution**, so the
+deterministic build and test suite never touch a phone.
+
+```powershell
+dotnet build tools\DeviceDrill\DeviceDrill.csproj -c Release
+$drill = "tools\DeviceDrill\bin\Release\net10.0-windows\DeviceDrill.exe"
+
+# Identify what Windows actually exposes (exit 0 = Ready).
+& $drill probe --family apple  --report "$env:TEMP\drill\probe-apple.json"
+& $drill probe --family android --report "$env:TEMP\drill\probe-android.json"
+
+# Full enumeration; exit 0 only when the status is Complete.
+& $drill scan --family apple --report "$env:TEMP\drill\scan-iphone.json"
+
+# Copy a filtered selection, then verify it. Source is read-only.
+& $drill copy --family android --dest "$env:TEMP\drill\android" --exts .mp4 --max 1 `
+    --report "$env:TEMP\drill\copy.json"
+
+# Zero-byte files, rename conflicts, cancellation.
+& $drill copy --family android --dest "$env:TEMP\drill\zero" --zero-only --max 20 --report ...
+& $drill copy --family android --dest "$env:TEMP\drill\rename" --contains "Internal storage\Camera" `
+    --max 1 --policy rename --repeat 2 --report ...
+& $drill copy --family android --dest "$env:TEMP\drill\cancel" --contains "Internal storage\Camera" `
+    --exts .mp4 --max 1 --cancel-after 2 --no-verify --report ...
+```
+
+Each command writes a JSON report (probe identity and capabilities; scan status, counts, bytes, zero-byte
+and unknown-size counts, folders and warnings; per-run summary, reconciliation and verification). Run
+one process at a time: two processes sharing the WPD provider can make one abort (KI-27). The
+2026-10-29 evidence lives in `%TEMP%\opencode\drill-2026-10-29\`.

@@ -1,0 +1,118 @@
+{
+  "Action": "scan",
+  "Device": {
+    "Status": 5,
+    "Family": 1,
+    "Name": "Apple iPhone",
+    "StableId": "\\\\?\\usb#vid_05ac\u0026pid_12a8\u0026mi_00#9\u0026321a23f6\u00260\u00260000#{6ac27878-a6fa-4155-ba85-f98f491d4f33}",
+    "Model": "Apple iPhone",
+    "OperatingSystem": "27.0.1"
+  },
+  "Backend": "Windows Portable Devices (native)",
+  "Status": 0,
+  "IsComplete": true,
+  "FileCount": 57731,
+  "KnownBytes": 194908848302,
+  "ZeroByteFiles": 0,
+  "UnknownSizeFiles": 0,
+  "DuplicatePaths": 0,
+  "FailedFolders": 0,
+  "FolderCount": 13,
+  "LivePhotoPairs": 1207,
+  "DurationSeconds": 1267.23,
+  "FilesPerSecond": 45.6,
+  "Warnings": [],
+  "Folders": [
+    {
+      "RelativePath": "DCIM\\202610_a",
+      "FileCount": 2543,
+      "Bytes": 32405919122,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "DCIM\\202609_b",
+      "FileCount": 11,
+      "Bytes": 3696683,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "DCIM\\202608_a",
+      "FileCount": 26320,
+      "Bytes": 114331766452,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "DCIM\\202610_b",
+      "FileCount": 3,
+      "Bytes": 3203060,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "DCIM\\201901_a",
+      "FileCount": 6,
+      "Bytes": 2803529,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "DCIM\\202609_c",
+      "FileCount": 1,
+      "Bytes": 372939,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "DCIM\\202608_b",
+      "FileCount": 6,
+      "Bytes": 3398613,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "DCIM\\202609_d",
+      "FileCount": 1,
+      "Bytes": 372939,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "DCIM\\202608_c",
+      "FileCount": 1,
+      "Bytes": 185393,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "DCIM\\202606_a",
+      "FileCount": 1,
+      "Bytes": 389296,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "DCIM\\202003_a",
+      "FileCount": 2,
+      "Bytes": 5671342,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "DCIM\\202609_a",
+      "FileCount": 28836,
+      "Bytes": 48151068934,
+      "Succeeded": true,
+      "Error": null
+    },
+    {
+      "RelativePath": "DCIM",
+      "FileCount": 0,
+      "Bytes": 0,
+      "Succeeded": true,
+      "Error": null
+    }
+  ]
+}

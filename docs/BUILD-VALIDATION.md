@@ -306,7 +306,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
   -> publish\I-Total.Transfer.exe, 112,195,398 bytes
-     SHA-256 3EDE82DBE942ABABD7247C22F6062A5FB5E3AE8507DC9102B5E5AB428FA387CA
+     SHA-256 F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8
 ```
 
 The source ZIP was extracted into a clean folder, published there, and produced the **same** executable

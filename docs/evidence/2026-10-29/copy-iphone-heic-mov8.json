@@ -1,0 +1,70 @@
+{
+  "Action": "copy",
+  "Device": {
+    "Status": 5,
+    "Family": 1,
+    "Name": "Apple iPhone",
+    "StableId": "\\\\?\\usb#vid_05ac\u0026pid_12a8\u0026mi_00#9\u0026321a23f6\u00260\u00260000#{6ac27878-a6fa-4155-ba85-f98f491d4f33}"
+  },
+  "Backend": "Windows Portable Devices (native)",
+  "Destination": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\opencode\\drill-2026-10-29\\iphone-heic-mov8",
+  "ConflictPolicy": "PreserveAndReport",
+  "Scan": {
+    "Status": 0,
+    "Files": 57731,
+    "KnownBytes": 194908848302
+  },
+  "Runs": [
+    {
+      "Run": 1,
+      "Completed": true,
+      "Status": "HASH-VERIFIED COMPLETE (source-to-destination)",
+      "Total": 8,
+      "Copied": 8,
+      "AlreadyPresent": 0,
+      "Skipped": 0,
+      "Failed": 0,
+      "Inaccessible": 0,
+      "Unverifiable": 0,
+      "BytesCopied": 369415047,
+      "WeakestLevel": "SourceAndDestinationHash",
+      "Reconciliation": {
+        "DiscoveredFiles": 8,
+        "DiscoveredKnownBytes": 369415047,
+        "UnknownSizeFiles": 0,
+        "EligibleFiles": 8,
+        "EligibleBytes": 369415047,
+        "ExcludedFiles": 0,
+        "ConflictSkippedFiles": 0,
+        "AlreadyPresentFiles": 0,
+        "AlreadyPresentBytes": 0,
+        "CopiedFiles": 8,
+        "CopiedBytes": 369415047,
+        "SourceHashVerifiedFiles": 8,
+        "DestinationHashVerifiedFiles": 0,
+        "SizeVerifiedFiles": 0,
+        "UnverifiableFiles": 0,
+        "InaccessibleFiles": 0,
+        "FailedFiles": 0,
+        "FailedBytes": 0,
+        "OutstandingFiles": 0,
+        "DuplicatePathCount": 0,
+        "FailedFolderCount": 0
+      }
+    }
+  ],
+  "Cancelled": false,
+  "Verification": {
+    "Completed": true,
+    "Total": 8,
+    "Matching": 8,
+    "Missing": 0,
+    "WrongSize": 0,
+    "WrongHash": 0,
+    "Unverifiable": 0,
+    "SourceHashVerified": 8,
+    "DestinationHashVerified": 8,
+    "Repaired": 0,
+    "Issues": []
+  }
+}

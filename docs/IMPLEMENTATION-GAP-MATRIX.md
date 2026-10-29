@@ -30,8 +30,8 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | B1 | Distinguish complete/incomplete/empty/failed enumeration | `TransferRules.ClassifyEnumeration`, `ScanAccounting.BuildReport` | AT `EnumerationAccountingTests`, `FilterAndConflictTests` | AUTOMATED TEST VERIFIED | — |
 | B2 | Never report a partial scan as complete | `WpdDevice.EnumerateRecursive` folder outcomes; `TransferService` completion | AT recovery tests; STATIC | AUTOMATED TEST VERIFIED | live unplug drill still pending (B9) |
 | B3 | Account for every object: copied, skipped, failed, inaccessible, excluded | `TransferService.CopyCoreAsync` counters + manifest | AT `TransferEngineTests`, `RecoveryFlowTests` | AUTOMATED TEST VERIFIED | reconciliation report (D8) |
-| B4 | Zero-byte file is a measurement; unreadable size is unknown | `MediaFile.SizeKnown`, `ScanAccounting`, backends | AT 9 accounting tests + 3 engine tests | AUTOMATED TEST VERIFIED | live confirmation on a phone |
-| B5 | Recursive enumeration of every reachable container | `WpdDevice.EnumerateRecursive`, `ShellIPhoneDevice.ScanFolder`, `AfcDevice.EnumerateFolder` | STATIC; LIVE Android 4,103-file walk (2026-10-22) | PHYSICAL DEVICE VERIFIED (Android) | iPhone re-run after next publish |
+| B4 | Zero-byte file is a measurement; unreadable size is unknown | `MediaFile.SizeKnown`, `ScanAccounting`, backends | AT 9 accounting tests + 3 engine tests; LIVE 20/20 zero-byte Android files hash-verified, 263 zero-byte in a 4,131-file scan, 0 unknown | PHYSICAL DEVICE VERIFIED | — |
+| B5 | Recursive enumeration of every reachable container | `WpdDevice.EnumerateRecursive`, `ShellIPhoneDevice.ScanFolder`, `AfcDevice.EnumerateFolder` | LIVE 2026-10-29: iPhone 57,731 files / 13 folders and Android 4,131 / 307 folders, both `Complete` | PHYSICAL DEVICE VERIFIED | — |
 | B6 | Both iPhone layouts (DCIM container and albums at storage root) | `CameraRoll.Decide`, `WpdDevice.ResolveMediaRootObjectId` | AT `CameraRollTests`; LIVE iPhone 13 Pro (2026-10-22) | PHYSICAL DEVICE VERIFIED | — |
 | B7 | Duplicate destination paths are detected and refused | `EnsureUniqueSourcePaths`, `ClassifyEnumeration` duplicates | AT duplicate tests | AUTOMATED TEST VERIFIED | — |
 | B8 | Stable session identity; a different phone is refused | `ManifestStore.SourceIdentityProblem`, `DeviceSelectionGuard`, `ScanResult.BelongsTo` | AT `DeviceSelectionTests`, recovery tests | AUTOMATED TEST VERIFIED | physical disappearance drill (IP09/BT08) |
@@ -55,7 +55,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | C8 | Resume only when source identity and destination state reconcile | `SourceIdentityProblem`, `HandleExistingAsync` | AT | AUTOMATED TEST VERIFIED | — |
 | C9 | Unknown-size resume does not become a collision | `ClassifyExistingDestination`, digest-first rule | AT `EnumerationAccountingTests` | AUTOMATED TEST VERIFIED | — |
 | C13 | A corrupt SQLite file does not stop the run and its handle is released | `TryOpenDatabase` (dispose on failure), `ManifestStore` | AT `ACorruptSqliteFileDoesNotStopTheRun` | AUTOMATED TEST VERIFIED | — |
-| C12 | A renamed copy is verified at its committed path and not duplicated on rerun | `TransferEntry.CommittedPath`, `HandleExistingAsync`, `VerifyCoreAsync` | AT `RenameConflictTests` (4) | AUTOMATED TEST VERIFIED | — |
+| C12 | A renamed copy is verified at its committed path and not duplicated on rerun | `TransferEntry.CommittedPath`, `HandleExistingAsync`, `VerifyCoreAsync` | AT `RenameConflictTests` (4); LIVE Android rename `(1).mp4` with `STORED AS`, rerun `ALREADY PRESENT` | PHYSICAL DEVICE VERIFIED | — |
 | C11 | A run continues on the JSON manifest when SQLite cannot be opened | `TryOpenDatabase`, `ManifestStore` | AT `ATransferStillCompletesWhenTheSqliteDatabaseCannotBeOpened` | AUTOMATED TEST VERIFIED | — |
 | C10 | Source is never deleted | all backends | STATIC (no delete API on source paths) | AUTOMATED TEST VERIFIED | — |
 
@@ -63,7 +63,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 
 | ID | Requirement | Where | Evidence | Status | Next action |
 | --- | --- | --- | --- | --- | --- |
-| D1 | Source bytes hashed while streaming; never invented | `WpdDevice.CopyToStage`, `AfcDevice.CopyToStage` | AT `SourceHashingBackendSkipsTheRedundantStagedReadBack`; LIVE hash equality | PHYSICAL DEVICE VERIFIED (Android) | — |
+| D1 | Source bytes hashed while streaming; never invented | `WpdDevice.CopyToStage`, `AfcDevice.CopyToStage` | LIVE 2026-10-29: iPhone 8/8 and Android 2,056/2,056 files at `SourceAndDestinationHash` | PHYSICAL DEVICE VERIFIED | — |
 | D2 | Independent staged/destination verification and commit gating | `CopyCoreAsync` commit path | AT corruption tests | AUTOMATED TEST VERIFIED | — |
 | D3 | Honest verification labels (`SourceAndDestinationHash`, `DestinationHash`, `SizeOnly`, `None`) | `TransferRules.ClassifyVerification`, `VerificationLevel` | AT `ReconciliationTests` | AUTOMATED TEST VERIFIED | — |
 | D4 | Verification separates wrong size from wrong hash; corruption marks Failed | `VerifyCoreAsync` | AT verification suite | AUTOMATED TEST VERIFIED | — |
@@ -80,16 +80,17 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 
 | ID | Requirement | Where | Evidence | Status | Next action |
 | --- | --- | --- | --- | --- | --- |
-| E1 | WPD device manager + real interfaces, connected vs remembered | `WpdDevice.Probe`, `ListDevices` | STATIC; LIVE both phones | PHYSICAL DEVICE VERIFIED (historical) | — |
+| E1 | WPD device manager + real interfaces, connected vs remembered | `WpdDevice.Probe`, `ListDevices` | LIVE 2026-10-29: iPhone `Ready` (iOS 27.0.1) and HUAWEI `Ready` (LDN-L21), both native WPD | PHYSICAL DEVICE VERIFIED | — |
 | E2 | Opaque, session-scoped object IDs; re-resolve after reconnect | `ResolveObjectId`, `_nameIndex.Clear()` | STATIC | IMPLEMENTED — NOT VERIFIED | reconnect drill |
 | E3 | Deterministic COM release on success/cancel/exception | `ResetSession`, `ReleaseCom`; enumerator/keys/values/manager released in `finally` | STATIC — five leaks found and fixed; Microsoft documents that the enumerator must be released (`docs/RESEARCH-SOURCES.md`, 2026-10-29) | IMPLEMENTED — NOT VERIFIED | no phone to measure handle counts |
 | E4 | Device-supported buffer size / bounded default | `OpenStream(out optimalBufferSize)`, `_copyBufferBytes` | STATIC; AT buffer clamp | AUTOMATED TEST VERIFIED | benchmark sweep at Gate H |
 | E5 | Short reads, EOF, unknown size, source disappearance handled | `CopyToStage` read loop; engine size rules | AT partial-read/unknown-size tests | AUTOMATED TEST VERIFIED | live pull drill |
-| E6 | Android volumes walked, private trees skipped, PTP warning | `WpdDevice.Scan` Android branch, `PortableStorage` | AT `PortableStorageTests`; LIVE | PHYSICAL DEVICE VERIFIED (Android) | — |
+| E6 | Android volumes walked, private trees skipped, PTP warning | `WpdDevice.Scan` Android branch, `PortableStorage` | LIVE 2026-10-29: 4,131 files / 17.37 GiB / 307 folders, `Complete` | PHYSICAL DEVICE VERIFIED | — |
 | E7 | AFC inert unless pinned, hashed, verified | `DependencyVerifier`, `AfcDevice.RuntimeAvailable` | AT dependency tests | AUTOMATED TEST VERIFIED | BLOCKED: no audited binaries |
 | E8 | Preflight states (locked, untrusted, media unavailable, charging-only…) | `WpdDevice.Probe`, `ConnectionDiagnostics` | AT diagnostics tests; LIVE PTP/lock | PHYSICAL DEVICE VERIFIED (partial) | iPhone lock drill (IP08) |
 | E9 | Driver detection/repair route without silent installs | `ConnectionDiagnostics`, Settings text | STATIC | IMPLEMENTED — NOT VERIFIED | clean-machine drill |
-| E10 | Windows-to-device only where backend supports it | `CanWriteToDevice`, AFC path | AT capability tests | AUTOMATED TEST VERIFIED | live AFC write BLOCKED |
+| E11 | The staged file is moved, not deleted, at commit | `WpdDevice.CopyToStage` | LIVE 2,056 Android + 8 iPhone + 20 zero-byte + 184 MB resume copies | PHYSICAL DEVICE VERIFIED | — |
+| E12 | The device family survives the first session open | `ResetSession` restores the bound family | LIVE probe: Android 4 categories, iPhone 2 | PHYSICAL DEVICE VERIFIED | — || E10 | Windows-to-device only where backend supports it | `CanWriteToDevice`, AFC path | AT capability tests | AUTOMATED TEST VERIFIED | live AFC write BLOCKED |
 
 ## Gate F — Designer UI
 

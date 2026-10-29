@@ -74,7 +74,9 @@ public sealed class WpdDevice : ITransferBackend
     private string? _deviceId;
     private string? _mediaRootObjectId;
     /// <summary>The family whose storage rules the attached device is being read with.</summary>
-    private DeviceFamily _family = DeviceFamily.Unknown;
+    // Written on the COM apartment thread by Probe/Scan and read by the UI thread through Capabilities.
+    // Volatile so the reader cannot keep seeing Unknown and advertise only the iPhone media groups.
+    private volatile DeviceFamily _family = DeviceFamily.Unknown;
     /// <summary>
     /// The phone this backend selected. A probe chooses one phone; every later scan and copy must read
     /// that same phone. Without this, a moment in which the selected iPhone stops answering makes
@@ -424,34 +426,41 @@ public sealed class WpdDevice : ITransferBackend
             string finalPath = Path.Combine(stagingDirectory, file.Name);
             if (File.Exists(finalPath)) File.Delete(finalPath);
 
-            EnsureOpen(_deviceId ?? throw new IOException("WPD session is not open."));
+            // Reopen the same bound phone if a previous failure reset the session. Without this the
+            // next file failed with "WPD session is not open" even though the phone was still attached.
+            EnsureOpen(_deviceId ?? _selected.DeviceId ?? throw new IOException("WPD session is not open."));
             IStream stream = OpenSourceStream(file);
             using var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
             long written = 0;
             byte[] buffer = new byte[_copyBufferBytes];
             IntPtr readPtr = Marshal.AllocCoTaskMem(4);
+            bool staged = false;
             try
             {
-                using var output = new FileStream(stagePath, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024, FileOptions.SequentialScan);
-                while (true)
+                using (var output = new FileStream(stagePath, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024, FileOptions.SequentialScan))
                 {
-                    token.ThrowIfCancellationRequested();
-                    stream.Read(buffer, buffer.Length, readPtr);
-                    int read = Marshal.ReadInt32(readPtr);
-                    if (read <= 0) break;
-                    sha.AppendData(buffer, 0, read);
-                    output.Write(buffer, 0, read);
-                    written += read;
+                    while (true)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        stream.Read(buffer, buffer.Length, readPtr);
+                        int read = Marshal.ReadInt32(readPtr);
+                        if (read <= 0) break;
+                        sha.AppendData(buffer, 0, read);
+                        output.Write(buffer, 0, read);
+                        written += read;
+                    }
+                    output.Flush(true);
                 }
-                output.Flush(true);
+                staged = true;
             }
             finally
             {
                 Marshal.FreeCoTaskMem(readPtr);
                 ReleaseCom(stream);
-                // A failed or cancelled attempt must not leave a large .partial behind. On success the
-                // partial has already been moved to its final staging name, so this is a no-op.
-                TryDelete(stagePath);
+                // Only a failed or cancelled attempt is cleaned up here. The successful partial is the
+                // file that is moved to its final staging name below; deleting it here made every copy
+                // fail with "could not find .partial" and then poisoned the session for the next file.
+                if (!staged) TryDelete(stagePath);
             }
 
             if (file.SizeKnown && written != file.Size)
@@ -478,7 +487,7 @@ public sealed class WpdDevice : ITransferBackend
     {
         try
         {
-            EnsureOpen(_deviceId ?? throw new IOException("WPD session is not open."));
+            EnsureOpen(_deviceId ?? _selected.DeviceId ?? throw new IOException("WPD session is not open."));
             string objectId = ResolveObjectId(file);
             return new WpdStream(this, objectId);
         }
@@ -1099,9 +1108,12 @@ public sealed class WpdDevice : ITransferBackend
         try { _device?.Close(); } catch { }
         ReleaseCom(_resources); ReleaseCom(_properties); ReleaseCom(_content); ReleaseCom(_device);
         _device = null; _content = null; _properties = null; _resources = null; _deviceId = null; _mediaRootObjectId = null;
-        // A volume list and a family belong to one attached device, exactly as its object ids do.
+        // A volume list belongs to one attached device, exactly as its object ids do. The family is
+        // restored from the selection that was already bound: EnsureOpen resets the session on the
+        // first open, and clearing the family there made Capabilities advertise the iPhone media
+        // groups for an Android phone and made the resume path take the iPhone branch.
         _volumes.Clear();
-        _family = DeviceFamily.Unknown;
+        _family = _selected.Family;
         // Object ids belong to the session that handed them out; a reconnect can renumber every one.
         _nameIndex.Clear();
     }
