@@ -297,4 +297,171 @@ public sealed class TransferEngineTests
         }
         finally { Directory.Delete(destination, true); }
     }
+
+    private static ScanResult ScanWithTimestamp(MediaFile file, DateTimeOffset? modified)
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var timed = new MediaFile(file.Folder, file.Name, file.Size, file.Extension) { ModifiedUtc = modified };
+        return new ScanResult("Mock iPhone", now, now, [timed], []);
+    }
+
+    private static TransferOptions OptionsWith(ConflictPolicy policy, bool skipUnchanged) =>
+        TransferOptions.FromSettings(AppSettings.Defaults()) with
+        {
+            ConflictPolicy = policy,
+            SkipUnchanged = skipUnchanged
+        };
+
+    [TestMethod]
+    public async Task AChangedSourceIsCopiedAgainWhenOverwriteIsChosen()
+    {
+        // A photo edited on the phone can keep its size. The scan's modification time is the only signal
+        // the engine has without re-reading every source byte, so a newer timestamp must defeat
+        // SkipUnchanged and replace the stale destination.
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1, bytesPerFile: 1024);
+        string destination = TempDestination();
+        try
+        {
+            var service = new TransferService(backend, new LogService(destination),
+                OptionsWith(ConflictPolicy.Overwrite, skipUnchanged: true));
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+            MediaFile file = scan.Files[0];
+            DateTimeOffset firstSeen = new(2026, 10, 20, 10, 0, 0, TimeSpan.Zero);
+
+            TransferSummary first = await service.CopyAsync(ScanWithTimestamp(file, firstSeen), destination, 1,
+                new Progress<TransferProgress>(_ => { }), CancellationToken.None);
+            Assert.IsTrue(first.Completed);
+            Assert.AreEqual(1, backend.FetchedPaths.Count);
+
+            TransferSummary second = await service.CopyAsync(ScanWithTimestamp(file, firstSeen.AddMinutes(5)), destination, 1,
+                new Progress<TransferProgress>(_ => { }), CancellationToken.None);
+
+            Assert.AreEqual(2, backend.FetchedPaths.Count,
+                "A changed source must be fetched again even when the destination still matches its old hash.");
+            Assert.AreEqual(1, second.Copied);
+            Assert.AreEqual(0, second.Failed);
+            Assert.IsTrue(second.Completed);
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
+    public async Task AChangedSourceIsPreservedAndReportedByDefault()
+    {
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1, bytesPerFile: 1024);
+        string destination = TempDestination();
+        try
+        {
+            var service = new TransferService(backend, new LogService(destination));
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+            MediaFile file = scan.Files[0];
+            DateTimeOffset firstSeen = new(2026, 10, 20, 10, 0, 0, TimeSpan.Zero);
+
+            TransferSummary first = await service.CopyAsync(ScanWithTimestamp(file, firstSeen), destination, 1,
+                new Progress<TransferProgress>(_ => { }), CancellationToken.None);
+            Assert.IsTrue(first.Completed);
+
+            TransferSummary second = await service.CopyAsync(ScanWithTimestamp(file, firstSeen.AddMinutes(5)), destination, 1,
+                new Progress<TransferProgress>(_ => { }), CancellationToken.None);
+
+            Assert.AreEqual(1, backend.FetchedPaths.Count, "PreserveAndReport must not overwrite the existing file.");
+            Assert.AreEqual(1, second.Failed);
+            Assert.AreEqual(0, second.Copied);
+            Assert.IsFalse(second.Completed);
+            Assert.IsTrue(File.Exists(Path.Combine(destination, "DCIM", file.Name)));
+
+            var manifest = System.Text.Json.JsonSerializer.Deserialize<SessionManifest>(
+                File.ReadAllText(Path.Combine(destination, ".i-total", "session.json")));
+            Assert.IsNotNull(manifest);
+            Assert.AreEqual(TransferState.Failed, manifest.Entries.Single().State);
+            StringAssert.Contains(manifest.Entries.Single().Error, "source file changed");
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
+    public async Task AnUnchangedSourceIsStillSkipped()
+    {
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1, bytesPerFile: 1024);
+        string destination = TempDestination();
+        try
+        {
+            var service = new TransferService(backend, new LogService(destination));
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+            MediaFile file = scan.Files[0];
+            DateTimeOffset seen = new(2026, 10, 20, 10, 0, 0, TimeSpan.Zero);
+
+            Assert.IsTrue((await service.CopyAsync(ScanWithTimestamp(file, seen), destination, 1,
+                new Progress<TransferProgress>(_ => { }), CancellationToken.None)).Completed);
+
+            TransferSummary second = await service.CopyAsync(ScanWithTimestamp(file, seen), destination, 1,
+                new Progress<TransferProgress>(_ => { }), CancellationToken.None);
+
+            Assert.AreEqual(1, backend.FetchedPaths.Count, "An unchanged source must not be re-read.");
+            Assert.AreEqual(0, second.Copied);
+            Assert.AreEqual(0, second.Failed);
+            Assert.IsTrue(second.Completed);
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
+    public async Task AFailedOverwriteRestoresTheOriginalDestination()
+    {
+        // Overwrite is explicit, but a corrupt new copy must not leave the operator with neither version.
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1, bytesPerFile: 1024);
+        backend.CorruptPaths.Add(Path.Combine("DCIM", "IMG_0000.bin"));
+        string destination = TempDestination();
+        try
+        {
+            string target = Path.Combine(destination, "DCIM", "IMG_0000.bin");
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            File.WriteAllText(target, "ORIGINAL-DESTINATION");
+
+            var service = new TransferService(backend, new LogService(destination),
+                OptionsWith(ConflictPolicy.Overwrite, skipUnchanged: false));
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+
+            TransferSummary summary = await service.CopyAsync(scan, destination, 1,
+                new Progress<TransferProgress>(_ => { }), CancellationToken.None);
+
+            Assert.AreEqual(1, summary.Failed);
+            Assert.IsFalse(summary.Completed);
+            Assert.IsTrue(File.Exists(target), "The previous destination must survive a failed overwrite.");
+            Assert.AreEqual("ORIGINAL-DESTINATION", File.ReadAllText(target));
+            string backupDirectory = Path.Combine(destination, ".i-total", "backup");
+            Assert.AreEqual(0, Directory.Exists(backupDirectory)
+                ? Directory.GetFiles(backupDirectory).Length : 0,
+                "A successful restore removes the backup copy.");
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
+    public async Task ASuccessfulOverwriteReplacesTheFileAndRemovesTheBackup()
+    {
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1, bytesPerFile: 1024);
+        string destination = TempDestination();
+        try
+        {
+            string target = Path.Combine(destination, "DCIM", "IMG_0000.bin");
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            File.WriteAllText(target, "OLD");
+
+            var service = new TransferService(backend, new LogService(destination),
+                OptionsWith(ConflictPolicy.Overwrite, skipUnchanged: false));
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+
+            TransferSummary summary = await service.CopyAsync(scan, destination, 1,
+                new Progress<TransferProgress>(_ => { }), CancellationToken.None);
+
+            Assert.IsTrue(summary.Completed);
+            Assert.AreEqual(1024, new FileInfo(target).Length);
+            string backupDirectory = Path.Combine(destination, ".i-total", "backup");
+            Assert.AreEqual(0, Directory.Exists(backupDirectory)
+                ? Directory.GetFiles(backupDirectory).Length : 0);
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
 }

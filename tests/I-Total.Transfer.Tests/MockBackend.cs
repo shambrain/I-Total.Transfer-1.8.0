@@ -49,6 +49,13 @@ public sealed class MockBackend : ITransferBackend
     /// </summary>
     public HashSet<string> ThrowPaths { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Relative paths whose staged bytes are corrupted after the source digest is taken, so the engine
+    /// sees a source hash that does not match the committed destination. Used to prove that a failed
+    /// overwrite restores the previous destination instead of losing it.
+    /// </summary>
+    public HashSet<string> CorruptPaths { get; } = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>Every relative path the engine actually asked the device to fetch, in order.</summary>
     public List<string> FetchedPaths { get; } = new();
 
@@ -88,6 +95,12 @@ public sealed class MockBackend : ITransferBackend
             return new CopyResult(false, null, "source disappeared");
         Directory.CreateDirectory(stagingDirectory);
         File.WriteAllBytes(Path.Combine(stagingDirectory, file.Name), bytes);
+        if (CorruptPaths.Contains(file.RelativePath))
+        {
+            byte[] corrupted = (byte[])bytes.Clone();
+            if (corrupted.Length > 0) corrupted[0] ^= 0xFF;
+            File.WriteAllBytes(Path.Combine(stagingDirectory, file.Name), corrupted);
+        }
         string? sourceHash = _canHashSourceBytes ? Convert.ToHexString(SHA256.HashData(bytes)) : null;
         return new CopyResult(true, sourceHash, "");
     }

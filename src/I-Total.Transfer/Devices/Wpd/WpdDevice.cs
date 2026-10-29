@@ -451,6 +451,9 @@ public sealed class WpdDevice : ITransferBackend
             {
                 Marshal.FreeCoTaskMem(readPtr);
                 ReleaseCom(stream);
+                // A failed or cancelled attempt must not leave a large .partial behind. On success the
+                // partial has already been moved to its final staging name, so this is a no-op.
+                TryDelete(stagePath);
             }
 
             if (file.Size > 0 && written != file.Size)

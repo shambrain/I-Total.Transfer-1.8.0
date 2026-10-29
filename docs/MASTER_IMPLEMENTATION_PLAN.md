@@ -5,7 +5,7 @@ is still open. Detailed evidence lives in `TEST-PLAN.md`, `BUILD-VALIDATION.md`,
 `PERFORMANCE-AUDIT.md`, `ARCHITECTURE-REVIEW.md`, `WIRELESS.md` and `RECOVERY.md`; this file is the index
 and the state of record.
 
-Last reconciled: 2026-10-24, against v1.8.0 source and the 455-test Release suite (453 passed, 2 skipped).
+Last reconciled: 2026-10-24, against v1.8.0 source and the 460-test Release suite (458 passed, 2 skipped).
 The UI design/token map is in `UI-DESIGN-SYSTEM.md`; the requirement-to-evidence map is in
 `UI-REQUIREMENTS-MATRIX.md`.
 

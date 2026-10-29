@@ -105,8 +105,17 @@ public sealed class ManifestStore
             string path = TransferRules.ValidateRelativePath(file.Folder, file.Name);
             if (existing.TryGetValue(path, out TransferEntry? entry))
             {
+                bool sourceChanged = entry.ExpectedBytes != file.Size ||
+                    (entry.SourceModifiedUtc is { } recorded && file.ModifiedUtc is { } current && recorded != current);
                 entry.ExpectedBytes = file.Size;
                 entry.SourceModifiedUtc = file.ModifiedUtc;
+                if (sourceChanged)
+                {
+                    entry.SourceChanged = true;
+                    if (entry.State is TransferState.SizeVerified or TransferState.IntegrityVerified
+                        or TransferState.CopiedUnverified or TransferState.Skipped)
+                        entry.State = TransferState.Queued;
+                }
                 if (entry.State is TransferState.Copying or TransferState.Paused) entry.State = TransferState.Queued;
             }
             else

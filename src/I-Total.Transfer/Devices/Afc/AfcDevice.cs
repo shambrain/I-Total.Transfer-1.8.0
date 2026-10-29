@@ -318,7 +318,12 @@ public sealed class AfcDevice : ITransferBackend
                 File.Move(stagePath, finalPath);
                 return new CopyResult(true, Convert.ToHexString(sha.GetHashAndReset()), "") { BytesWritten = written };
             }
-            finally { AfcNative.afc_close_file(_afc, handle); }
+            finally
+            {
+                AfcNative.afc_close_file(_afc, handle);
+                // A failed or cancelled attempt must not leave a large .partial behind.
+                TryDelete(stagePath);
+            }
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception ex) { Reset(); return new CopyResult(false, null, "AFC copy failed: " + ex.Message); }

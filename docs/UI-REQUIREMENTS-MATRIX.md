@@ -167,7 +167,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --filter "FullyQu
 Results recorded on 2026-10-24 (whole suite after the caption fix):
 
 - Release build: 0 warnings, 0 errors.
-- Full suite: 453 passed, 0 failed, 2 skipped, 455 total, 27 s.
+- Full suite: 458 passed, 0 failed, 2 skipped, 460 total, 30 s.
 - Targeted UI/theme suite: 42 passed, 0 failed, 42 total.
 
 ## 10. Evidence files

@@ -176,6 +176,12 @@ public sealed class TransferEntry
     public VerificationLevel Verification { get; set; } = VerificationLevel.None;
     public string? Error { get; set; }
     public DateTimeOffset? SourceModifiedUtc { get; set; }
+    /// <summary>
+    /// True when a later scan reported a different size or modification time than the copy recorded.
+    /// A same-size content change is only detectable through the timestamp; without one the engine
+    /// cannot tell, and this stays false.
+    /// </summary>
+    public bool SourceChanged { get; set; }
     public bool PreserveTimestamp { get; set; }
     public DateTimeOffset UpdatedUtc { get; set; } = DateTimeOffset.UtcNow;
 }

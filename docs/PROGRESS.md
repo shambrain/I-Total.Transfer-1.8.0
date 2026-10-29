@@ -6,6 +6,83 @@ start from here without re-reading the whole conversation.
 
 ---
 
+## 2026-10-29 - copy-path correctness audit (changed source, overwrite restore, staging)
+
+### Starting point
+
+HEAD was `33f1b99`; the published exe was `945E2D1F...` (112,154,438 B). Both handsets were detached, so
+this session worked on the engine and its tests rather than on a device.
+
+### Defects found and fixed
+
+1. **A same-size source change was treated as unchanged.** `ManifestStore.MergeScan` overwrote the recorded
+   source modification time before the copy loop, so `HandleExistingAsync` compared only the destination
+   with its old hash and `SkipUnchanged` skipped a file that had changed on the phone. `TransferEntry` now
+   carries `SourceChanged` (size or modification time), `PreserveAndReport` preserves the destination and
+   reports the file, and `Overwrite` refetches it. Three tests fail on the old engine.
+2. **A failed overwrite destroyed both versions.** `Overwrite` deleted the destination before the move; a
+   SHA-256 mismatch then deleted the new copy, leaving nothing. The old file is now moved to
+   `.i-total\backup` first, restored on any failure, and deleted only after the new bytes verify. Two tests
+   pin restore and success.
+3. **Failed/cancelled attempts left `.partial` staging files.** WPD and AFC now delete the partial in a
+   finally block.
+
+### Commands and exact results
+
+```powershell
+dotnet build I-Total.Transfer.sln -c Release --no-incremental
+# Build succeeded. 0 Warning(s), 0 Error(s)
+
+dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s
+# Passed! - Failed: 0, Passed: 458, Skipped: 2, Total: 460, Duration: 30 s
+
+dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+# publish\I-Total.Transfer.exe: 112,158,534 B
+# SHA-256 25397B1FB167442052DBC6A42DE04C7A9888E9148CFC935ADBDE257565A48AF6
+```
+
+The two key regressions were also run against the pre-fix engine by stashing only the source changes:
+`AChangedSourceIsCopiedAgainWhenOverwriteIsChosen` failed (`Expected:<2>. Actual:<1>`) and
+`AFailedOverwriteRestoresTheOriginalDestination` failed ("The previous destination must survive a failed
+overwrite"); both pass with the fixes.
+
+### Files changed
+
+```
+src/I-Total.Transfer/Core/Models.cs
+src/I-Total.Transfer/Services/ManifestStore.cs
+src/I-Total.Transfer/Services/TransferService.cs
+src/I-Total.Transfer/Devices/Wpd/WpdDevice.cs
+src/I-Total.Transfer/Devices/Afc/AfcDevice.cs
+tests/I-Total.Transfer.Tests/MockBackend.cs
+tests/I-Total.Transfer.Tests/TransferEngineTests.cs
+CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
+```
+
+### Packaging
+
+- The portable ZIP and Inno Setup executable were rebuilt from the new publish; the deployment and source
+  archives were regenerated and `dist\SHA256SUMS.txt` / `dist\installer\SHA256SUMS.txt` are authoritative.
+- The setup was installed and uninstalled silently: installed exe hash matched `publish\`, no firewall rule,
+  user data kept.
+- The source ZIP was rebuilt and published byte-identically; a clean clone of the release commit was checked.
+
+### Blockers and limits
+
+- A statistical multi-file benchmark, an iPhone-side benchmark, a locked iPhone, a cloud-optimised library,
+  a physical cable pull mid-copy, locked/unplugged diagnostics and a real iOS wireless sender need hardware.
+- Trusted code-signing certificate, RFC3161 success path, Windows 11, production issuer and Steamworks remain
+  external.
+- The source-change signal is the scan's size/modification time; a same-size change on a device that reports
+  no modification time is not detectable without re-reading the source.
+
+### Next task
+
+1. Reattach the phones and run the 4 GB+, mid-copy-pull and locked/unplugged diagnostics drills.
+2. Obtain a trusted certificate and complete the timestamped signing path.
+
+---
+
 ## 2026-10-24 - 96-DPI shell render, three release defects fixed, release refreshed
 
 ### Starting point

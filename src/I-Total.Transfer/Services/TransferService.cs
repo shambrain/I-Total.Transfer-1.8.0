@@ -245,6 +245,7 @@ public sealed class TransferService
                     lastError = stageResult.Error;
                     if (stageResult.Success)
                     {
+                        string? replacedBackup = null;
                         try
                         {
                             long stageSize = new FileInfo(stagePath).Length;
@@ -262,8 +263,26 @@ public sealed class TransferService
                             string? stagedPayloadHash = string.IsNullOrWhiteSpace(stageResult.SourceSha256)
                                 ? await ComputeSha256Async(stagePath, token)
                                 : null;
-                            if (File.Exists(target)) File.Delete(target); // Overwrite policy reached this point explicitly.
-                            File.Move(stagePath, target);
+                            // Overwrite is explicit, but a corrupt new copy must not destroy the old one.
+                            // Move the previous file aside first, put it back if the commit fails, and
+                            // delete it only once the new bytes are verified.
+                            if (File.Exists(target))
+                            {
+                                string backupDirectory = Path.Combine(destination, ".i-total", "backup");
+                                Directory.CreateDirectory(backupDirectory);
+                                replacedBackup = Path.Combine(backupDirectory,
+                                    Guid.NewGuid().ToString("N") + "-" + Path.GetFileName(target));
+                                File.Move(target, replacedBackup);
+                            }
+                            try { File.Move(stagePath, target); }
+                            catch
+                            {
+                                if (replacedBackup is not null)
+                                {
+                                    try { File.Move(replacedBackup, target); } catch { }
+                                }
+                                throw;
+                            }
                             committed = true;
                             if (_options.PreserveTimestamps && file.ModifiedUtc is DateTimeOffset modified)
                                 TrySetTimestamps(target, modified);
@@ -273,7 +292,7 @@ public sealed class TransferService
                             if (!string.IsNullOrWhiteSpace(expectedHash) &&
                                 !string.Equals(expectedHash, destinationHash, StringComparison.OrdinalIgnoreCase))
                             {
-                                try { File.Delete(target); } catch { }
+                                RestoreReplacedTarget(target, replacedBackup);
                                 committed = false;
                                 throw new InvalidDataException("SHA-256 mismatch: the committed destination does not match the bytes read from the source. The destination copy was rejected.");
                             }
@@ -283,7 +302,9 @@ public sealed class TransferService
                             entry.DestinationSha256 = destinationHash;
                             entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, stagedPayloadHash, destinationHash, file.Size > 0);
                             entry.PreserveTimestamp = _options.PreserveTimestamps;
+                            entry.SourceChanged = false;
                             success = true;
+                            if (replacedBackup is not null) { try { File.Delete(replacedBackup); } catch { } }
                             fileRates.Enqueue((Math.Max(0, file.Size), Math.Max(0.001, attemptTimer.Elapsed.TotalSeconds)));
                             while (fileRates.Count > 30) fileRates.Dequeue();
                             bytesCopied += Math.Max(0, file.Size);
@@ -299,7 +320,7 @@ public sealed class TransferService
                             // either verified or absent, and the next run fetches it again.
                             if (committed)
                             {
-                                try { File.Delete(target); } catch { }
+                                RestoreReplacedTarget(target, replacedBackup);
                                 committed = false;
                                 lastError = $"{ex.Message} (the committed copy was discarded because it could not be verified)";
                             }
@@ -465,6 +486,10 @@ public sealed class TransferService
         int processed, int total, long bytesDone, long required, long bytesCopied,
         Queue<(long Bytes, double Seconds)> fileRates, Stopwatch timer, CancellationToken token)
     {
+        // A source that changed after its copy was recorded must not be treated as unchanged. With
+        // PreserveAndReport the existing destination is kept and the file is reported; with Overwrite the
+        // stale destination is replaced; Skip and Rename still follow their own policy.
+        bool sourceChanged = entry.SourceChanged;
         switch (_options.ConflictPolicy)
         {
             case ConflictPolicy.Skip:
@@ -480,7 +505,7 @@ public sealed class TransferService
 
             case ConflictPolicy.Overwrite:
             {
-                if (_options.SkipUnchanged)
+                if (_options.SkipUnchanged && !sourceChanged)
                 {
                     long existingSize = new FileInfo(target).Length;
                     string? existingHash = file.Size > 0 && existingSize == file.Size ? await ComputeSha256Async(target, token) : null;
@@ -499,6 +524,19 @@ public sealed class TransferService
 
             default: // PreserveAndReport
             {
+                if (sourceChanged)
+                {
+                    entry.State = TransferState.Failed;
+                    entry.Verification = VerificationLevel.None;
+                    entry.Error = "The source file changed since it was copied (size or modification time). " +
+                        "The existing destination was preserved; choose Overwrite or Rename to replace it.";
+                    entry.UpdatedUtc = DateTimeOffset.UtcNow;
+                    _store!.MarkDirty(force: true); TryDatabase(() => database?.UpsertFile(destination, entry), relative);
+                    _log.Write($"SOURCE CHANGED {relative}: {entry.Error}", "WARN");
+                    progress.Report(BuildProgress("Copy", processed, total, bytesDone, required, bytesCopied, fileRates, timer, relative,
+                        "Source changed since the recorded copy; existing destination preserved."));
+                    return new ResumeOutcome(true, ResumeKind.Failed, target);
+                }
                 long existingSize = new FileInfo(target).Length;
                 // A file that a previous pass already copied but could not verify (the phone reported
                 // no source size) is not a collision. Hash the destination anyway so the recorded
@@ -821,6 +859,30 @@ public sealed class TransferService
         catch (Exception ex) { _log.Write($"SQLite update failed for {context}; JSON manifest remains available: {ex.Message}", "WARN"); }
     }
 
+
+    /// <summary>
+    /// Puts the previous destination back after a copy that could not be verified. The old file is moved
+    /// to .i-total\backup before the new one is committed, so a failed overwrite never destroys both
+    /// copies; if the restore itself fails, the backup is kept and its path is logged.
+    /// </summary>
+    private void RestoreReplacedTarget(string target, string? backup)
+    {
+        if (backup is null || !File.Exists(backup))
+        {
+            try { File.Delete(target); } catch { }
+            return;
+        }
+        try
+        {
+            if (File.Exists(target)) File.Delete(target);
+            File.Move(backup, target);
+            _log.Write($"Restored the previous destination after a failed overwrite: {target}", "WARN");
+        }
+        catch (Exception ex)
+        {
+            _log.Write($"The previous destination could not be restored from '{backup}': {ex.Message}. The backup is kept.", "ERROR");
+        }
+    }
     private static void TrySetTimestamps(string path, DateTimeOffset modified)
     {
         try { File.SetLastWriteTimeUtc(path, modified.UtcDateTime); } catch { }
