@@ -20,9 +20,9 @@ a filtered HEIC/MOV copy also completed through the shared engine (8 files, hash
 
 
 
-## 2026-10-29 candidate drill (`3EDE82DB...`, before the two hardware fixes below)
+## 2026-10-29 hardware drills (source at the time; published build after the fixes: `F3ED2CC3...`)
 
-Both handsets were attached. The published candidate was driven through a new reproducible harness,
+Both handsets were attached. Probes and scans ran first; the two defects they exposed were fixed and the copy drills then ran against the fixed source. The published build is `F3ED2CC3...`. The drills used a new reproducible harness,
 `tools/DeviceDrill` (console, references the real `WpdDevice` and `TransferService`; outside the solution so
 the deterministic suite never touches a phone). Source is read-only throughout.
 
