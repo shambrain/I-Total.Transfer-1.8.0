@@ -51,6 +51,35 @@ public sealed class VerificationFlowTests
     }
 
     [TestMethod]
+    public async Task ACorruptedDestinationIsPersistedAsFailedInSqliteAsWellAsJson()
+    {
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1);
+        string destination = TempDestination();
+        try
+        {
+            var service = new TransferService(backend, new LogService(destination));
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+            await service.CopyAsync(scan, destination, 1, Quiet(), CancellationToken.None);
+
+            string path = Path.Combine(destination, "DCIM", "IMG_0000.bin");
+            long size = new FileInfo(path).Length;
+            File.WriteAllBytes(path, new byte[size]); // same size, different bytes
+
+            VerificationResult result = await service.VerifyAsync(scan, destination, Quiet(), CancellationToken.None);
+            Assert.AreEqual(1, result.WrongHash);
+            Assert.IsFalse(result.Completed);
+
+            using var database = new SessionDatabase(Path.Combine(destination, ".i-total", "session.db"), new LogService(destination));
+            database.Initialize();
+            PersistedFileState row = database.QueryFileStates(destination).Single();
+            Assert.AreEqual(nameof(TransferState.Failed), row.State,
+                "the verification verdict must be readable from SQLite, not only from the JSON manifest");
+            Assert.AreEqual(nameof(VerificationLevel.None), row.Verification);
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
     public async Task ASizeChangeOnTheDestinationIsNotAMatch()
     {
         using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1);

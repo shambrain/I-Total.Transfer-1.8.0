@@ -133,10 +133,21 @@ public sealed class TransferService
         // bytes this run will actually copy. Reporting the unfiltered scan total beside the filtered
         // file count produced a screen that said "520 files / 15.01 GB" for a 2.63 GB plan.
         long required = planned.Sum(f => Math.Max(0, f.Size));
-        DriveInfo drive = new(Path.GetPathRoot(destination) ?? throw new IOException("Destination drive could not be determined."));
         long reserve = Math.Max(512L * 1024 * 1024, (long)(required * 0.03));
-        if (drive.AvailableFreeSpace < required + reserve)
-            throw new IOException($"Insufficient destination space. Need approximately {FormatBytes(required + reserve)} including safety reserve; available {FormatBytes(drive.AvailableFreeSpace)}.");
+        long available = -1;
+        try
+        {
+            string? root = Path.GetPathRoot(destination);
+            if (!string.IsNullOrEmpty(root)) available = new DriveInfo(root).AvailableFreeSpace;
+        }
+        catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException)
+        {
+            // A UNC/network destination has no DriveInfo. Refusing the run would remove a destination
+            // the user chose; the copy loop still reports a disk-full failure per file.
+            _log.Write($"Free space could not be determined for '{destination}'; continuing without the space preflight. {ex.Message}", "WARN");
+        }
+        if (available >= 0 && available < required + reserve)
+            throw new IOException($"Insufficient destination space. Need approximately {FormatBytes(required + reserve)} including safety reserve; available {FormatBytes(available)}.");
 
         // The destination folder is the durable record of this session, so stamp it as in-flight before
         // a single byte moves. Without this, a run that stops without writing a summary (power loss, a
@@ -433,7 +444,14 @@ public sealed class TransferService
             .Select(e => e.Verification)
             .DefaultIfEmpty(VerificationLevel.None)
             .Min();
-        string status = complete
+        // A run whose every planned file was already present under an accepted policy is a no-op, not a
+        // copy: saying "verified complete" would imply this run wrote something. The reconciliation is
+        // computed here so the verdict and the report use the same numbers.
+        ReconciliationReport reconciliation = ReconciliationReport.Build(scan, manifest.Entries);
+        bool nothingToCopy = complete && reconciliation.CopiedFiles == 0 && reconciliation.AlreadyPresentFiles == total;
+        string status = nothingToCopy
+            ? "ALREADY PRESENT \u2014 NO FILES NEEDED COPYING (verified against the session record)"
+            : complete
             ? weakest switch
             {
                 VerificationLevel.SourceAndDestinationHash => "HASH-VERIFIED COMPLETE (source-to-destination)",
@@ -458,12 +476,13 @@ public sealed class TransferService
         string summaryLevel = complete ? "OK" : failed == 0 && inaccessible == 0 ? "WARN" : "ERROR";
         _log.Write($"SUMMARY {status}; processed={processed}/{total}; copied={copied}; skipped={skipped}; failed={failed}; inaccessible={inaccessible}; unverifiable={unverifiable}; elapsed={timer.Elapsed:hh\\:mm\\:ss}", summaryLevel);
         TryDatabase(() => database?.EndSession(sessionId, status), "session summary");
-        ReconciliationReport reconciliation = ExportReports(destination, scan, manifest, status, weakest);
+        ExportReports(destination, scan, manifest, status, weakest, reconciliation);
         return new TransferSummary(total, copied, skipped, failed, inaccessible, unverifiable, required, timer.Elapsed,
             complete, status, _store.Path)
         {
             BytesCopied = bytesCopied,
             WeakestLevel = weakest,
+            AlreadyPresent = reconciliation.AlreadyPresentFiles,
             Reconciliation = reconciliation,
             ReportPath = Path.Combine(destination, "I-total-session-report.json"),
             // One id per run. It is what makes the trial ledger idempotent: a resumed session and a fresh
@@ -943,6 +962,7 @@ public sealed class TransferService
         bool complete = enumerationComplete && total > 0 && matching == total && missing == 0 &&
                         wrong == 0 && unverifiable == 0 && collisions == 0;
         _store.Flush();
+        PersistVerification(destination, scan, manifest, complete);
         _log.Write($"Verification: matching={matching}/{total}; source-hash-verified={sourceVerified}; destination-hash-verified={destVerified}; missing={missing}; size-mismatches={wrongSize}; hash-mismatches={wrongHash}; unverifiable={unverifiable}; repaired={repaired}; enumeration={scan.Status}.", complete ? "OK" : "ERROR");
         string reportPath = Path.Combine(destination, "I-total-verification.json");
         LogService.ExportJson(reportPath, new
@@ -960,6 +980,31 @@ public sealed class TransferService
             Repaired = repaired,
             ReportPath = reportPath
         };
+    }
+
+    /// <summary>
+    /// Writes the verification verdict to the SQLite queue as well as the JSON manifest, so a recovery
+    /// or history path sees the same hashes and states without parsing JSON. Failure to open the
+    /// database is logged and never turns a verification result into an exception.
+    /// </summary>
+    private void PersistVerification(string destination, ScanResult scan, SessionManifest manifest, bool complete)
+    {
+        SessionDatabase? database = null;
+        try
+        {
+            string sessionId = Guid.NewGuid().ToString("N");
+            database = new SessionDatabase(Path.Combine(destination, ".i-total", "session.db"), _log);
+            database.Initialize();
+            database.BeginSession(sessionId, scan.DeviceName, destination, "VERIFYING",
+                _device.Name, scan.Family.ToString(), scan.Status.ToString());
+            database.UpsertFiles(destination, manifest.Entries);
+            database.EndSession(sessionId, complete ? "VERIFICATION COMPLETE" : "VERIFICATION INCOMPLETE");
+        }
+        catch (Exception ex)
+        {
+            _log.Write($"SQLite unavailable during verification; the JSON manifest remains the record. {ex.Message}", "WARN");
+        }
+        finally { database?.Dispose(); }
     }
 
     // ------------------------------------------------------------------ Infrastructure
@@ -1035,11 +1080,11 @@ public sealed class TransferService
         return c.StartsWith(full, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static ReconciliationReport ExportReports(string destination, ScanResult scan, SessionManifest manifest, string status, VerificationLevel weakest)
+    private static void ExportReports(string destination, ScanResult scan, SessionManifest manifest, string status,
+        VerificationLevel weakest, ReconciliationReport reconciliation)
     {
         // The report describes what happened, per object. The reconciliation is computed from the
         // persisted entries, not from the run's counters, so a resumed session reconciles the whole plan.
-        ReconciliationReport reconciliation = ReconciliationReport.Build(scan, manifest.Entries);
         var report = new
         {
             Product = "I-Total Transfer by Deveg",
@@ -1069,7 +1114,6 @@ public sealed class TransferService
         foreach ((string metric, string value) in reconciliation.Rows())
             summary.Append(metric).Append(',').Append(value).Append("\r\n");
         File.WriteAllText(Path.Combine(destination, "I-total-reconciliation.csv"), summary.ToString(), new UTF8Encoding(true));
-        return reconciliation;
     }
 
     private static string Csv(string value) => "\"" + value.Replace("\"", "\"\"") + "\"";

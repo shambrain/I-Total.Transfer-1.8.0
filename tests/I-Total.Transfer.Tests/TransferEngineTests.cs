@@ -24,6 +24,35 @@ public sealed class TransferEngineTests
     }
 
     [TestMethod]
+    public async Task ARerunWhereEverythingIsAlreadyPresentIsANoOpNotAFreshVerifiedCopy()
+    {
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 2);
+        string destination = TempDestination();
+        try
+        {
+            var logger = new LogService(destination);
+            var service = new TransferService(backend, logger);
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+            var progress = new Progress<TransferProgress>(_ => { });
+
+            TransferSummary first = await service.CopyAsync(scan, destination, 1, progress, CancellationToken.None);
+            Assert.AreEqual(2, first.Copied);
+
+            TransferSummary second = await service.CopyAsync(scan, destination, 1, progress, CancellationToken.None);
+
+            Assert.IsTrue(second.Completed);
+            Assert.AreEqual(0, second.Copied, "nothing was written on the second run");
+            Assert.AreEqual(2, second.AlreadyPresent, "both files were verified against the session record");
+            Assert.AreEqual(0, second.BytesCopied);
+            StringAssert.StartsWith(second.Status, "ALREADY PRESENT",
+                "a no-op must not claim this run produced a verified copy");
+            Assert.AreEqual(2, second.Reconciliation!.AlreadyPresentFiles);
+            Assert.AreEqual(0, second.Reconciliation.CopiedFiles);
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
     public async Task APermanentFailureIsNotRetriedButATransientOneIs()
     {
         // A denied or missing object fails identically on every attempt. Retrying it triples the delay

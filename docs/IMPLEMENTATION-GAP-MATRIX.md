@@ -38,7 +38,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | B9 | Unplug mid-scan produces Incomplete and no cache | `ScanCacheStore`, WPD folder outcomes | AT simulated; LIVE iPhone (2026-10-24) | PHYSICAL DEVICE VERIFIED (historical) | re-run after publish |
 | B10 | iCloud/cloud-only scope warning, no false coverage claim | `WpdDevice` probe messages, README | STATIC; LIVE message observed | IMPLEMENTED — NOT VERIFIED | needs an Optimize-Storage device |
 | B11 | Scan stability detects changes between two passes | `ScanStability.ChangedPaths` (path, size, size-known, timestamps) | AT `ScanStabilityTests` (10) | AUTOMATED TEST VERIFIED | — |
-| B12 | Enumeration duration and items/second recorded | `ScanProgressReporter`, scan log line | STATIC; LIVE 55,185 files / 23.3 min | PHYSICAL DEVICE VERIFIED (historical) | — |
+| B13 | A run with nothing to copy is reported as a no-op, not a fresh verified copy | `CopyCoreAsync` verdict, `TransferSummary.AlreadyPresent` | AT `ARerunWhereEverythingIsAlreadyPresentIsANoOpNotAFreshVerifiedCopy` | AUTOMATED TEST VERIFIED | — || B12 | Enumeration duration and items/second recorded | `ScanProgressReporter`, scan log line | STATIC; LIVE 55,185 files / 23.3 min | PHYSICAL DEVICE VERIFIED (historical) | — |
 
 ## Gate C — planner, persistence and recovery
 
@@ -67,7 +67,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | D6 | Checked arithmetic for byte totals | `ScanAccounting.Of` (`checked`), `Enumerable.Sum` | STATIC + AT | AUTOMATED TEST VERIFIED | extend to report totals (D8) |
 | D7 | JSON/CSV report with reconciliation counts and bytes | `ReconciliationReport`, `ExportReports` (JSON + `I-total-reconciliation.csv`) | AT `ReconciliationReportTests` (5) | AUTOMATED TEST VERIFIED | — |
 | D8 | Unknown size stays unknown in reports and totals | `TransferEntry.SizeKnown/BytesWritten`, `ScanAccounting` | AT engine tests | AUTOMATED TEST VERIFIED | include in reconciliation report |
-| D9 | Unicode, long paths, reserved names | `TransferRules.ValidateRelativePath/SanitizeSegment` | AT reserved-name and traversal tests | AUTOMATED TEST VERIFIED | long-path (>260) drill not run |
+| D11 | Verification verdict is durable in SQLite, not only JSON | `PersistVerification` | AT `ACorruptedDestinationIsPersistedAsFailedInSqliteAsWellAsJson` | AUTOMATED TEST VERIFIED | — || D9 | Unicode, long paths, reserved names | `TransferRules.ValidateRelativePath/SanitizeSegment` | AT reserved-name and traversal tests | AUTOMATED TEST VERIFIED | long-path (>260) drill not run |
 | D10 | Zero-byte files verify | engine + `EnumerationAccountingTests` | AT | AUTOMATED TEST VERIFIED | live confirmation |
 
 ## Gate E — device backends and preflight

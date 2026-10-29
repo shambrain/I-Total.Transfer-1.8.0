@@ -1,5 +1,14 @@
 ## 1.8.0 — 2026-10-20 — borderless chrome, honest device detection, unfinished-session recovery, Android storage
 
+- **A no-op run is now labelled as one, and verification is durable (2026-10-29).** When every planned
+  file was already present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads
+  as if the run had written the files; it now says `ALREADY PRESENT - NO FILES NEEDED COPYING (verified
+  against the session record)` and `TransferSummary.AlreadyPresent` carries the count. Verification now
+  writes its post-verification states (including `Failed` for a corrupted destination) and a
+  `VERIFICATION COMPLETE/INCOMPLETE` session row to SQLite, so the verdict is readable without the JSON
+  manifest. A UNC destination whose free space cannot be read no longer blocks the run; the limitation is
+  logged and a real disk-full error is reported per file.
+
 - **The queue now persists what was verified, and the report reconciles every object (2026-10-29).**
   `SessionDatabase` gained `SizeKnown`, `BytesWritten`, `SourceSha256`, `StagedPayloadSha256`,
   `DestinationSha256`, `Verification`, `SourceModifiedUtc`, `SourceChanged` and `Outcome` through an

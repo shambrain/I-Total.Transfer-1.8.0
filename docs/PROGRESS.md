@@ -121,15 +121,26 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 1C62B2B18AA488939E3DC747C9D7B5772436C376E6AEC27C10ECE5986EC97D7E (112,191,302 B)
+  -> 0F15740792C5555FD2B5472FA5246E5538BA48B8AB3DA90BDF5D6A7D890854D3 (112,191,302 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
 same SHA-256, so the source-only rebuild is byte-identical. `Build-Installer.ps1` produced portable
-`96E773D3...` and setup `41A2F4A3...`; the setup was installed silently into a temporary folder (exe and
+`00E46FB8...` and setup `9DE4D08F...`; the setup was installed silently into a temporary folder (exe and
 README hashes matched), then uninstalled: folder, HKCU entry and shortcuts removed, `%APPDATA%` kept. `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`, `RELEASE-ACCEPTANCE.md`,
 `PERFORMANCE-AUDIT.md` and `KNOWN_ISSUES.md` were updated for the candidate; no hardware or performance
 claim was added.
+12. **A no-op run no longer claims it produced a verified copy.** When every planned file was already
+    present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads as if this run
+    wrote something. It now says `ALREADY PRESENT — NO FILES NEEDED COPYING (verified against the session
+    record)`, `TransferSummary.AlreadyPresent` carries the count, and a test pins the second run of an
+    unchanged session.
+13. **Verification results are persisted to SQLite as well as JSON.** `VerifyAsync` now writes the
+    post-verification states (including `Failed` for a corrupted destination) and a
+    `VERIFICATION COMPLETE/INCOMPLETE` session row; a test corrupts a destination, verifies, and reads the
+    `Failed` row back from the database. The free-space preflight also no longer refuses a UNC destination
+    whose free space cannot be read; it logs the limitation and lets the per-file copy report a real
+    disk-full error.
 ### Blockers
 
 No phone attached, so no hardware claim is made for the new size handling. AFC remains inert (empty
@@ -233,15 +244,26 @@ CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 1C62B2B18AA488939E3DC747C9D7B5772436C376E6AEC27C10ECE5986EC97D7E (112,191,302 B)
+  -> 0F15740792C5555FD2B5472FA5246E5538BA48B8AB3DA90BDF5D6A7D890854D3 (112,191,302 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
 same SHA-256, so the source-only rebuild is byte-identical. `Build-Installer.ps1` produced portable
-`96E773D3...` and setup `41A2F4A3...`; the setup was installed silently into a temporary folder (exe and
+`00E46FB8...` and setup `9DE4D08F...`; the setup was installed silently into a temporary folder (exe and
 README hashes matched), then uninstalled: folder, HKCU entry and shortcuts removed, `%APPDATA%` kept. `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`, `RELEASE-ACCEPTANCE.md`,
 `PERFORMANCE-AUDIT.md` and `KNOWN_ISSUES.md` were updated for the candidate; no hardware or performance
 claim was added.
+12. **A no-op run no longer claims it produced a verified copy.** When every planned file was already
+    present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads as if this run
+    wrote something. It now says `ALREADY PRESENT — NO FILES NEEDED COPYING (verified against the session
+    record)`, `TransferSummary.AlreadyPresent` carries the count, and a test pins the second run of an
+    unchanged session.
+13. **Verification results are persisted to SQLite as well as JSON.** `VerifyAsync` now writes the
+    post-verification states (including `Failed` for a corrupted destination) and a
+    `VERIFICATION COMPLETE/INCOMPLETE` session row; a test corrupts a destination, verifies, and reads the
+    `Failed` row back from the database. The free-space preflight also no longer refuses a UNC destination
+    whose free space cannot be read; it logs the limitation and lets the per-file copy report a real
+    disk-full error.
 ### Blockers and limits
 
 - A statistical multi-file benchmark, an iPhone-side benchmark, a locked iPhone, a cloud-optimised library,
@@ -538,15 +560,26 @@ The setup is **unsigned**: no trusted certificate is present (signtool 10.0.2610
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 1C62B2B18AA488939E3DC747C9D7B5772436C376E6AEC27C10ECE5986EC97D7E (112,191,302 B)
+  -> 0F15740792C5555FD2B5472FA5246E5538BA48B8AB3DA90BDF5D6A7D890854D3 (112,191,302 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
 same SHA-256, so the source-only rebuild is byte-identical. `Build-Installer.ps1` produced portable
-`96E773D3...` and setup `41A2F4A3...`; the setup was installed silently into a temporary folder (exe and
+`00E46FB8...` and setup `9DE4D08F...`; the setup was installed silently into a temporary folder (exe and
 README hashes matched), then uninstalled: folder, HKCU entry and shortcuts removed, `%APPDATA%` kept. `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`, `RELEASE-ACCEPTANCE.md`,
 `PERFORMANCE-AUDIT.md` and `KNOWN_ISSUES.md` were updated for the candidate; no hardware or performance
 claim was added.
+12. **A no-op run no longer claims it produced a verified copy.** When every planned file was already
+    present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads as if this run
+    wrote something. It now says `ALREADY PRESENT — NO FILES NEEDED COPYING (verified against the session
+    record)`, `TransferSummary.AlreadyPresent` carries the count, and a test pins the second run of an
+    unchanged session.
+13. **Verification results are persisted to SQLite as well as JSON.** `VerifyAsync` now writes the
+    post-verification states (including `Failed` for a corrupted destination) and a
+    `VERIFICATION COMPLETE/INCOMPLETE` session row; a test corrupts a destination, verifies, and reads the
+    `Failed` row back from the database. The free-space preflight also no longer refuses a UNC destination
+    whose free space cannot be read; it logs the limitation and lets the per-file copy report a real
+    disk-full error.
 ### Blockers and limits
 
 - A *native* 100 % desktop capture is still impossible here: the display used for the 200 % pass was
@@ -792,15 +825,26 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 1C62B2B18AA488939E3DC747C9D7B5772436C376E6AEC27C10ECE5986EC97D7E (112,191,302 B)
+  -> 0F15740792C5555FD2B5472FA5246E5538BA48B8AB3DA90BDF5D6A7D890854D3 (112,191,302 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
 same SHA-256, so the source-only rebuild is byte-identical. `Build-Installer.ps1` produced portable
-`96E773D3...` and setup `41A2F4A3...`; the setup was installed silently into a temporary folder (exe and
+`00E46FB8...` and setup `9DE4D08F...`; the setup was installed silently into a temporary folder (exe and
 README hashes matched), then uninstalled: folder, HKCU entry and shortcuts removed, `%APPDATA%` kept. `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`, `RELEASE-ACCEPTANCE.md`,
 `PERFORMANCE-AUDIT.md` and `KNOWN_ISSUES.md` were updated for the candidate; no hardware or performance
 claim was added.
+12. **A no-op run no longer claims it produced a verified copy.** When every planned file was already
+    present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads as if this run
+    wrote something. It now says `ALREADY PRESENT — NO FILES NEEDED COPYING (verified against the session
+    record)`, `TransferSummary.AlreadyPresent` carries the count, and a test pins the second run of an
+    unchanged session.
+13. **Verification results are persisted to SQLite as well as JSON.** `VerifyAsync` now writes the
+    post-verification states (including `Failed` for a corrupted destination) and a
+    `VERIFICATION COMPLETE/INCOMPLETE` session row; a test corrupts a destination, verifies, and reads the
+    `Failed` row back from the database. The free-space preflight also no longer refuses a UNC destination
+    whose free space cannot be read; it logs the limitation and lets the per-file copy report a real
+    disk-full error.
 ### Blockers and limits
 
 - **100 % pixel capture of UI-18 was open at this cut.** This host has only a 150 % display; the page actions and
