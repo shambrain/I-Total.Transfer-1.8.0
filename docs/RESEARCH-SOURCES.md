@@ -209,3 +209,15 @@ rule. The rules below were still designed from sources; the live run is evidence
   check needs the SDK and a partner account, neither of which exists here, so the signed-file channel is the
   supported one and the limitation is stated in `KNOWN_ISSUES.md`.
   https://partner.steamgames.com/doc/features
+
+## 2026-10-29 — WPD enumerator ownership (checked for the COM-cleanup fix)
+
+| Item | Value |
+| --- | --- |
+| Source | Microsoft Learn, `IPortableDeviceContent::EnumObjects` (portabledeviceapi.h) |
+| URL | https://learn.microsoft.com/en-us/windows/win32/api/portabledeviceapi/nf-portabledeviceapi-iportabledevicecontent-enumobjects |
+| Accessed | 2026-10-29 |
+| Finding | The `ppEnum` out-parameter receives an `IEnumPortableDeviceObjectIDs`, and the documentation states: "The caller must release this interface when it is done with it." |
+| Relevance | `WpdDevice.EnumerateChildren` created one enumerator per folder and never released it. The code now releases it in a `finally` block (`ReleaseCom`), which is what the documentation requires. |
+| Evidence class | Primary vendor documentation, fetched this session. |
+| Caveat | The same page does not discuss `IPortableDeviceValues`; releasing that object follows the general COM ownership rule (every interface obtained from a COM call is released by the caller), and is an inference from that rule rather than a claim taken from this page. |

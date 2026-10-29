@@ -77,7 +77,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | --- | --- | --- | --- | --- | --- |
 | E1 | WPD device manager + real interfaces, connected vs remembered | `WpdDevice.Probe`, `ListDevices` | STATIC; LIVE both phones | PHYSICAL DEVICE VERIFIED (historical) | — |
 | E2 | Opaque, session-scoped object IDs; re-resolve after reconnect | `ResolveObjectId`, `_nameIndex.Clear()` | STATIC | IMPLEMENTED — NOT VERIFIED | reconnect drill |
-| E3 | Deterministic COM release on success/cancel/exception | `ResetSession`, `ReleaseCom`; enumerator/keys/values/manager released in `finally` | STATIC — five leaks found and fixed | IMPLEMENTED — NOT VERIFIED | no phone to measure handle counts |
+| E3 | Deterministic COM release on success/cancel/exception | `ResetSession`, `ReleaseCom`; enumerator/keys/values/manager released in `finally` | STATIC — five leaks found and fixed; Microsoft documents that the enumerator must be released (`docs/RESEARCH-SOURCES.md`, 2026-10-29) | IMPLEMENTED — NOT VERIFIED | no phone to measure handle counts |
 | E4 | Device-supported buffer size / bounded default | `OpenStream(out optimalBufferSize)`, `_copyBufferBytes` | STATIC; AT buffer clamp | AUTOMATED TEST VERIFIED | benchmark sweep at Gate H |
 | E5 | Short reads, EOF, unknown size, source disappearance handled | `CopyToStage` read loop; engine size rules | AT partial-read/unknown-size tests | AUTOMATED TEST VERIFIED | live pull drill |
 | E6 | Android volumes walked, private trees skipped, PTP warning | `WpdDevice.Scan` Android branch, `PortableStorage` | AT `PortableStorageTests`; LIVE | PHYSICAL DEVICE VERIFIED (Android) | — |
