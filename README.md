@@ -9,6 +9,11 @@ item is named explicitly instead of being folded into a success count.
 Version **1.8.0** · `net10.0-windows` · WinForms (Designer-authored) with a Fluent control library ·
 .NET 10 LTS · runs on Windows 10 1809+ and Windows 11.
 
+**Source and releases:** <https://github.com/shambrain/I-Total.Transfer-1.8.0>
+
+**Screenshots:** every page at 96, 150 and 200 % DPI, all three themes, the live 150 % audit and the
+hardware drills are in [`docs/screenshots/INDEX.md`](docs/screenshots/INDEX.md).
+
 The window is borderless: the banner band doubles as the title bar (minimize / maximize / close painted
 on the gradient, drag to move, double-click to zoom), while DWM still supplies the shadow, Aero Snap and
 the Alt+Space system menu.

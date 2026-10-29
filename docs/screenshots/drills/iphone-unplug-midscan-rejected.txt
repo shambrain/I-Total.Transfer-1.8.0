@@ -1,0 +1,81 @@
+﻿ControlType.Window||Scan failed
+ControlType.Pane|2|OK
+ControlType.Pane|65535|the iPhone stopped answering during the scan. The listing is incomplete and was not accepted. Reconnect it, unlock it, then scan again.
+ControlType.Text|_titleLabel|I-Total Transfer
+ControlType.Text|_subtitleLabel|Phone to Windows · verified media transfer
+ControlType.Text|_deviceStateHeader|iPhone ready
+ControlType.Text|_deviceNameHeader|Apple iPhone · 27.0.1 · USB (WPD)
+ControlType.Button|_minimizeButton|Minimize
+ControlType.Button|_maximizeButton|Maximize or restore
+ControlType.Button|_closeButton|Close
+ControlType.Pane|_headerRule|Apple iPhone · 27.0.1 · USB (WPD)
+ControlType.Pane|_navHost|Apple iPhone · 27.0.1 · USB (WPD)
+ControlType.Pane|_nav|Apple iPhone · 27.0.1 · USB (WPD)
+ControlType.Text|_navGroupTransfer|TRANSFER
+ControlType.Button|_navDashboard|Overview
+ControlType.Button|_navTransfer|Backup & queue
+ControlType.Button|_navLibrary|Media library
+ControlType.Button|_navWireless|Wireless import
+ControlType.Text|_navGroupActivity|ACTIVITY
+ControlType.Button|_navHistory|History
+ControlType.Text|_navGroupSystem|SYSTEM
+ControlType.Button|_navSettings|Settings
+ControlType.Button|_navDiagnostics|Diagnostics
+ControlType.Text|_versionLabel|I-Total Transfer 1.8.0
+ControlType.Pane|_contentHost|I-Total Transfer 1.8.0
+ControlType.Pane|_pageHeader|I-Total Transfer 1.8.0
+ControlType.Text|_pageGlyph|
+ControlType.Text|_pageTitle|Overview
+ControlType.Text|_pageSubtitle|Device state, headline numbers and the primary transfer actions.
+ControlType.Pane|_pageHeaderRule|Device state, headline numbers and the primary transfer actions.
+ControlType.Pane|_contentBody|Device state, headline numbers and the primary transfer actions.
+ControlType.Text|_deviceGlyph|
+ControlType.Text|_nameLabel|Apple iPhone
+ControlType.Text|_detailLabel|Model: Apple iPhone   ·   iOS: 27.0.1   ·   Serial: FCC4L3VYCW   ·   Link: USB (WPD)   ·   iPhone media is accessible through native WPD (hash-verified transfers available).
+ControlType.Text|_backendLabel|Backend: Windows Portable Devices (native) — iPhone media is accessible through native WPD (hash-verified transfers available).
+ControlType.Text|_stateLabel|IPHONE READY
+ControlType.Button|_checkButton|Check device
+ControlType.Button|_scanButton|Scan device
+ControlType.Text|_mediaTitle|What your iPhone exposes
+ControlType.Text|_mediaHint|This connection exposes 2 of 4 groups. Groups it cannot read are shown as unavailable, never as empty folders.
+ControlType.Pane|_mediaTiles|This connection exposes 2 of 4 groups. Groups it cannot read are shown as unavailable, never as empty folders.
+ControlType.Text|_footnoteLabel|None found
+ControlType.Text|_valueLabel|0
+ControlType.Text|_titleLabel|Photos
+ControlType.Text|_footnoteLabel|None found
+ControlType.Text|_valueLabel|0
+ControlType.Text|_titleLabel|Videos
+ControlType.Text|_footnoteLabel|Not exposed by this connection
+ControlType.Text|_valueLabel|—
+ControlType.Text|_titleLabel|Music
+ControlType.Text|_footnoteLabel|Not exposed by this connection
+ControlType.Text|_valueLabel|—
+ControlType.Text|_titleLabel|Files
+ControlType.Text|_footnoteLabel|Waiting for a scan
+ControlType.Text|_valueLabel|0
+ControlType.Text|_titleLabel|Files found
+ControlType.Text|_footnoteLabel|Not calculated yet
+ControlType.Text|_valueLabel|0 B
+ControlType.Text|_titleLabel|Total size
+ControlType.Text|_footnoteLabel|Hash-verified against the source
+ControlType.Text|_valueLabel|0
+ControlType.Text|_titleLabel|Verified
+ControlType.Text|_footnoteLabel|No failures
+ControlType.Text|_valueLabel|0
+ControlType.Text|_titleLabel|Needs attention
+ControlType.Pane|_operationCard|Message
+ControlType.Text|_operationTitle|Failed
+ControlType.Text|_operationText|Scan failed: the iPhone stopped answering during the scan. The listing is incomplete and was not accepted. Reconnect it, unlock it, then scan again.
+ControlType.Pane|_actionsCard|Scan failed: the iPhone stopped answering during the scan. The listing is incomplete and was not accepted. Reconnect it, unlock it, then scan again.
+ControlType.Text|_destinationLabel|Destination folder
+ControlType.Edit|_destinationBox|Destination folder
+ControlType.Button|_browseButton|Browse…
+ControlType.CheckBox|_confirmScanCheck|Confirm each scan with a second pass (catches a listing that changes mid-scan)
+ControlType.Text|_hintLabel|Files are copied, then read back and hashed against the source where the backend can produce one. Nothing is ever deleted from the iPhone.
+ControlType.Text|_integrationLabel|Verification policy: DestinationHash. Backend preference: Auto. A file is only reported as verified when the active backend can produce the matching hash.
+ControlType.Button|_startButton|Start transfer
+ControlType.Button|_pauseButton|Pause
+ControlType.Button|_stopButton|Stop
+ControlType.Text|_statusDot|
+ControlType.Text|_statusLabel|WPD scan finished: 2,326 files in 2 folders (Incomplete).
+ControlType.Text|_backendStatusLabel|Backend: Windows Portable Devices (native)

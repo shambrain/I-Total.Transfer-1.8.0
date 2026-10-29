@@ -92,6 +92,24 @@ CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
 - The source-change signal is the scan's size/modification time; a same-size change on a device that reports
   no modification time is not detectable without re-reading the source.
 
+### Publication
+
+- The GitHub repository is **shambrain/I-Total.Transfer-1.8.0** (private). It was created from this tree
+  after `git filter-repo` removed four pre-`.gitignore` testhost dumps (about 1.1 GB) from history; the
+  largest reachable blob is a 44.9 MB release ZIP.
+- A curated gallery of **82 screenshots** was added under `docs/screenshots/`: all seven pages in Neon,
+  Slate and Light at 96 DPI; the 150 % minimum window; the 200 % minimum and design sizes; the published
+  exe at 200 % via UI Automation; the live 150 % audit; the three theme previews; the iPhone/Android/PTP/
+  lock/cancel/unplug drills; and the attached-diagnostics page. `docs/screenshots/INDEX.md` labels each set
+  as live evidence or harness render and names what it does not prove.
+- The README links the gallery and the repository. The deployment and source archives were rebuilt with
+  the screenshots and the new README; the portable/setup archives were rebuilt because the README is
+  embedded in them.
+- The executable is unchanged at `8FCB2B50...` (112,158,534 B); `dist\SHA256SUMS.txt` is the authoritative
+  record for the rebuilt archives. The source ZIP was extracted and compared file by file with the tree:
+  103 of 103 `docs/` files identical, including all 82 PNGs and `MANIFEST.txt`. The deployment ZIP was
+  re-opened: 82 PNGs, `INDEX.md`, `MANIFEST.txt`, and the embedded executable and README hashes match the tree.
+
 ### Next task
 
 1. Reattach the phones and run the 4 GB+, mid-copy-pull and locked/unplugged diagnostics drills.
@@ -346,6 +364,24 @@ The setup is **unsigned**: no trusted certificate is present (signtool 10.0.2610
   blockers (`signtool` is present). Windows 11 and audible cues remain unobserved; the 200 % layout is now
   rendered.
 
+### Publication
+
+- The GitHub repository is **shambrain/I-Total.Transfer-1.8.0** (private). It was created from this tree
+  after `git filter-repo` removed four pre-`.gitignore` testhost dumps (about 1.1 GB) from history; the
+  largest reachable blob is a 44.9 MB release ZIP.
+- A curated gallery of **82 screenshots** was added under `docs/screenshots/`: all seven pages in Neon,
+  Slate and Light at 96 DPI; the 150 % minimum window; the 200 % minimum and design sizes; the published
+  exe at 200 % via UI Automation; the live 150 % audit; the three theme previews; the iPhone/Android/PTP/
+  lock/cancel/unplug drills; and the attached-diagnostics page. `docs/screenshots/INDEX.md` labels each set
+  as live evidence or harness render and names what it does not prove.
+- The README links the gallery and the repository. The deployment and source archives were rebuilt with
+  the screenshots and the new README; the portable/setup archives were rebuilt because the README is
+  embedded in them.
+- The executable is unchanged at `8FCB2B50...` (112,158,534 B); `dist\SHA256SUMS.txt` is the authoritative
+  record for the rebuilt archives. The source ZIP was extracted and compared file by file with the tree:
+  103 of 103 `docs/` files identical, including all 82 PNGs and `MANIFEST.txt`. The deployment ZIP was
+  re-opened: 82 PNGs, `INDEX.md`, `MANIFEST.txt`, and the embedded executable and README hashes match the tree.
+
 ### Next task
 
 1. No internal UI, transfer or packaging task is outstanding; only the external items above remain.
@@ -562,6 +598,24 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 - Production licence issuer/purchase URL, Steamworks, Inno Setup 6, Authenticode certificate and `signtool`
   remain external blockers. `Build-Installer.ps1` still prints `SETUP SKIPPED`; nothing is signed.
 - Windows 11 rendering, 200 % scaling and audible cues remain unobserved.
+
+### Publication
+
+- The GitHub repository is **shambrain/I-Total.Transfer-1.8.0** (private). It was created from this tree
+  after `git filter-repo` removed four pre-`.gitignore` testhost dumps (about 1.1 GB) from history; the
+  largest reachable blob is a 44.9 MB release ZIP.
+- A curated gallery of **82 screenshots** was added under `docs/screenshots/`: all seven pages in Neon,
+  Slate and Light at 96 DPI; the 150 % minimum window; the 200 % minimum and design sizes; the published
+  exe at 200 % via UI Automation; the live 150 % audit; the three theme previews; the iPhone/Android/PTP/
+  lock/cancel/unplug drills; and the attached-diagnostics page. `docs/screenshots/INDEX.md` labels each set
+  as live evidence or harness render and names what it does not prove.
+- The README links the gallery and the repository. The deployment and source archives were rebuilt with
+  the screenshots and the new README; the portable/setup archives were rebuilt because the README is
+  embedded in them.
+- The executable is unchanged at `8FCB2B50...` (112,158,534 B); `dist\SHA256SUMS.txt` is the authoritative
+  record for the rebuilt archives. The source ZIP was extracted and compared file by file with the tree:
+  103 of 103 `docs/` files identical, including all 82 PNGs and `MANIFEST.txt`. The deployment ZIP was
+  re-opened: 82 PNGs, `INDEX.md`, `MANIFEST.txt`, and the embedded executable and README hashes match the tree.
 
 ### Next task
 
@@ -1108,6 +1162,24 @@ CHANGELOG.md
   artifact.
 - **Windows 11 and 200 % scaling**: still unobserved.
 - **Audible cues**: cannot be heard from the harness.
+
+### Publication
+
+- The GitHub repository is **shambrain/I-Total.Transfer-1.8.0** (private). It was created from this tree
+  after `git filter-repo` removed four pre-`.gitignore` testhost dumps (about 1.1 GB) from history; the
+  largest reachable blob is a 44.9 MB release ZIP.
+- A curated gallery of **82 screenshots** was added under `docs/screenshots/`: all seven pages in Neon,
+  Slate and Light at 96 DPI; the 150 % minimum window; the 200 % minimum and design sizes; the published
+  exe at 200 % via UI Automation; the live 150 % audit; the three theme previews; the iPhone/Android/PTP/
+  lock/cancel/unplug drills; and the attached-diagnostics page. `docs/screenshots/INDEX.md` labels each set
+  as live evidence or harness render and names what it does not prove.
+- The README links the gallery and the repository. The deployment and source archives were rebuilt with
+  the screenshots and the new README; the portable/setup archives were rebuilt because the README is
+  embedded in them.
+- The executable is unchanged at `8FCB2B50...` (112,158,534 B); `dist\SHA256SUMS.txt` is the authoritative
+  record for the rebuilt archives. The source ZIP was extracted and compared file by file with the tree:
+  103 of 103 `docs/` files identical, including all 82 PNGs and `MANIFEST.txt`. The deployment ZIP was
+  re-opened: 82 PNGs, `INDEX.md`, `MANIFEST.txt`, and the embedded executable and README hashes match the tree.
 
 ### Next task
 

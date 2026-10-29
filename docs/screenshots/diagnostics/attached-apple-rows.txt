@@ -1,0 +1,15 @@
+Date: 2026-10-24T21:43:43.6930527+03:00
+DPI: 96  Client: {Width=1416, Height=919}
+SUMMARY: Attached: HUAWEI Y7 Prime 2018 (Android), Apple iPhone (Apple).  |  Windows Portable Devices (native) — iPhone media is accessible through native WPD (hash-verified transfers available).
+DEPENDENCIES: Native dependencies — no native runtime verified — native backends stay disabled (fail-closed)
+ROWS: 10
+ROW | Apple handsets seen over USB | ATTACHED | Attached and answering: Apple iPhone. If its media is not readable, unlock the handset and tap Trust, then probe again. A cable that charges but carries no data, or an unpowered hub, is the next thing to rule out. (Apple support interfaces also on record: 2 - these accompany a handset but cannot supply media.)
+ROW | Windows device access | PASS | iPhone media is accessible through native WPD (hash-verified transfers available).
+ROW | Selected backend | Windows Portable Devices (native) | The engine will use this backend. Capabilities are reported on the Diagnostics page.
+ROW | Device family | APPLE | The handset identified itself as an iPhone or iPad, so the camera-roll rules apply.
+ROW | Apple software | DETECTED | An Apple Windows component appears to be installed. This does not guarantee the driver is working.
+ROW | Apple USB driver files | FOUND | C:\Program Files\Common Files\Apple\Mobile Device Support\Drivers\usbaapl64.inf
+ROW | Trust state | ACCESSIBLE | Media storage was accessible during this probe.
+ROW | iCloud originals | MANUAL CHECK | Windows USB import can only copy media currently exposed by iOS. If Optimize iPhone Storage is enabled, cloud-only originals may not be available.
+ROW | USB cable / port | MANUAL CHECK | Use a known data-capable cable, connect directly to the PC, avoid hubs during diagnosis, and try another USB port if enumeration is slow or unstable.
+ROW | Native AFC runtime | NOT PRESENT | No pinned native binary verified, so the AFC backend stays inert (fail-closed). Install a pinned runtime to enable Windows-to-iPhone transfers.
