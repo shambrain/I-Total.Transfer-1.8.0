@@ -12,6 +12,58 @@ start from here without re-reading the whole conversation.
 > hashes quoted in this log before this note identify the pre-publication history; the file contents, tests
 > and evidence are unchanged. The release executable is unaffected.
 
+## 2026-10-30 - inventory scope, mid-stream fault injection and evidence reconciliation
+
+### Verified starting point
+
+Branch `work/master-directive`, HEAD `45c971b`, clean tree, suite **509 passed / 2 skipped / 511 total**
+(re-run before changing anything). The 2026-10-29 hardware evidence and release artifacts were preserved.
+
+### KI-29 investigated from the recorded numbers
+
+The reconnect scan (26,336 files / 114,344,214,625 B, `Complete`) was decomposed against the 2026-10-29
+folder totals: it equals `202608_a` (26,320 / 114,331,766,452 B) plus 16 of the 32 small-folder files. The
+byte difference from the earlier scan (80,564,633,677 B) equals `202610_a` + `202609_a` + those 16 small
+files exactly. So two large albums were absent from the later listing; the evidence does not say they were
+deleted, and no cause is asserted.
+
+### Inventory scope is now a second, independent fact
+
+- `InventoryScopeStatus` (`Unknown` / `Stable` / `Changed`), `InventoryScope`, `FolderInventory` and
+  `ScanScope.Compare(previous, current)` in `Core/ScanScope.cs`.
+- `ScanResult.Scope` carries it; the scan report and session report include it.
+- `MainForm` compares the fresh scan with the last complete cached listing, logs the named missing folders,
+  and tells the operator to rescan after the phone settles. A Complete enumeration is no longer silently
+  presented as a whole-library inventory.
+- `CopyCoreAsync` logs the scope warning when a transfer starts from a changed scope.
+- Eight tests (`ScanScopeTests`): unknown without history, stable identical, missing album named, small
+  change tolerated, material drop detected, new folder alone not a warning, case-insensitive folders.
+
+### Mid-stream failure path tested (automated, not physical)
+
+- `MockBackend.MidStreamThrowPaths` writes half a `.partial`, throws, and cleans its partial like the real
+  backends.
+- `AMidStreamDisconnectAbortsWithoutCommittingOrReportingComplete`: the run throws, the manifest says
+  `ABORTED`, the entry stays `Copying` with no destination digest, no destination file, no `.partial`, and
+  no completion report.
+- `AResumeAfterAMidStreamDisconnectReReadsTheItemAndCompletes`: after the fault is removed, the same
+  session re-reads the item and completes with a verified destination.
+- These are **automated fault-injection** results. IP07/AN07 remain pending; the 7.3 GB physical copy
+  completed before the cable was pulled (timestamps in the evidence).
+
+### Commands and results
+
+```text
+dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 509 passed, 2 skipped, 511 total
+```
+
+### Next
+
+Republish the candidate with the scope feature, repackage and refresh the hashes; AN06 (HUAWEI PTP) remains
+pending until the operator switches the phone to PTP; a genuine mid-file cable pull remains pending.
+
+---
 ## 2026-10-29 - hardware drills on the master-directive candidate
 
 ### Starting point
@@ -84,7 +136,7 @@ it completed. Recorded as KI-27 (two app instances are not coordinated).
 
 ```text
 dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
-dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 499 passed, 2 skipped, 501 total
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 509 passed, 2 skipped, 511 total
 ```
 
 ### Next
@@ -210,7 +262,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8 (112,195,398 B)
+  -> F73A3872E10343F0A4207B19F8FF9DDEBD45F227EDDC49FE1C40A7F98A1E2250 (112,203,590 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -264,13 +316,13 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **499 passed, 2 skipped, 501 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **509 passed, 2 skipped, 511 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.
 - The published executable was launched once and stayed up for five seconds with the window title
   `I-Total Transfer - verified phone media transfer`; it was then stopped.
-- Final artifacts: exe `0F157407...` (112,195,398 B); the deployment, portable, setup and source archive
+- Final artifacts: exe `0F157407...` (112,203,590 B); the deployment, portable, setup and source archive
   hashes are recorded in `dist/SHA256SUMS.txt`, which is authoritative because it ships outside them.
 ### Blockers
 
@@ -383,7 +435,7 @@ CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8 (112,195,398 B)
+  -> F73A3872E10343F0A4207B19F8FF9DDEBD45F227EDDC49FE1C40A7F98A1E2250 (112,203,590 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -437,13 +489,13 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **499 passed, 2 skipped, 501 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **509 passed, 2 skipped, 511 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.
 - The published executable was launched once and stayed up for five seconds with the window title
   `I-Total Transfer - verified phone media transfer`; it was then stopped.
-- Final artifacts: exe `0F157407...` (112,195,398 B); the deployment, portable, setup and source archive
+- Final artifacts: exe `0F157407...` (112,203,590 B); the deployment, portable, setup and source archive
   hashes are recorded in `dist/SHA256SUMS.txt`, which is authoritative because it ships outside them.
 ### Blockers and limits
 
@@ -749,7 +801,7 @@ The setup is **unsigned**: no trusted certificate is present (signtool 10.0.2610
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8 (112,195,398 B)
+  -> F73A3872E10343F0A4207B19F8FF9DDEBD45F227EDDC49FE1C40A7F98A1E2250 (112,203,590 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -803,13 +855,13 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **499 passed, 2 skipped, 501 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **509 passed, 2 skipped, 511 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.
 - The published executable was launched once and stayed up for five seconds with the window title
   `I-Total Transfer - verified phone media transfer`; it was then stopped.
-- Final artifacts: exe `0F157407...` (112,195,398 B); the deployment, portable, setup and source archive
+- Final artifacts: exe `0F157407...` (112,203,590 B); the deployment, portable, setup and source archive
   hashes are recorded in `dist/SHA256SUMS.txt`, which is authoritative because it ships outside them.
 ### Blockers and limits
 
@@ -1064,7 +1116,7 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8 (112,195,398 B)
+  -> F73A3872E10343F0A4207B19F8FF9DDEBD45F227EDDC49FE1C40A7F98A1E2250 (112,203,590 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -1118,13 +1170,13 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **499 passed, 2 skipped, 501 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **509 passed, 2 skipped, 511 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.
 - The published executable was launched once and stayed up for five seconds with the window title
   `I-Total Transfer - verified phone media transfer`; it was then stopped.
-- Final artifacts: exe `0F157407...` (112,195,398 B); the deployment, portable, setup and source archive
+- Final artifacts: exe `0F157407...` (112,203,590 B); the deployment, portable, setup and source archive
   hashes are recorded in `dist/SHA256SUMS.txt`, which is authoritative because it ships outside them.
 ### Blockers and limits
 

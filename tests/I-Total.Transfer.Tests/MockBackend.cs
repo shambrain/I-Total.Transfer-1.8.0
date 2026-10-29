@@ -78,6 +78,13 @@ public sealed class MockBackend : ITransferBackend
     /// </summary>
     public HashSet<string> TruncatePaths { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Relative paths where the backend writes half of the payload to a <c>.partial</c> and then throws,
+    /// emulating a device that disappears mid-stream. The backend removes its own partial in a finally,
+    /// exactly as the WPD and AFC backends do.
+    /// </summary>
+    public HashSet<string> MidStreamThrowPaths { get; } = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>Every relative path the engine actually asked the device to fetch, in order.</summary>
     public List<string> FetchedPaths { get; } = new();
 
@@ -125,6 +132,13 @@ public sealed class MockBackend : ITransferBackend
         if (!_contentByRelativePath.TryGetValue(file.RelativePath, out byte[]? bytes))
             return new CopyResult(false, null, "source disappeared");
         Directory.CreateDirectory(stagingDirectory);
+        if (MidStreamThrowPaths.Contains(file.RelativePath))
+        {
+            string partial = Path.Combine(stagingDirectory, file.Name + ".partial");
+            File.WriteAllBytes(partial, bytes[..(bytes.Length / 2)]);
+            try { throw new IOException("mock device disappeared mid-stream"); }
+            finally { try { File.Delete(partial); } catch { } }
+        }
         if (TruncatePaths.Contains(file.RelativePath) && bytes.Length > 0)
             bytes = bytes[..(bytes.Length / 2)];
         File.WriteAllBytes(Path.Combine(stagingDirectory, file.Name), bytes);

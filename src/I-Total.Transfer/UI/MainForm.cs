@@ -672,6 +672,16 @@ public sealed partial class MainForm : Form
                 Log("Second scan matched the first by path and size. This checks listing stability, not iCloud completeness.", "OK");
             }
 
+            // Two independent facts: enumeration status (was every exposed folder read?) and inventory
+            // scope (is the exposed folder set comparable with the last complete listing?). A Complete
+            // scan with a smaller scope must not look like a whole-library backup.
+            InventoryScope scope = ScanScope.Compare(_cachedLibrary, scan);
+            if (scope.Status == InventoryScopeStatus.Changed)
+            {
+                Log("Scan scope changed: " + scope.Detail, "WARN");
+                SetStatus("Scan scope changed vs the last complete listing - rescan after the phone settles before treating this as the whole library.", "WARN");
+            }
+            scan = scan with { Scope = scope };
             _scan = scan;
             LogScan(scan);
             FinishScanCache(preflight, scan);

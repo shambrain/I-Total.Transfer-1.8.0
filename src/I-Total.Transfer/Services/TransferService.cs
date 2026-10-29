@@ -64,6 +64,7 @@ public sealed class TransferService
             Status = scan.Status.ToString(),
             FileCount = scan.Files.Count,
             TotalBytes = scan.TotalBytes,
+            InventoryScope = scan.Scope,
             Report = scan.Report
         });
     }
@@ -189,6 +190,8 @@ public sealed class TransferService
             if (pendingStates.Count >= 64) DrainStates();
         }
 
+        if (scan.Scope is { Status: InventoryScopeStatus.Changed })
+            _log.Write("SCOPE CHANGED: " + scan.Scope.Detail, "WARN");
         _log.Write($"Transfer started. Device={scan.DeviceName}; Backend={_device.Name}; Files={total:N0}; Expected={FormatBytes(required)}; Destination={destination}; Direction=device->windows");
 
         try
@@ -1131,6 +1134,7 @@ public sealed class TransferService
             ScanStartedUtc = scan.StartedUtc,
             ScanFinishedUtc = scan.FinishedUtc,
             EnumerationStatus = scan.Status.ToString(),
+            InventoryScope = scan.Scope,
             DiscoveredFiles = scan.Files.Count,
             DiscoveredBytes = scan.TotalBytes,
             Status = status,

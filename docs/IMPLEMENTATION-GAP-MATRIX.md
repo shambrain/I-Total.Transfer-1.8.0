@@ -38,6 +38,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | B9 | Unplug mid-scan produces Incomplete and no cache | `ScanCacheStore`, WPD folder outcomes | AT simulated; LIVE iPhone (2026-10-24) | PHYSICAL DEVICE VERIFIED (historical) | re-run after publish |
 | B10 | iCloud/cloud-only scope warning, no false coverage claim | `WpdDevice` probe messages, README | STATIC; LIVE message observed | IMPLEMENTED — NOT VERIFIED | needs an Optimize-Storage device |
 | B11 | Scan stability detects changes between two passes | `ScanStability.ChangedPaths` (path, size, size-known, timestamps) | AT `ScanStabilityTests` (10) | AUTOMATED TEST VERIFIED | — |
+| B15 | Inventory scope is separate from enumeration status and warns on a changed folder set | `ScanScope`, `ScanResult.Scope`, `MainForm`, reports | AT `ScanScopeTests` (8) | AUTOMATED TEST VERIFIED | physical rescan guidance remains operator action | 
 | B14 | Unknown-size completeness arithmetic cannot overflow | `TransferRules.ClassifyEnumeration` (64-bit) | AT `AnAbsurdUnknownSizeCountCannotWrapIntoComplete` | AUTOMATED TEST VERIFIED | — |
 | B13 | A run with nothing to copy is reported as a no-op, not a fresh verified copy | `CopyCoreAsync` verdict, `TransferSummary.AlreadyPresent` | AT `ARerunWhereEverythingIsAlreadyPresentIsANoOpNotAFreshVerifiedCopy` | AUTOMATED TEST VERIFIED | — || B12 | Enumeration duration and items/second recorded | `ScanProgressReporter`, scan log line | STATIC; LIVE 55,185 files / 23.3 min | PHYSICAL DEVICE VERIFIED (historical) | — |
 
@@ -54,6 +55,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | C7 | Crash/kill recovery reconciles DB with files | `SessionRecovery`, `ManifestStore.LoadOrCreate` | AT recovery suite | AUTOMATED TEST VERIFIED | SQLite hashes (C2) |
 | C8 | Resume only when source identity and destination state reconcile | `SourceIdentityProblem`, `HandleExistingAsync` | AT | AUTOMATED TEST VERIFIED | — |
 | C9 | Unknown-size resume does not become a collision | `ClassifyExistingDestination`, digest-first rule | AT `EnumerationAccountingTests` | AUTOMATED TEST VERIFIED | — |
+| C14 | A mid-stream device failure aborts without committing or reporting complete, and resume re-reads | `MockBackend.MidStreamThrowPaths`, engine abort path | AT `AMidStreamDisconnectAbortsWithoutCommittingOrReportingComplete`, `AResumeAfterAMidStreamDisconnectReReadsTheItemAndCompletes` | AUTOMATED TEST VERIFIED | physical IP07/AN07 pending |
 | C13 | A corrupt SQLite file does not stop the run and its handle is released | `TryOpenDatabase` (dispose on failure), `ManifestStore` | AT `ACorruptSqliteFileDoesNotStopTheRun` | AUTOMATED TEST VERIFIED | — |
 | C12 | A renamed copy is verified at its committed path and not duplicated on rerun | `TransferEntry.CommittedPath`, `HandleExistingAsync`, `VerifyCoreAsync` | AT `RenameConflictTests` (4); LIVE Android rename `(1).mp4` with `STORED AS`, rerun `ALREADY PRESENT` | PHYSICAL DEVICE VERIFIED | — |
 | C11 | A run continues on the JSON manifest when SQLite cannot be opened | `TryOpenDatabase`, `ManifestStore` | AT `ATransferStillCompletesWhenTheSqliteDatabaseCannotBeOpened` | AUTOMATED TEST VERIFIED | — |

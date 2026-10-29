@@ -1,5 +1,18 @@
 ## 1.8.0 — 2026-10-20 — borderless chrome, honest device detection, unfinished-session recovery, Android storage
 
+- **Inventory scope is reported separately from enumeration status (2026-10-30).** A `Complete` scan means
+  every folder the provider exposed was read, not that the phone has no more albums. `ScanScope` compares
+  the fresh scan with the last complete cached listing at folder level; `ScanResult.Scope` carries
+  `Unknown`/`Stable`/`Changed`, the report records it, and the UI names the missing folders and asks for a
+  rescan when the scope changed. The 2026-10-30 reconnect evidence (26,336 files after 57,731) is
+  decomposed in `docs/KNOWN_ISSUES.md` KI-29: the later listing equals one large album plus 16 small-folder
+  files, and the missing bytes match two albums exactly. No cause is asserted.
+- **Mid-stream disconnect is covered by fault injection (2026-10-30).** A backend that throws after writing
+  half a `.partial` aborts the run: the manifest says `ABORTED`, the entry stays `Copying`, no destination
+  file or completion report is produced, the partial is cleaned, and a resume re-reads the item to a
+  verified copy. Two engine tests pin it. This is automated evidence; the physical cable-pull drill
+  (IP07/AN07) remains pending because the 2026-10-30 copy finished before the cable was pulled.
+
 - **WPD copies were broken and are fixed (2026-10-29).** `WpdDevice.CopyToStage` deleted its `.partial`
   file in a `finally` block that ran before the move to the final staging name, so every WPD copy failed
   with "could not find .partial" and the failure reset the session, making every later file fail with

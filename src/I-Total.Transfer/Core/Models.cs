@@ -162,6 +162,11 @@ public sealed record ScanResult(string DeviceName, DateTimeOffset StartedUtc, Da
     public DeviceFamily Family { get; init; } = DeviceFamily.Unknown;
     /// <summary>The backend's stable identity for the device the scan actually read.</summary>
     public string? StableId { get; init; }
+    /// <summary>
+    /// Whether the exposed inventory is comparable with the last complete listing. Independent of
+    /// <see cref="Status"/>: a Complete enumeration can still describe a smaller scope than before.
+    /// </summary>
+    public InventoryScope? Scope { get; init; }
     public TimeSpan Duration => FinishedUtc - StartedUtc;
     public EnumerationStatus Status => Report?.Status ?? EnumerationStatus.Complete;
     public bool IsComplete => Status == EnumerationStatus.Complete;

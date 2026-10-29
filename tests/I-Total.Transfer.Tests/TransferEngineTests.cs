@@ -24,6 +24,66 @@ public sealed class TransferEngineTests
     }
 
     [TestMethod]
+    public async Task AMidStreamDisconnectAbortsWithoutCommittingOrReportingComplete()
+    {
+        // A device that disappears after bytes have been written must not leave a destination file, a
+        // stale .partial, a verified entry or a "complete" report. The run aborts and the manifest says so.
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1, bytesPerFile: 1024);
+        backend.MidStreamThrowPaths.Add("DCIM\\IMG_0000.bin");
+        string destination = TempDestination();
+        try
+        {
+            var service = new TransferService(backend, new LogService(destination));
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+
+            await Assert.ThrowsExceptionAsync<IOException>(() =>
+                service.CopyAsync(scan, destination, 1, new Progress<TransferProgress>(_ => { }), CancellationToken.None));
+
+            var manifest = System.Text.Json.JsonSerializer.Deserialize<SessionManifest>(
+                File.ReadAllText(Path.Combine(destination, ".i-total", "session.json")));
+            Assert.IsNotNull(manifest);
+            Assert.AreEqual("ABORTED", manifest.LastSessionStatus);
+            TransferEntry entry = manifest.Entries.Single();
+            Assert.AreEqual(TransferState.Copying, entry.State, "an interrupted item stays outstanding, never verified");
+            Assert.IsTrue(string.IsNullOrEmpty(entry.DestinationSha256), "no destination digest exists for an aborted transfer");
+
+            Assert.IsFalse(File.Exists(Path.Combine(destination, "DCIM", "IMG_0000.bin")),
+                "a truncated copy must not become the destination file");
+            Assert.AreEqual(0, Directory.GetFiles(Path.Combine(destination, ".i-total", "staging"), "*.partial",
+                SearchOption.AllDirectories).Length, "the backend's partial is cleaned up");
+            Assert.IsFalse(File.Exists(Path.Combine(destination, "I-total-session-report.json")),
+                "an aborted run writes no completion report");
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
+    public async Task AResumeAfterAMidStreamDisconnectReReadsTheItemAndCompletes()
+    {
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1, bytesPerFile: 1024);
+        backend.MidStreamThrowPaths.Add("DCIM\\IMG_0000.bin");
+        string destination = TempDestination();
+        try
+        {
+            var service = new TransferService(backend, new LogService(destination));
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+            var progress = new Progress<TransferProgress>(_ => { });
+            await Assert.ThrowsExceptionAsync<IOException>(() => service.CopyAsync(scan, destination, 1, progress, CancellationToken.None));
+
+            backend.MidStreamThrowPaths.Clear();
+            TransferSummary resumed = await service.CopyAsync(scan, destination, 1, progress, CancellationToken.None);
+
+            Assert.IsTrue(resumed.Completed);
+            Assert.AreEqual(1, resumed.Copied);
+            Assert.AreEqual(0, resumed.Failed);
+            string path = Path.Combine(destination, "DCIM", "IMG_0000.bin");
+            Assert.IsTrue(File.Exists(path));
+            Assert.AreEqual(1024, new FileInfo(path).Length);
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
     public async Task ATruncatedStageIsRejectedAndNothingIsCommitted()
     {
         // A provider that ends the stream early must not produce a destination file: the staged size is

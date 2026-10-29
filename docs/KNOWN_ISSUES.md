@@ -273,13 +273,22 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 ### KI-29 - A reconnect can expose a smaller "Complete" listing
 
 - **Observation (2026-10-30):** after the iPhone was unlocked and reconnected, the first cold scan exposed
-  **26,336 files, `Complete`**, in 563 s. Before the lock/unplug the same phone exposed 57,731 files. The
-  scan had no failed folder and no warnings, so the engine classified it Complete.
+  **26,336 files / 114,344,214,625 bytes, `Complete`**, in 563 s. Before the lock/unplug the same phone
+  exposed **57,731 files / 194,908,848,302 bytes** with 13 folders. The later scan had no failed folder and
+  no warnings, so the engine classified it Complete.
+- **What the recorded numbers actually decompose to:** the 2026-10-29 folder totals are `202610_a`
+  2,543 files / 32,405,919,122 B, `202608_a` 26,320 / 114,331,766,452 B, `202609_a` 28,836 /
+  48,151,068,934 B, and 32 files / 20,093,794 B across the nine small folders. The later scan's 26,336
+  files and 114,344,214,625 B equal **`202608_a` plus 16 of those small-folder files**; the byte
+  difference from the earlier scan (80,564,633,677 B) equals **`202610_a` + `202609_a` + those 16 small
+  files exactly**. So two large albums were absent from the later listing; nothing in the evidence says
+  they were deleted, and no cause is asserted.
 - **Impact:** "Complete" means "every folder the provider exposed was read", not "the phone has no more
   albums". A provider that mounts a subset after reconnect can produce a smaller Complete listing; the
   app cannot know about objects it cannot see.
-- **Mitigation:** the cached-listing comparison and the optional second-pass stability check show the
-  difference; the report names the exposed count and the scope limits.
-- **To close:** no code fix can prove hidden albums. A rescan after the phone settles is the practical
-  answer; a future version could warn when the exposed count drops sharply against the last cached
-  listing.
+- **Mitigation:** the new inventory-scope comparison (`ScanScope`, `ScanResult.Scope`) compares the fresh
+  scan with the last complete cached listing at folder level and warns, naming the missing folders, when
+  the scope changed. The report carries both facts separately. The optional second-pass stability check
+  still detects a listing that moves during one scan.
+- **To close:** no code can prove hidden albums. A rescan after the phone settles is the practical answer;
+  the warning now tells the operator to do exactly that.

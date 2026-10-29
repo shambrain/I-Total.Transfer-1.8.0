@@ -369,3 +369,37 @@ Each command writes a JSON report (probe identity and capabilities; scan status,
 and unknown-size counts, folders and warnings; per-run summary, reconciliation and verification). Run
 one process at a time: two processes sharing the WPD provider can make one abort (KI-27). The
 2026-10-29 evidence lives in `%TEMP%\opencode\drill-2026-10-29\`.
+
+## Physical mid-file cable-pull procedure (IP07 / AN07)
+
+This is the only procedure that can close IP07/AN07. The 2026-10-30 attempt did not: the copy finished
+before the cable was pulled, and the timestamps prove it.
+
+1. Attach and unlock the phone. Run `probe --family apple|android --require-family` and confirm `Ready`.
+2. Warm the provider: run `scan` once and confirm it completes in a short time (a cold iPhone pass can take
+   20+ minutes; the marker below only appears when the copy starts, so a cold scan is safe but slow).
+3. Start the copy with a visible start marker and a large file:
+
+   ```powershell
+   $drill copy --family apple --dest "$env:TEMP\drill\pull" --exts .mov --sort-size --max 1 `
+       --no-verify --start-marker "$env:TEMP\drill\copying.marker" --report "$env:TEMP\drill\pull.json"
+   ```
+
+   The harness writes `copying.marker` on the first `CopyToStage` call and prints `START-MARKER`.
+4. Observation window: from the marker's timestamp until the report is written. Pull the cable **30-90
+   seconds after the marker appears**, while the copy is streaming.
+5. Success criteria (all must hold):
+   - the copy does **not** complete; the manifest entry is not `IntegrityVerified` and has no destination
+     digest;
+   - no destination file exists for the item and no `*.partial` remains in `.i-total\staging`;
+   - the run records an actionable failure (device gone / stream error), and no completion report claims
+     success;
+   - a subsequent run re-reads the item and completes with a verified destination.
+6. Failure criteria: the copy completes before the pull, or the pull happens during the scan (marker never
+   appears). Record that as "not mid-file" and repeat.
+7. Evidence to keep: the drill JSON, the destination `.i-total\session.json`, the log, the marker file, and
+   the file/report timestamps. Do not state a pull time unless the timestamps show the pull happened inside
+   the copy window.
+
+Automated fault injection (`MidStreamThrowPaths`, two engine tests) covers the same failure path in the
+suite; it is not a substitute for this physical drill.
