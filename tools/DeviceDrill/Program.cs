@@ -82,6 +82,11 @@ public static class Program
     {
         using var device = new WpdDevice(1024 * 1024, preference);
         DeviceInfo info = device.Probe();
+        if (options.ContainsKey("require-family") && !FamilyMatches(options.GetValueOrDefault("family", "apple"), info))
+        {
+            Console.Error.WriteLine($"DEVICE-FAMILY-MISMATCH requested={options.GetValueOrDefault("family", "apple")} actual={info.Family} name={info.Name}");
+            return 2;
+        }
         WriteJson(options, new
         {
             Action = "probe",
@@ -113,6 +118,11 @@ public static class Program
     {
         using var device = new WpdDevice(1024 * 1024, preference);
         DeviceInfo info = device.Probe();
+        if (options.ContainsKey("require-family") && !FamilyMatches(options.GetValueOrDefault("family", "apple"), info))
+        {
+            Console.Error.WriteLine($"DEVICE-FAMILY-MISMATCH requested={options.GetValueOrDefault("family", "apple")} actual={info.Family} name={info.Name}");
+            return 2;
+        }
         if (!info.Status.IsUsable())
         {
             Console.Error.WriteLine($"DEVICE-NOT-READY {info.Status}: {info.Message}");
@@ -165,6 +175,11 @@ public static class Program
 
         using var device = new WpdDevice(1024 * 1024, preference);
         DeviceInfo info = device.Probe();
+        if (options.ContainsKey("require-family") && !FamilyMatches(options.GetValueOrDefault("family", "apple"), info))
+        {
+            Console.Error.WriteLine($"DEVICE-FAMILY-MISMATCH requested={options.GetValueOrDefault("family", "apple")} actual={info.Family} name={info.Name}");
+            return 2;
+        }
         if (!info.Status.IsUsable())
         {
             Console.Error.WriteLine($"DEVICE-NOT-READY {info.Status}: {info.Message}");
@@ -309,6 +324,11 @@ public static class Program
         if (max > 0) files = files.Take(max);
         return scan with { Files = files.ToList() };
     }
+
+    private static bool FamilyMatches(string requested, DeviceInfo info) =>
+        string.Equals(requested, "android", StringComparison.OrdinalIgnoreCase)
+            ? info.Family == DeviceFamily.Android
+            : info.Family == DeviceFamily.Apple;
 
     private static ConflictPolicy ParsePolicy(string value) => value.ToLowerInvariant() switch
     {

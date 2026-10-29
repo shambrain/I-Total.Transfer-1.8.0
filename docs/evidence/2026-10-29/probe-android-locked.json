@@ -1,0 +1,27 @@
+{
+  "Action": "probe",
+  "Backend": "Windows Portable Devices (native)",
+  "Status": "Ready",
+  "Family": 2,
+  "Name": "HUAWEI Y7 Prime 2018",
+  "Model": "LDN-L21",
+  "OperatingSystem": "1.0",
+  "StableId": "\\\\?\\usb#vid_12d1\u0026pid_1082\u0026mi_00#8\u0026219e05d9\u00262\u00260000#{6ac27878-a6fa-4155-ba85-f98f491d4f33}",
+  "BackendName": "Windows Portable Devices (native)",
+  "Message": "Device storage is accessible through native WPD (hash-verified transfers available).",
+  "Capabilities": {
+    "Notes": "Streams objects through IPortableDeviceResources::GetStream and hashes raw source bytes while reading. Read-only: this app never writes to the device.",
+    "FamilySeen": 4,
+    "CanEnumerate": true,
+    "CanReadSource": true,
+    "CanHashSourceBytes": true,
+    "CanReadBackCommitted": true,
+    "CanWriteToDevice": false,
+    "Categories": [
+      "Photos",
+      "Videos",
+      "Music",
+      "Files"
+    ]
+  }
+}

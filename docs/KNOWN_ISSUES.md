@@ -256,3 +256,16 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 - **Mitigation:** the failure is reported as "the phone stopped answering"; completed files are preserved.
 - **To close:** decide whether to add a single-instance guard (a named mutex plus "bring the existing
   window forward") and test it with two launches.
+
+### KI-28 - A locked iPhone disappears from WPD; the app may select the other attached phone
+
+- **Observation (2026-10-29):** while the iPhone was locked and suspended, Windows no longer listed it
+  as a WPD device (only the HUAWEI remained). A new session with `AppleFirst` selected the HUAWEI and the
+  Overview named it. The in-flight copy that was already running completed.
+- **Impact:** the "preferred handset" is a preference, not a requirement. A user who locks the iPhone and
+  then scans will get the other phone if one is attached; the screen names the device, but the transition
+  can surprise.
+- **Mitigation:** the selected device is named in the Overview, the banner and the log; the drill harness
+  now has `--require-family` and refuses a mismatch.
+- **To close:** decide whether a locked/absent preferred family should block the action with an explicit
+  message instead of falling back. That is a product decision, not a defect in the current contract.

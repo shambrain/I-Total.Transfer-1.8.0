@@ -18,6 +18,9 @@ edited by hand; the drill serialises the engine's own records.
 | `cancel-iphone.json` | iPhone cancel after 3 s | run cancelled; the destination manifest records `CANCELLED` |
 | `resume-iphone.json` | iPhone resume | 261,575,329 bytes, `HASH-VERIFIED COMPLETE`, verification 1/1 |
 | `sweep-64/256/1024/4096.json` | Android buffer sweep | one 184,296,485-byte MP4 per buffer, each hash-verified; single runs, not a benchmark |
+| `lock-iphone.json` | iPhone lock drill | 7,336,273,708-byte MOV copied `HASH-VERIFIED COMPLETE` while the phone was locked |
+| `probe-apple-locked.json` | probe with the iPhone locked | returns the HUAWEI (Android) — the locked iPhone is absent from WPD |
+| `pnp-wpd-while-iphone-locked.txt` | Windows device list while locked | only the HUAWEI and two unrelated WPD devices |
 
 The reports describe one run each. They are not benchmarks and do not claim statistical performance.
 The companion narrative, including the two defects these drills found, is in

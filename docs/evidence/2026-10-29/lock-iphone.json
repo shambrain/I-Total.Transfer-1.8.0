@@ -1,0 +1,60 @@
+{
+  "Action": "copy",
+  "Device": {
+    "Status": 5,
+    "Family": 1,
+    "Name": "Apple iPhone",
+    "StableId": "\\\\?\\usb#vid_05ac\u0026pid_12a8\u0026mi_00#9\u0026321a23f6\u00260\u00260000#{6ac27878-a6fa-4155-ba85-f98f491d4f33}"
+  },
+  "Backend": "Windows Portable Devices (native)",
+  "Destination": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\opencode\\drill-2026-10-29\\lock-iphone",
+  "ConflictPolicy": "PreserveAndReport",
+  "BufferSizeKb": 256,
+  "Scan": {
+    "Status": 0,
+    "Files": 57734,
+    "KnownBytes": 194909332413
+  },
+  "Runs": [
+    {
+      "Run": 1,
+      "ElapsedSeconds": 200.58,
+      "Completed": true,
+      "Status": "HASH-VERIFIED COMPLETE (source-to-destination)",
+      "Total": 1,
+      "Copied": 1,
+      "AlreadyPresent": 0,
+      "Skipped": 0,
+      "Failed": 0,
+      "Inaccessible": 0,
+      "Unverifiable": 0,
+      "BytesCopied": 7336273708,
+      "WeakestLevel": "SourceAndDestinationHash",
+      "Reconciliation": {
+        "DiscoveredFiles": 1,
+        "DiscoveredKnownBytes": 7336273708,
+        "UnknownSizeFiles": 0,
+        "EligibleFiles": 1,
+        "EligibleBytes": 7336273708,
+        "ExcludedFiles": 0,
+        "ConflictSkippedFiles": 0,
+        "AlreadyPresentFiles": 0,
+        "AlreadyPresentBytes": 0,
+        "CopiedFiles": 1,
+        "CopiedBytes": 7336273708,
+        "SourceHashVerifiedFiles": 1,
+        "DestinationHashVerifiedFiles": 0,
+        "SizeVerifiedFiles": 0,
+        "UnverifiableFiles": 0,
+        "InaccessibleFiles": 0,
+        "FailedFiles": 0,
+        "FailedBytes": 0,
+        "OutstandingFiles": 0,
+        "DuplicatePathCount": 0,
+        "FailedFolderCount": 0
+      }
+    }
+  ],
+  "Cancelled": false,
+  "Verification": null
+}

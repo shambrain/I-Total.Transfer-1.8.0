@@ -1,0 +1,9 @@
+
+Status FriendlyName        
+------ ------------        
+OK     HUAWEI Y7 Prime 2018
+OK     MasterDrive         
+OK     MasterX             
+
+
+

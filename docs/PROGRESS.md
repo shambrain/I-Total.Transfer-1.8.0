@@ -65,6 +65,11 @@ Android resume    184,296,485-byte MP4, HASH-VERIFIED COMPLETE, verification 1/1
 - **Buffer sweep (BT07)**: one 184,296,485-byte MP4, one run per buffer, all hash-verified: 64 KiB
   5.29 s / 33.22 MB/s, 256 KiB 5.17 s / 34.00 MB/s, 1 MiB 5.19 s / 33.86 MB/s, 4 MiB 5.19 s / 33.86 MB/s.
   Single runs, not a benchmark; no policy change is justified.
+- **iPhone lock (IP08)**: a 7,336,273,708-byte MOV copy completed `HASH-VERIFIED COMPLETE` while the
+  operator locked the phone (exact lock instant not timestamped). Once suspended, the iPhone vanished from
+  the WPD device list; an `--family apple` probe then returned the HUAWEI, so a new session falls back to
+  the other attached phone. A locked iPhone is not an "attached but not answering" abort on this stack;
+  recorded as KI-28 (fallback behaviour).
 ### Observation
 
 Running the iPhone cold scan and an Android copy in two processes at once made the WPD provider return
