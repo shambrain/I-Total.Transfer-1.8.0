@@ -1,0 +1,5 @@
+Drill: pull2-iphone (2026-10-30)
+Scan after the iPhone was reconnected: 26,336 files, status=Complete, 563.2 s.
+The same phone exposed 57,731 files on 2026-10-29 before it was locked/unplugged.
+Copy: 7,336,273,708-byte MOV completed HASH-VERIFIED in 199.91 s; the cable was pulled after the copy finished (file mtime 00:24:54, report 00:25:01), so this is not mid-file pull evidence.
+

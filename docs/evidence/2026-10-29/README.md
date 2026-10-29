@@ -21,6 +21,9 @@ edited by hand; the drill serialises the engine's own records.
 | `lock-iphone.json` | iPhone lock drill | 7,336,273,708-byte MOV copied `HASH-VERIFIED COMPLETE` while the phone was locked |
 | `probe-apple-locked.json` | probe with the iPhone locked | returns the HUAWEI (Android) — the locked iPhone is absent from WPD |
 | `pnp-wpd-while-iphone-locked.txt` | Windows device list while locked | only the HUAWEI and two unrelated WPD devices |
+| `pull-iphone.json` | cable pull during the scan | 2,557 files, `Incomplete`; the copy attempt failed with the device gone, no partial |
+| `pull2-iphone.json` | reconnect + 7.3 GB copy | first scan 26,336 files `Complete`; the copy finished before the cable was pulled |
+| `reconnect-scan-observation.txt` | timing note | file and report timestamps showing the pull was after the copy |
 
 The reports describe one run each. They are not benchmarks and do not claim statistical performance.
 The companion narrative, including the two defects these drills found, is in

@@ -196,7 +196,13 @@ public static class Program
             MaxRetries = 2,
             BufferSizeKb = Math.Clamp(bufferKb, 64, 4096)
         };
-        var service = new TransferService(device, log, transfer, filter);
+        ITransferBackend backend = device;
+        if (options.TryGetValue("start-marker", out string? marker) && !string.IsNullOrWhiteSpace(marker))
+        {
+            backend = new MarkerBackend(device, Path.GetFullPath(marker));
+            Console.Error.WriteLine("START-MARKER " + Path.GetFullPath(marker));
+        }
+        var service = new TransferService(backend, log, transfer, filter);
 
         var clock = Stopwatch.StartNew();
         ScanResult scan = await service.ScanAsync(CancellationToken.None);
@@ -358,4 +364,42 @@ public static class Program
             Console.Error.WriteLine("REPORT " + Path.GetFullPath(path));
         }
     }
+
+/// <summary>Delegates to the real backend and writes a marker the first time a copy starts, so an
+/// operator can time a physical cable pull without guessing when the scan ends.</summary>
+internal sealed class MarkerBackend : ITransferBackend
+{
+    private readonly ITransferBackend _inner;
+    private readonly string _marker;
+    private int _written;
+
+    public MarkerBackend(ITransferBackend inner, string marker)
+    {
+        _inner = inner;
+        _marker = marker;
+        File.Delete(_marker);
+    }
+
+    public BackendKind Kind => _inner.Kind;
+    public string Name => _inner.Name;
+    public bool CanHashSourceBytes => _inner.CanHashSourceBytes;
+    public BackendCapabilities Capabilities => _inner.Capabilities;
+    public DeviceInfo Probe() => _inner.Probe();
+    public ScanResult Scan(CancellationToken cancellationToken, Action<string>? progress = null) => _inner.Scan(cancellationToken, progress);
+
+    public CopyResult CopyToStage(MediaFile file, string stagingDirectory, TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        if (Interlocked.Exchange(ref _written, 1) == 0)
+        {
+            try { File.WriteAllText(_marker, DateTimeOffset.UtcNow.ToString("O") + " " + file.RelativePath); } catch { }
+        }
+        return _inner.CopyToStage(file, stagingDirectory, timeout, cancellationToken);
+    }
+
+    public Stream? OpenSourceRead(MediaFile file) => _inner.OpenSourceRead(file);
+    public CopyResult CopyToDevice(string localSourcePath, MediaFile deviceDestination, TimeSpan timeout, CancellationToken cancellationToken)
+        => _inner.CopyToDevice(localSourcePath, deviceDestination, timeout, cancellationToken);
+    public bool TryDeleteDeviceFile(MediaFile file) => _inner.TryDeleteDeviceFile(file);
+    public void Dispose() { /* the caller owns the real backend */ }
+}
 }

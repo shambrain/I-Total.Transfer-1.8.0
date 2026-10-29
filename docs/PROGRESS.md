@@ -70,6 +70,10 @@ Android resume    184,296,485-byte MP4, HASH-VERIFIED COMPLETE, verification 1/1
   the WPD device list; an `--family apple` probe then returned the HUAWEI, so a new session falls back to
   the other attached phone. A locked iPhone is not an "attached but not answering" abort on this stack;
   recorded as KI-28 (fallback behaviour).
+- **iPhone cable pull (attempts)**: a pull during the scan produced 2,557 files, `Incomplete`; the following
+  copy failed with the device gone, no partial and no destination file. A second attempt pulled the cable
+  after the 7.3 GB copy had already finished (file 00:24:54, report 00:25:01), so **mid-file pull remains
+  pending**. The reconnect scan exposed 26,336 files `Complete` against 57,731 before, recorded as KI-29.
 ### Observation
 
 Running the iPhone cold scan and an Android copy in two processes at once made the WPD provider return

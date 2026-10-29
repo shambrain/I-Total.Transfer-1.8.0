@@ -1,0 +1,60 @@
+{
+  "Action": "copy",
+  "Device": {
+    "Status": 5,
+    "Family": 1,
+    "Name": "Apple iPhone",
+    "StableId": "\\\\?\\usb#vid_05ac\u0026pid_12a8\u0026mi_00#9\u0026321a23f6\u00260\u00260000#{6ac27878-a6fa-4155-ba85-f98f491d4f33}"
+  },
+  "Backend": "Windows Portable Devices (native)",
+  "Destination": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\opencode\\drill-2026-10-29\\pull-iphone",
+  "ConflictPolicy": "PreserveAndReport",
+  "BufferSizeKb": 256,
+  "Scan": {
+    "Status": 1,
+    "Files": 2557,
+    "KnownBytes": 8650575898
+  },
+  "Runs": [
+    {
+      "Run": 1,
+      "ElapsedSeconds": 0.22,
+      "Completed": false,
+      "Status": "INCOMPLETE ENUMERATION \u2014 NOT A VERIFIED COMPLETE BACKUP",
+      "Total": 1,
+      "Copied": 0,
+      "AlreadyPresent": 0,
+      "Skipped": 0,
+      "Failed": 1,
+      "Inaccessible": 0,
+      "Unverifiable": 0,
+      "BytesCopied": 0,
+      "WeakestLevel": "None",
+      "Reconciliation": {
+        "DiscoveredFiles": 1,
+        "DiscoveredKnownBytes": 261575329,
+        "UnknownSizeFiles": 0,
+        "EligibleFiles": 1,
+        "EligibleBytes": 261575329,
+        "ExcludedFiles": 0,
+        "ConflictSkippedFiles": 0,
+        "AlreadyPresentFiles": 0,
+        "AlreadyPresentBytes": 0,
+        "CopiedFiles": 0,
+        "CopiedBytes": 0,
+        "SourceHashVerifiedFiles": 0,
+        "DestinationHashVerifiedFiles": 0,
+        "SizeVerifiedFiles": 0,
+        "UnverifiableFiles": 0,
+        "InaccessibleFiles": 0,
+        "FailedFiles": 1,
+        "FailedBytes": 261575329,
+        "OutstandingFiles": 0,
+        "DuplicatePathCount": 0,
+        "FailedFolderCount": 0
+      }
+    }
+  ],
+  "Cancelled": false,
+  "Verification": null
+}

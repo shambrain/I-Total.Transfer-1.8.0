@@ -269,3 +269,17 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
   now has `--require-family` and refuses a mismatch.
 - **To close:** decide whether a locked/absent preferred family should block the action with an explicit
   message instead of falling back. That is a product decision, not a defect in the current contract.
+
+### KI-29 - A reconnect can expose a smaller "Complete" listing
+
+- **Observation (2026-10-30):** after the iPhone was unlocked and reconnected, the first cold scan exposed
+  **26,336 files, `Complete`**, in 563 s. Before the lock/unplug the same phone exposed 57,731 files. The
+  scan had no failed folder and no warnings, so the engine classified it Complete.
+- **Impact:** "Complete" means "every folder the provider exposed was read", not "the phone has no more
+  albums". A provider that mounts a subset after reconnect can produce a smaller Complete listing; the
+  app cannot know about objects it cannot see.
+- **Mitigation:** the cached-listing comparison and the optional second-pass stability check show the
+  difference; the report names the exposed count and the scope limits.
+- **To close:** no code fix can prove hidden albums. A rescan after the phone settles is the practical
+  answer; a future version could warn when the exposed count drops sharply against the last cached
+  listing.
