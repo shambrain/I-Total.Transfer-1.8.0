@@ -151,6 +151,17 @@ smoke test only.
     `Failed` row back from the database. The free-space preflight also no longer refuses a UNC destination
     whose free space cannot be read; it logs the limitation and lets the per-file copy report a real
     disk-full error.
+### Final verification
+
+- `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **491 passed, 2 skipped, 493 total** in four
+  consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
+  `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
+  subsequent full run, and is recorded as KI-26 rather than dismissed.
+- The published executable was launched once and stayed up for five seconds with the window title
+  `I-Total Transfer - verified phone media transfer`; it was then stopped.
+- Final artifacts: exe `0F157407...` (112,191,302 B); the deployment, portable, setup and source archive
+  hashes are recorded in `dist/SHA256SUMS.txt`, which is authoritative because it ships outside them.
 ### Blockers
 
 No phone attached, so no hardware claim is made for the new size handling. AFC remains inert (empty
@@ -284,6 +295,17 @@ smoke test only.
     `Failed` row back from the database. The free-space preflight also no longer refuses a UNC destination
     whose free space cannot be read; it logs the limitation and lets the per-file copy report a real
     disk-full error.
+### Final verification
+
+- `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **491 passed, 2 skipped, 493 total** in four
+  consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
+  `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
+  subsequent full run, and is recorded as KI-26 rather than dismissed.
+- The published executable was launched once and stayed up for five seconds with the window title
+  `I-Total Transfer - verified phone media transfer`; it was then stopped.
+- Final artifacts: exe `0F157407...` (112,191,302 B); the deployment, portable, setup and source archive
+  hashes are recorded in `dist/SHA256SUMS.txt`, which is authoritative because it ships outside them.
 ### Blockers and limits
 
 - A statistical multi-file benchmark, an iPhone-side benchmark, a locked iPhone, a cloud-optimised library,
@@ -610,6 +632,17 @@ smoke test only.
     `Failed` row back from the database. The free-space preflight also no longer refuses a UNC destination
     whose free space cannot be read; it logs the limitation and lets the per-file copy report a real
     disk-full error.
+### Final verification
+
+- `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **491 passed, 2 skipped, 493 total** in four
+  consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
+  `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
+  subsequent full run, and is recorded as KI-26 rather than dismissed.
+- The published executable was launched once and stayed up for five seconds with the window title
+  `I-Total Transfer - verified phone media transfer`; it was then stopped.
+- Final artifacts: exe `0F157407...` (112,191,302 B); the deployment, portable, setup and source archive
+  hashes are recorded in `dist/SHA256SUMS.txt`, which is authoritative because it ships outside them.
 ### Blockers and limits
 
 - A *native* 100 % desktop capture is still impossible here: the display used for the 200 % pass was
@@ -885,6 +918,17 @@ smoke test only.
     `Failed` row back from the database. The free-space preflight also no longer refuses a UNC destination
     whose free space cannot be read; it logs the limitation and lets the per-file copy report a real
     disk-full error.
+### Final verification
+
+- `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **491 passed, 2 skipped, 493 total** in four
+  consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
+  `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
+  subsequent full run, and is recorded as KI-26 rather than dismissed.
+- The published executable was launched once and stayed up for five seconds with the window title
+  `I-Total Transfer - verified phone media transfer`; it was then stopped.
+- Final artifacts: exe `0F157407...` (112,191,302 B); the deployment, portable, setup and source archive
+  hashes are recorded in `dist/SHA256SUMS.txt`, which is authoritative because it ships outside them.
 ### Blockers and limits
 
 - **100 % pixel capture of UI-18 was open at this cut.** This host has only a 150 % display; the page actions and

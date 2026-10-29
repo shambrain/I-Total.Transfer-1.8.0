@@ -229,3 +229,16 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 - **Mitigation:** `ALegacyRowWithoutAnOutcomeIsMappedFromItsStateRatherThanCountedAsOutstanding` pins the
   mapping; new rows always record the outcome.
 - **To close:** nothing to fix; a future schema version may backfill the column.
+
+### KI-26 - One unreproduced failure of a licensing test
+
+- **Observation:** during the final verification on 2026-10-29, one full run reported
+  `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas` failed (490 passed, 1 failed, 2 skipped).
+  The test passed in isolation immediately afterwards, and four consecutive full runs then passed
+  (491 passed, 2 skipped, 493 total each).
+- **Impact:** the licensing rule itself is deterministic (RSA-PSS verification over a tampered signature)
+  and the test uses an in-memory trial store, so no persisted state is involved. The failure could not be
+  reproduced and its assertion message was not captured by the filtered output.
+- **Mitigation:** the suite is run with `--blame-hang`; the result is recorded here rather than hidden.
+- **To close:** if it recurs, capture the full MSTest failure (assert name, expected/actual) and the
+  sequence file; do not mark the suite green until the cause is known.
