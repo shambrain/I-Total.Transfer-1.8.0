@@ -190,6 +190,8 @@ public static class Program
         int max = int.TryParse(options.GetValueOrDefault("max", "0"), out int parsedMax) ? parsedMax : 0;
         ScanResult planned = Select(scan, options, max);
         Console.Error.WriteLine($"PLAN {planned.Files.Count:N0} files selected for the copy drill.");
+        foreach (MediaFile f in planned.Files.Take(5))
+            Console.Error.WriteLine($"SELECTED {f.RelativePath} ({f.Size:N0} bytes, sizeKnown={f.SizeKnown})");
 
         int repeat = int.TryParse(options.GetValueOrDefault("repeat", "1"), out int r) ? Math.Max(1, r) : 1;
         var runs = new List<object>();
@@ -303,6 +305,7 @@ public static class Program
             files = files.Where(f => f.RelativePath.Contains(contains, StringComparison.OrdinalIgnoreCase));
         if (options.ContainsKey("zero-only")) files = files.Where(f => f.SizeKnown && f.Size == 0);
         if (options.ContainsKey("unknown-only")) files = files.Where(f => !f.SizeKnown);
+        if (options.ContainsKey("sort-size")) files = files.OrderByDescending(f => f.Size);
         if (max > 0) files = files.Take(max);
         return scan with { Files = files.ToList() };
     }
