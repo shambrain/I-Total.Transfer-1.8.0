@@ -308,15 +308,12 @@ public sealed class WpdDevice : ITransferBackend
             .Where(g => g.Count() > 1).Select(g => g.Key).Take(20).ToArray();
         if (duplicatePaths.Length > 0)
             warnings.Add("The device exposed duplicate destination paths: " + string.Join(", ", duplicatePaths));
-        int unknownSize = files.Count(f => f.Size <= 0);
+        int unknownSize = files.Count(f => !f.SizeKnown);
         if (unknownSize > 0)
-            warnings.Add($"{unknownSize:N0} file(s) reported no usable size.");
+            warnings.Add($"{unknownSize:N0} file(s) reported no readable size; they can be copied but not size-verified.");
 
-        int failedFolders = folders.Count(f => !f.Succeeded);
-        var status = TransferRules.ClassifyEnumeration(folders.Count, failedFolders, files.Count, duplicatePaths.Length, unknownSize);
-        var report = new EnumerationReport(status, folders.Count, failedFolders, files.Count,
-            files.Sum(f => Math.Max(0, f.Size)), files.Count(f => f.Size == 0), unknownSize, duplicatePaths.Length,
-            TransferRules.CountLivePhotoPairs(files), Name, folders, warnings);
+        EnumerationReport report = ScanAccounting.BuildReport(Name, files, folders, duplicatePaths.Length, warnings);
+        var status = report.Status;
 
         progress?.Invoke($"WPD scan finished: {files.Count:N0} files in {folders.Count:N0} folders ({status}).");
         return new ScanResult(string.IsNullOrWhiteSpace(friendly) ? DeviceFamilies.Describe(family) : friendly,
@@ -386,6 +383,7 @@ public sealed class WpdDevice : ITransferBackend
                     var file = new MediaFile(relativeFolder, props.Name, size,
                         Path.GetExtension(props.Name).ToLowerInvariant())
                     {
+                        SizeKnown = props.SizeKnown,
                         SourceObjectId = childId,
                         ModifiedUtc = props.ModifiedUtc
                     };
@@ -949,9 +947,9 @@ public sealed class WpdDevice : ITransferBackend
             Guid contentType = ReadGuid(objectId, WpdKeys.ObjectContentType);
             Guid functional = ReadGuid(objectId, WpdKeys.FunctionalObjectCategory);
             bool isFolder = contentType == WpdKeys.ContentTypeFolder || functional == WpdKeys.FunctionalCategoryStorage;
-            long size = ReadULong(objectId, WpdKeys.ObjectSize);
+            long size = ReadULong(objectId, WpdKeys.ObjectSize, out bool sizeKnown);
             DateTimeOffset? modified = ReadDate(objectId, WpdKeys.ObjectDateModified);
-            return new ObjectProps(string.IsNullOrWhiteSpace(name) ? objectId : name, size, isFolder, modified);
+            return new ObjectProps(string.IsNullOrWhiteSpace(name) ? objectId : name, size, isFolder, modified, sizeKnown);
         }
     }
 
@@ -965,9 +963,9 @@ public sealed class WpdDevice : ITransferBackend
         Guid contentType = GetGuid(values, WpdKeys.ObjectContentType);
         Guid functional = GetGuid(values, WpdKeys.FunctionalObjectCategory);
         bool isFolder = contentType == WpdKeys.ContentTypeFolder || functional == WpdKeys.FunctionalCategoryStorage;
-        long size = (long)GetULong(values, WpdKeys.ObjectSize);
+        long size = (long)GetULong(values, WpdKeys.ObjectSize, out bool sizeKnown);
         DateTimeOffset? modified = GetDate(values, WpdKeys.ObjectDateModified);
-        return new ObjectProps(string.IsNullOrWhiteSpace(name) ? objectId : name, size, isFolder, modified);
+        return new ObjectProps(string.IsNullOrWhiteSpace(name) ? objectId : name, size, isFolder, modified, sizeKnown);
     }
 
     /// <summary>
@@ -996,8 +994,13 @@ public sealed class WpdDevice : ITransferBackend
     private Guid ReadGuid(string objectId, PropertyKey key) =>
         TryGetValue(objectId, key, out IPortableDeviceValues values) ? GetGuid(values, key) : Guid.Empty;
 
-    private long ReadULong(string objectId, PropertyKey key) =>
-        TryGetValue(objectId, key, out IPortableDeviceValues values) ? (long)GetULong(values, key) : 0;
+    private long ReadULong(string objectId, PropertyKey key, out bool known)
+    {
+        if (TryGetValue(objectId, key, out IPortableDeviceValues values))
+            return (long)GetULong(values, key, out known);
+        known = false;
+        return 0;
+    }
 
     private DateTimeOffset? ReadDate(string objectId, PropertyKey key) =>
         TryGetValue(objectId, key, out IPortableDeviceValues values) ? GetDate(values, key) : null;
@@ -1010,13 +1013,19 @@ public sealed class WpdDevice : ITransferBackend
         catch { return Guid.Empty; }
     }
 
-    private static ulong GetULong(IPortableDeviceValues values, PropertyKey key)
+    /// <summary>
+    /// Reads an unsigned size and reports whether the provider actually supplied one. A missing
+    /// property is not a zero-byte object: the size is unknown, and the caller must keep the two
+    /// apart so a zero-byte file can still be verified while an unmeasurable one is never called
+    /// size-verified.
+    /// </summary>
+    private static ulong GetULong(IPortableDeviceValues values, PropertyKey key, out bool known)
     {
-        try { PropertyKey k = key; values.GetUnsignedLargeIntegerValue(ref k, out ulong v); return v; }
+        try { PropertyKey k = key; values.GetUnsignedLargeIntegerValue(ref k, out ulong v); known = true; return v; }
         catch
         {
-            try { PropertyKey k = key; values.GetUnsignedIntegerValue(ref k, out uint v2); return v2; }
-            catch { return 0; }
+            try { PropertyKey k = key; values.GetUnsignedIntegerValue(ref k, out uint v2); known = true; return v2; }
+            catch { known = false; return 0; }
         }
     }
 
@@ -1084,7 +1093,7 @@ public sealed class WpdDevice : ITransferBackend
         _apartment.Dispose();
     }
 
-    private readonly record struct ObjectProps(string Name, long Size, bool IsFolder, DateTimeOffset? ModifiedUtc);
+    private readonly record struct ObjectProps(string Name, long Size, bool IsFolder, DateTimeOffset? ModifiedUtc, bool SizeKnown);
 
     /// <summary>Buffered read-only stream over a WPD resource stream, used for source hashing and read-back.</summary>
     private sealed class WpdStream : Stream

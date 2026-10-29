@@ -249,7 +249,9 @@ public sealed class TransferService
                         try
                         {
                             long stageSize = new FileInfo(stagePath).Length;
-                            if (file.Size > 0 && stageSize != file.Size)
+                            // Only a measured source size can be compared. An unknown size is not 0, so
+                            // it must not fail a staged file that has real bytes.
+                            if (file.SizeKnown && stageSize != file.Size)
                                 throw new InvalidDataException($"Size mismatch in staging: expected {file.Size}, got {stageSize}.");
 
                             // A backend that hashes the raw source bytes while streaming (WPD does, and returns
@@ -300,14 +302,16 @@ public sealed class TransferService
                             entry.SourceSha256 = stageResult.SourceSha256;
                             entry.StagedPayloadSha256 = stagedPayloadHash;
                             entry.DestinationSha256 = destinationHash;
-                            entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, stagedPayloadHash, destinationHash, file.Size > 0);
+                            entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, stagedPayloadHash, destinationHash, file.SizeKnown);
                             entry.PreserveTimestamp = _options.PreserveTimestamps;
                             entry.SourceChanged = false;
                             success = true;
                             if (replacedBackup is not null) { try { File.Delete(replacedBackup); } catch { } }
-                            fileRates.Enqueue((Math.Max(0, file.Size), Math.Max(0.001, attemptTimer.Elapsed.TotalSeconds)));
+                            entry.BytesWritten = new FileInfo(target).Length;
+                            long countedBytes = file.SizeKnown ? Math.Max(0, file.Size) : entry.BytesWritten;
+                            fileRates.Enqueue((countedBytes, Math.Max(0.001, attemptTimer.Elapsed.TotalSeconds)));
                             while (fileRates.Count > 30) fileRates.Dequeue();
-                            bytesCopied += Math.Max(0, file.Size);
+                            bytesCopied += countedBytes;
                             break;
                         }
                         catch (Exception ex)
@@ -337,19 +341,25 @@ public sealed class TransferService
                 if (success)
                 {
                     copied++;
-                    if (file.Size > 0)
+                    // A measured size (including a genuine zero) can be verified. An unmeasured size
+                    // can only be accepted when the source byte stream itself was hashed and matched
+                    // the committed destination, because that proves the bytes without a size.
+                    bool verifiedWithoutSize = !file.SizeKnown &&
+                        entry.Verification == VerificationLevel.SourceAndDestinationHash;
+                    if (file.SizeKnown || verifiedWithoutSize)
                     {
                         entry.State = TransferState.IntegrityVerified; entry.Error = null;
                         string note = entry.Verification == VerificationLevel.SourceAndDestinationHash
                             ? "Source and destination SHA-256 match (raw source bytes were read and hashed)."
                             : "Staged payload and destination SHA-256 match, but the backend cannot hash raw source bytes, so byte identity with the original is not asserted.";
-                        _log.Write($"COPY COMPLETE {relative} ({FormatBytes(file.Size)}): verification={entry.Verification}; source={entry.SourceSha256}; staged={entry.StagedPayloadSha256 ?? "(not read: the streamed source digest was compared with the destination directly)"}; destination={entry.DestinationSha256}. {note}", "OK");
+                        string sizeNote = file.SizeKnown ? "" : " The source size was unavailable; identity rests on the source-to-destination hash, not on a size.";
+                        _log.Write($"COPY COMPLETE {relative} ({(file.SizeKnown ? FormatBytes(file.Size) : "size unknown")}): verification={entry.Verification}; source={entry.SourceSha256}; staged={entry.StagedPayloadSha256 ?? "(not read: the streamed source digest was compared with the destination directly)"}; destination={entry.DestinationSha256}. {note}{sizeNote}", "OK");
                     }
                     else
                     {
                         unverifiable++; entry.State = TransferState.CopiedUnverified;
-                        entry.Error = "Source-reported size was unavailable; copy completed but could not be size-verified.";
-                        _log.Write($"COPIED-UNVERIFIABLE {relative}: source size unavailable; cannot claim verified completion.", "WARN");
+                        entry.Error = "The source reported no readable size and no source-byte hash was available; the copy completed but cannot be called verified.";
+                        _log.Write($"COPIED-UNVERIFIABLE {relative}: source size unavailable and no source-byte digest; cannot claim verified completion.", "WARN");
                     }
                 }
                 else
@@ -508,12 +518,15 @@ public sealed class TransferService
                 if (_options.SkipUnchanged && !sourceChanged)
                 {
                     long existingSize = new FileInfo(target).Length;
-                    string? existingHash = file.Size > 0 && existingSize == file.Size ? await ComputeSha256Async(target, token) : null;
-                    ResumeDecision d = TransferRules.ClassifyExistingDestination(file.Size, existingSize, entry.DestinationSha256, existingHash);
+                    bool sizeComparable = file.SizeKnown && existingSize == file.Size;
+                    string? existingHash = sizeComparable || (!file.SizeKnown && !string.IsNullOrWhiteSpace(entry.DestinationSha256))
+                        ? await ComputeSha256Async(target, token)
+                        : null;
+                    ResumeDecision d = TransferRules.ClassifyExistingDestination(file.Size, existingSize, entry.DestinationSha256, existingHash, file.SizeKnown);
                     if (d == ResumeDecision.SkipVerified)
                     {
                         entry.State = TransferState.IntegrityVerified;
-                        entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, null, entry.DestinationSha256, true);
+                        entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, null, entry.DestinationSha256, file.SizeKnown);
                         entry.UpdatedUtc = DateTimeOffset.UtcNow;
                         _store!.MarkDirty(); TryDatabase(() => database?.UpsertFile(destination, entry), relative);
                         return new ResumeOutcome(true, ResumeKind.Skipped, target);
@@ -544,7 +557,8 @@ public sealed class TransferService
                 // of degrading it to Failed - otherwise every resume of a zero-byte placeholder makes
                 // the session look worse while changing nothing on disk.
                 bool wasCopiedUnverified = entry.State == TransferState.CopiedUnverified;
-                string? existingHash = (file.Size > 0 && existingSize == file.Size) || wasCopiedUnverified
+                string? existingHash = (file.SizeKnown && existingSize == file.Size) || wasCopiedUnverified ||
+                    (!file.SizeKnown && !string.IsNullOrWhiteSpace(entry.DestinationSha256))
                     ? await ComputeSha256Async(target, token)
                     : null;
                 if (wasCopiedUnverified && existingHash is not null &&
@@ -561,12 +575,12 @@ public sealed class TransferService
                         "Already copied but unverified; destination preserved."));
                     return new ResumeOutcome(true, ResumeKind.Skipped, target);
                 }
-                ResumeDecision decision = TransferRules.ClassifyExistingDestination(file.Size, existingSize, entry.DestinationSha256, existingHash);
+                ResumeDecision decision = TransferRules.ClassifyExistingDestination(file.Size, existingSize, entry.DestinationSha256, existingHash, file.SizeKnown);
                 switch (decision)
                 {
                     case ResumeDecision.SkipVerified:
                         entry.State = TransferState.IntegrityVerified;
-                        entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, null, entry.DestinationSha256, true);
+                        entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, null, entry.DestinationSha256, file.SizeKnown);
                         entry.Error = null; entry.UpdatedUtc = DateTimeOffset.UtcNow;
                         _store!.MarkDirty(); TryDatabase(() => database?.UpsertFile(destination, entry), relative);
                         progress.Report(BuildProgress("Copy", processed, total, bytesDone, required, bytesCopied, fileRates, timer, relative, "Existing destination matches its saved SHA-256."));
@@ -592,7 +606,7 @@ public sealed class TransferService
 
                     default: // PreserveCollision
                         entry.State = TransferState.Failed; entry.Verification = VerificationLevel.None;
-                        entry.Error = file.Size <= 0
+                        entry.Error = !file.SizeKnown
                             ? $"Source size is unavailable; existing destination file ({existingSize} bytes) was preserved because it cannot be safely classified."
                             : $"Destination collision: existing file size {existingSize} differs from source-reported size {file.Size}. Existing file was preserved.";
                         entry.UpdatedUtc = DateTimeOffset.UtcNow;
@@ -775,9 +789,68 @@ public sealed class TransferService
                     }
                 }
             }
-            else if (file.Size <= 0)
+            else if (!file.SizeKnown)
             {
-                unverifiable++; issues.Add($"UNVERIFIABLE: {relative}; source size was unavailable.");
+                // The size cannot be compared, but a recorded destination digest still proves the bytes
+                // are unchanged, and the source-hash policy can additionally re-read the source. Calling
+                // every unmeasured file "unverifiable" would ignore evidence that does exist.
+                string? saved = entry?.DestinationSha256;
+                if (string.IsNullOrWhiteSpace(saved))
+                {
+                    unverifiable++;
+                    issues.Add($"UNVERIFIABLE: {relative}; source size was unavailable and no destination digest was recorded.");
+                }
+                else
+                {
+                    string actualHash = await ComputeSha256Async(path, token);
+                    if (!string.Equals(actualHash, saved, StringComparison.OrdinalIgnoreCase))
+                    {
+                        wrongHash++; wrong++;
+                        if (entry is not null)
+                        {
+                            entry.State = TransferState.Failed;
+                            entry.Error = "Destination SHA-256 differs from the saved digest; the file was changed after it was verified.";
+                            entry.Verification = VerificationLevel.None;
+                            _store.MarkDirty(force: true);
+                        }
+                        issues.Add($"SHA-256 MISMATCH: {relative}; destination bytes differ from the saved destination digest.");
+                    }
+                    else
+                    {
+                        destVerified++;
+                        bool contradicted = false;
+                        if (_device.Capabilities.CanReadBackCommitted && _options.VerificationPolicy == VerificationPolicy.SourceAndDestinationHash)
+                        {
+                            string? liveSource = await Task.Run(() => HashSourceAsync(file, token), token);
+                            if (!string.IsNullOrWhiteSpace(liveSource))
+                            {
+                                if (string.Equals(liveSource, actualHash, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    sourceVerified++;
+                                    if (entry is not null)
+                                    {
+                                        entry.SourceSha256 = liveSource;
+                                        entry.Verification = VerificationLevel.SourceAndDestinationHash;
+                                    }
+                                }
+                                else
+                                {
+                                    contradicted = true;
+                                    wrongHash++; wrong++;
+                                    if (entry is not null)
+                                    {
+                                        entry.State = TransferState.Failed;
+                                        entry.Error = "Live source SHA-256 differs from the destination during verification.";
+                                        entry.Verification = VerificationLevel.None;
+                                        _store.MarkDirty(force: true);
+                                    }
+                                    issues.Add($"SOURCE/DESTINATION MISMATCH: {relative}; live source SHA-256 differs from destination.");
+                                }
+                            }
+                        }
+                        if (!contradicted) matching++;
+                    }
+                }
             }
             else
             {

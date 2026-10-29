@@ -105,9 +105,12 @@ public sealed class ManifestStore
             string path = TransferRules.ValidateRelativePath(file.Folder, file.Name);
             if (existing.TryGetValue(path, out TransferEntry? entry))
             {
-                bool sourceChanged = entry.ExpectedBytes != file.Size ||
+                // A change from "size measured" to "size unreadable" (or back) is a source change too:
+                // the plan would otherwise keep a verified entry whose size evidence no longer exists.
+                bool sourceChanged = entry.ExpectedBytes != file.Size || entry.SizeKnown != file.SizeKnown ||
                     (entry.SourceModifiedUtc is { } recorded && file.ModifiedUtc is { } current && recorded != current);
                 entry.ExpectedBytes = file.Size;
+                entry.SizeKnown = file.SizeKnown;
                 entry.SourceModifiedUtc = file.ModifiedUtc;
                 if (sourceChanged)
                 {
@@ -124,6 +127,7 @@ public sealed class ManifestStore
                 {
                     RelativePath = path,
                     ExpectedBytes = file.Size,
+                    SizeKnown = file.SizeKnown,
                     State = TransferState.Queued,
                     SourceModifiedUtc = file.ModifiedUtc
                 });

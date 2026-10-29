@@ -1,5 +1,17 @@
 ## 1.8.0 — 2026-10-20 — borderless chrome, honest device detection, unfinished-session recovery, Android storage
 
+- **Zero-byte files are no longer confused with unreadable sizes (2026-10-29).** `MediaFile.Size` could not
+  distinguish a measured 0 from "the device did not report a size", so every genuine zero-byte file was
+  counted as both zero-byte and unknown and was copied as `CopiedUnverified`. `MediaFile.SizeKnown` and
+  `TransferEntry.SizeKnown` now carry the distinction, `ScanAccounting` is the single place that counts
+  zero-byte and unknown-size files, and all three backends build their report through it (Shell and AFC
+  previously omitted the unknown-size completeness rule that WPD applied). A zero-byte file is now
+  hash-verified like any other file; an unknown size stays unknown, and a copy with no size and no
+  source-byte hash is still reported unverifiable. Resuming an unknown-size file whose recorded digest
+  still matches the destination no longer reclassifies it as a collision, and `TransferEntry.BytesWritten`
+  keeps the committed byte total honest. Nine accounting tests and three engine tests pin the behaviour;
+  the suite is 472 passed, 2 skipped, 474 total.
+
 - **The wireless receiver now starts on a real LAN address without elevation.** The UI-18 live drill
   exposed the old `HttpListener` path failing with `Access is denied.` for the non-elevated per-user
   account, because HTTP.sys requires a URL ACL for every non-loopback prefix. The receiver now owns a

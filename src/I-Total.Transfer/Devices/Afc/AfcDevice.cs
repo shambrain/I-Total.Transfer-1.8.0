@@ -169,12 +169,11 @@ public sealed class AfcDevice : ITransferBackend
         var duplicates = files.GroupBy(f => f.RelativePath, StringComparer.OrdinalIgnoreCase)
             .Where(g => g.Count() > 1).Select(g => g.Key).Take(20).ToArray();
         if (duplicates.Length > 0) warnings.Add("Duplicate destination paths: " + string.Join(", ", duplicates));
-        int unknownSize = files.Count(f => f.Size <= 0);
-        int failed = folders.Count(f => !f.Succeeded);
-        var status = TransferRules.ClassifyEnumeration(folders.Count, failed, files.Count, duplicates.Length);
-        var report = new EnumerationReport(status, folders.Count, failed, files.Count,
-            files.Sum(f => Math.Max(0, f.Size)), files.Count(f => f.Size == 0), unknownSize, duplicates.Length,
-            TransferRules.CountLivePhotoPairs(files), Name, folders, warnings);
+        int unknownSize = files.Count(f => !f.SizeKnown);
+        if (unknownSize > 0)
+            warnings.Add($"{unknownSize:N0} file(s) reported no readable size; they can be copied but not size-verified.");
+        EnumerationReport report = ScanAccounting.BuildReport(Name, files, folders, duplicates.Length, warnings);
+        var status = report.Status;
         progress?.Invoke($"AFC scan finished: {files.Count:N0} files in {folders.Count:N0} folders ({status}).");
         return new ScanResult("Apple iPhone", started, DateTimeOffset.UtcNow, files, warnings)
         {
@@ -244,8 +243,12 @@ public sealed class AfcDevice : ITransferBackend
                 }
                 else if (name is not "." and not "..")
                 {
-                    long size = long.TryParse(sizeText, out long s) ? s : 0;
-                    files.Add(new MediaFile(relativeFolder, name, size, Path.GetExtension(name).ToLowerInvariant()) { SourceObjectId = childPath });
+                    bool sizeKnown = long.TryParse(sizeText, out long size);
+                    files.Add(new MediaFile(relativeFolder, name, size, Path.GetExtension(name).ToLowerInvariant())
+                    {
+                        SizeKnown = sizeKnown,
+                        SourceObjectId = childPath
+                    });
                     fileCount++; bytes += Math.Max(0, size);
                 }
                 name = ifmt = sizeText = null;

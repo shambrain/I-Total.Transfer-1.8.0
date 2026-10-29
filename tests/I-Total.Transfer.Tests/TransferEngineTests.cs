@@ -130,37 +130,96 @@ public sealed class TransferEngineTests
     }
 
     [TestMethod]
-    public async Task ResumingAZeroByteUnverifiedFilePreservesItWithoutCallingItAFailure()
+    public async Task AZeroByteSourceFileIsHashVerifiedInsteadOfBeingCalledUnverifiable()
     {
-        // The Huawei exposes some zero-byte placeholders whose source size it will not report. The first
-        // pass copies them and honestly marks them unverified. A resume must not then call the same
-        // files "collisions" and mark them failed: the destination is byte-identical to what the first
-        // pass recorded, so the state stays CopiedUnverified and the file is preserved.
+        // A genuine zero-byte file is a measurement, not a missing one. It used to be conflated with
+        // "the backend could not read the size", so an entire session that copied nothing but empty
+        // placeholders could never reach a verified status. The empty payload has a well-known
+        // SHA-256, so a source-hashing backend can prove it like any other file.
         using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1, bytesPerFile: 0);
+        string destination = TempDestination();
+        try
+        {
+            TransferSummary summary = await RunCopyAsync(backend, destination);
+            Assert.AreEqual(0, summary.Failed);
+            Assert.AreEqual(0, summary.Unverifiable, "a zero-byte file with a known size is verifiable");
+            Assert.AreEqual(1, summary.Copied);
+            Assert.IsTrue(summary.Completed);
+
+            string path = Path.Combine(destination, "DCIM", "IMG_0000.bin");
+            Assert.IsTrue(File.Exists(path));
+            Assert.AreEqual(0, new FileInfo(path).Length);
+
+            var manifest = System.Text.Json.JsonSerializer.Deserialize<SessionManifest>(
+                File.ReadAllText(Path.Combine(destination, ".i-total", "session.json")));
+            Assert.IsNotNull(manifest);
+            TransferEntry entry = manifest.Entries.Single();
+            Assert.IsTrue(entry.SizeKnown, "the size was reported as 0, which is a measurement");
+            Assert.AreEqual(TransferState.IntegrityVerified, entry.State);
+            Assert.AreEqual(VerificationLevel.SourceAndDestinationHash, entry.Verification);
+            Assert.AreEqual("E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+                entry.SourceSha256, "the empty payload's SHA-256 is the proof the file was read");
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
+    public async Task AnUnmeasuredSourceSizeStaysVisibleAndResumesWithoutBeingCalledACollision()
+    {
+        // The HUAWEI exposed placeholder files whose bytes could be read but whose size it would not
+        // report. A source-hashing backend still proves the copied bytes, so the item is accepted, but
+        // the unknown size must stay recorded and the resume must not reclassify the file as a
+        // collision just because 0 is not its real size.
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 20, bytesPerFile: 512, unknownSizeFiles: 1);
         string destination = TempDestination();
         try
         {
             var logger = new LogService(destination);
             var service = new TransferService(backend, logger);
             ScanResult scan = await service.ScanAsync(CancellationToken.None);
+            var progress = new Progress<TransferProgress>(_ => { });
 
-            TransferSummary first = await service.CopyAsync(scan, destination, 1,
-                new Progress<TransferProgress>(_ => { }), CancellationToken.None);
+            TransferSummary first = await service.CopyAsync(scan, destination, 1, progress, CancellationToken.None);
             Assert.AreEqual(0, first.Failed);
-            Assert.AreEqual(1, first.Unverifiable, "a file with no trustworthy source size is copied but unverified");
+            Assert.AreEqual(0, first.Unverifiable, "the source-to-destination hash proves the bytes even without a size");
+            Assert.AreEqual(20 * 512, first.BytesCopied, "the report counts the bytes actually written, not the 0 placeholder");
 
             string path = Path.Combine(destination, "DCIM", "IMG_0000.bin");
-            Assert.IsTrue(File.Exists(path));
-            Assert.AreEqual(0, new FileInfo(path).Length);
+            Assert.AreEqual(512, new FileInfo(path).Length);
 
-            TransferSummary second = await service.CopyAsync(scan, destination, 1,
-                new Progress<TransferProgress>(_ => { }), CancellationToken.None);
+            var manifest = System.Text.Json.JsonSerializer.Deserialize<SessionManifest>(
+                File.ReadAllText(Path.Combine(destination, ".i-total", "session.json")));
+            Assert.IsNotNull(manifest);
+            Assert.IsFalse(manifest.Entries.Single(e => e.RelativePath.EndsWith("IMG_0000.bin", StringComparison.Ordinal)).SizeKnown,
+                "an unreadable size must remain unknown, not become 0");
 
-            Assert.AreEqual(0, second.Failed, "preserving an unverified file is not a new failure");
-            Assert.AreEqual(1, second.Unverifiable);
-            Assert.AreEqual(0, second.Copied, "the unchanged destination is not copied a second time");
-            StringAssert.StartsWith(second.Status, "COPIED WITH UNVERIFIABLE");
-            Assert.AreEqual(0, new FileInfo(path).Length);
+            TransferSummary second = await service.CopyAsync(scan, destination, 1, progress, CancellationToken.None);
+            Assert.AreEqual(0, second.Failed, "an already verified unknown-size file is not a collision");
+            Assert.AreEqual(0, second.Copied, "the verified destination is preserved, not copied again");
+            Assert.AreEqual(0, second.Unverifiable);
+            Assert.IsTrue(second.Completed);
+            Assert.AreEqual(512, new FileInfo(path).Length);
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
+    public async Task AnUnmeasuredSizeWithoutASourceHashIsCopiedButNotCalledVerified()
+    {
+        // Shell CopyHere cannot hash raw source bytes. With no size and no source digest, nothing proves
+        // the destination equals the source, so the item must stay CopiedUnverified and the session must
+        // not claim a verified complete backup.
+        using var backend = new MockBackend(canHashSourceBytes: false, fileCount: 20, bytesPerFile: 512, unknownSizeFiles: 1);
+        string destination = TempDestination();
+        try
+        {
+            TransferSummary summary = await RunCopyAsync(backend, destination);
+            Assert.AreEqual(0, summary.Failed);
+            Assert.AreEqual(20, summary.Copied);
+            Assert.AreEqual(1, summary.Unverifiable);
+            Assert.IsFalse(summary.Completed);
+            StringAssert.StartsWith(summary.Status, "COPIED WITH UNVERIFIABLE");
+            Assert.AreEqual(512, new FileInfo(Path.Combine(destination, "DCIM", "IMG_0000.bin")).Length);
         }
         finally { Directory.Delete(destination, true); }
     }

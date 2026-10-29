@@ -173,28 +173,15 @@ public sealed class ShellIPhoneDevice : ITransferBackend
         if (duplicateCount > 0)
             warnings.Add("The device exposed duplicate destination paths: " + string.Join(", ", duplicatePaths));
 
-        int failedFolders = folders.Count(f => !f.Succeeded);
         foreach (FolderScanInfo failed in folders.Where(f => !f.Succeeded))
             warnings.Add($"Folder '{failed.RelativePath}' could not be fully enumerated: {failed.Error}");
 
-        int unknownSize = files.Count(f => f.Size <= 0);
+        int unknownSize = files.Count(f => !f.SizeKnown);
         if (unknownSize > 0)
-            warnings.Add($"{unknownSize:N0} file(s) reported no usable size. They can be copied but cannot be size-verified.");
+            warnings.Add($"{unknownSize:N0} file(s) reported no readable size. They can be copied but cannot be size-verified.");
 
-        var status = TransferRules.ClassifyEnumeration(folders.Count, failedFolders, files.Count, duplicateCount);
-        var report = new EnumerationReport(
-            Status: status,
-            FolderCount: folders.Count,
-            FailedFolderCount: failedFolders,
-            FileCount: files.Count,
-            TotalBytes: files.Sum(f => Math.Max(0, f.Size)),
-            ZeroByteCount: files.Count(f => f.Size == 0),
-            UnknownSizeCount: unknownSize,
-            DuplicatePathCount: duplicateCount,
-            LivePhotoPairCount: TransferRules.CountLivePhotoPairs(files),
-            BackendName: Name,
-            Folders: folders,
-            Warnings: warnings);
+        EnumerationReport report = ScanAccounting.BuildReport(Name, files, folders, duplicateCount, warnings);
+        var status = report.Status;
 
         string deviceName = "iPhone";
         try { deviceName = Convert.ToString(_device!.Name) ?? deviceName; } catch { }
@@ -261,8 +248,11 @@ public sealed class ShellIPhoneDevice : ITransferBackend
                             continue;
                         }
                         string folderPath = string.IsNullOrEmpty(relativeFolder) ? "DCIM" : relativeFolder;
-                        long size = GetFileSize(item);
-                        files.Add(new MediaFile(folderPath, fileName, size, Path.GetExtension(fileName).ToLowerInvariant()));
+                        long size = GetFileSize(item, out bool sizeKnown);
+                        files.Add(new MediaFile(folderPath, fileName, size, Path.GetExtension(fileName).ToLowerInvariant())
+                        {
+                            SizeKnown = sizeKnown
+                        });
                         folderFiles++;
                         folderBytes += Math.Max(0, size);
                         _scanBytes += Math.Max(0, size);
@@ -477,10 +467,20 @@ public sealed class ShellIPhoneDevice : ITransferBackend
         return Convert.ToString(item.Name) ?? "";
     }
 
-    private static long GetFileSize(dynamic item)
+    /// <summary>
+    /// Reads the Shell item's size, reporting whether a size was actually available. The Shell can
+    /// return an item whose properties are not populated yet; that is an unknown size, not 0 bytes.
+    /// </summary>
+    private static long GetFileSize(dynamic item, out bool known)
     {
-        try { object? size = item.ExtendedProperty("System.Size"); if (size is not null) return Convert.ToInt64(size); } catch { }
-        try { return Convert.ToInt64(item.Size); } catch { return 0; }
+        try
+        {
+            object? size = item.ExtendedProperty("System.Size");
+            if (size is not null) { known = true; return Convert.ToInt64(size); }
+        }
+        catch { }
+        try { long value = Convert.ToInt64(item.Size); known = true; return value; }
+        catch { known = false; return 0; }
     }
 
     private static bool CanOpenExclusively(string path)

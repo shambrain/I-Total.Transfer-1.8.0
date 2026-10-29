@@ -114,15 +114,23 @@ public static class TransferRules
     /// size) is preserved as a collision. Nothing here ever authorizes overwriting user data.
     /// </summary>
     public static ResumeDecision ClassifyExistingDestination(long sourceSize, long existingSize,
-        string? savedDestinationSha256, string? existingSha256)
+        string? savedDestinationSha256, string? existingSha256, bool sourceSizeKnown = true)
     {
-        if (sourceSize > 0 && sourceSize == existingSize)
+        // A recorded destination digest that still matches the bytes on disk proves the destination is
+        // exactly what this session committed, which is stronger evidence than any size comparison.
+        // This is also the only way an item whose source size is unknown can be resumed without
+        // calling an already verified file a collision.
+        bool sizesAgree = !sourceSizeKnown || (sourceSize >= 0 && sourceSize == existingSize);
+        if (sizesAgree && !string.IsNullOrWhiteSpace(savedDestinationSha256) && !string.IsNullOrWhiteSpace(existingSha256) &&
+            string.Equals(savedDestinationSha256, existingSha256, StringComparison.OrdinalIgnoreCase))
+            return ResumeDecision.SkipVerified;
+
+        // A known size of 0 is a measurement: a genuine zero-byte file can be compared and verified.
+        // An unknown size is not 0, so nothing may be concluded from it.
+        if (sourceSizeKnown && sourceSize >= 0 && sourceSize == existingSize)
         {
             if (string.IsNullOrWhiteSpace(savedDestinationSha256))
                 return ResumeDecision.RecordBaselineSkip;
-            if (!string.IsNullOrWhiteSpace(existingSha256) &&
-                string.Equals(savedDestinationSha256, existingSha256, StringComparison.OrdinalIgnoreCase))
-                return ResumeDecision.SkipVerified;
             return ResumeDecision.PreserveHashMismatch;
         }
         return ResumeDecision.PreserveCollision;

@@ -93,6 +93,13 @@ public sealed record DeviceInfo(DeviceStatus Status, string Name, string Message
 public sealed record MediaFile(string Folder, string Name, long Size, string Extension)
 {
     public string RelativePath => Path.Combine(Folder, Name);
+    /// <summary>
+    /// False when the backend could not read this object's size. <see cref="Size"/> is then a 0
+    /// placeholder, not a measurement: a genuine zero-byte file has a known size of 0, an unreadable
+    /// one has no size at all. The two must never be reported as the same thing, because only the
+    /// first can be verified.
+    /// </summary>
+    public bool SizeKnown { get; init; } = true;
     /// <summary>Last-write timestamp reported by the source backend, when available.</summary>
     public DateTimeOffset? ModifiedUtc { get; init; }
     /// <summary>Opaque backend identity (WPD object ID, AFC path). Not durable across reconnects.</summary>
@@ -164,6 +171,17 @@ public sealed class TransferEntry
 {
     public string RelativePath { get; set; } = "";
     public long ExpectedBytes { get; set; }
+    /// <summary>
+    /// Whether <see cref="ExpectedBytes"/> was measured by the backend. False means the source size is
+    /// unknown (stored as 0 for schema compatibility), so the copy cannot be size-verified and a
+    /// resume cannot treat a same-size destination as evidence of anything.
+    /// </summary>
+    public bool SizeKnown { get; set; } = true;
+    /// <summary>
+    /// Bytes actually committed to the destination. When the source size is unknown this is the only
+    /// honest byte figure for the item, so reports and byte totals use it instead of the 0 placeholder.
+    /// </summary>
+    public long BytesWritten { get; set; }
     public TransferState State { get; set; } = TransferState.Discovered;
     public int Attempts { get; set; }
     /// <summary>SHA-256 of the raw source byte stream, populated only when the backend can read and hash the source bytes. Null for backends that cannot expose source bytes.</summary>

@@ -15,7 +15,13 @@ public sealed class MockBackend : ITransferBackend
     private readonly IReadOnlyList<MediaFile> _files;
     private readonly Dictionary<string, byte[]> _contentByRelativePath;
 
-    public MockBackend(bool canHashSourceBytes, int fileCount, int bytesPerFile = 1024)
+    /// <param name="sizesKnown">
+    /// False emulates a backend that exposes bytes but cannot report their size (the case the HUAWEI
+    /// produced for some placeholder files). The size is then unknown, not zero, and the engine must
+    /// not treat it as a measurement.
+    /// </param>
+    public MockBackend(bool canHashSourceBytes, int fileCount, int bytesPerFile = 1024, bool sizesKnown = true,
+        int unknownSizeFiles = -1)
     {
         _canHashSourceBytes = canHashSourceBytes;
         var files = new List<MediaFile>();
@@ -23,7 +29,11 @@ public sealed class MockBackend : ITransferBackend
         for (int i = 0; i < fileCount; i++)
         {
             string name = $"IMG_{i:D4}.bin";
-            var file = new MediaFile("DCIM", name, bytesPerFile, ".bin");
+            bool known = unknownSizeFiles < 0 ? sizesKnown : i >= unknownSizeFiles;
+            var file = new MediaFile("DCIM", name, known ? bytesPerFile : 0, ".bin")
+            {
+                SizeKnown = known
+            };
             files.Add(file);
             byte[] bytes = new byte[bytesPerFile];
             for (int j = 0; j < bytes.Length; j++) bytes[j] = (byte)(i * 7 + j % 251);
@@ -79,7 +89,14 @@ public sealed class MockBackend : ITransferBackend
             if (progress is not null && (i == 0 || i % 1000 == 0))
                 progress($"Scanning DCIM · {i:N0} files · {i * 1024L / (1024 * 1024)} MB");
         }
-        return new ScanResult("Mock iPhone", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, _files, Array.Empty<string>());
+        // Build the same report a real backend builds, so the engine's completeness decision is
+        // exercised against real accounting rather than a hard-coded Complete.
+        EnumerationReport report = ScanAccounting.BuildReport(Name, _files, [], 0, []);
+        return new ScanResult("Mock iPhone", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, _files, Array.Empty<string>())
+        {
+            Report = report,
+            Family = DeviceFamily.Apple
+        };
     }
 
     public CopyResult CopyToStage(MediaFile file, string stagingDirectory, TimeSpan timeout, CancellationToken cancellationToken)
