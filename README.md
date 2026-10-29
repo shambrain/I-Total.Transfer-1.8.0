@@ -11,8 +11,9 @@ Version **1.8.0** · `net10.0-windows` · WinForms (Designer-authored) with a Fl
 
 **Source and releases:** <https://github.com/shambrain/I-Total.Transfer-1.8.0>
 
-**Screenshots:** every page at 96, 150 and 200 % DPI, all three themes, the live 150 % audit and the
-hardware drills are in [`docs/screenshots/INDEX.md`](docs/screenshots/INDEX.md).
+**Screenshots:** 125 runtime captures - every page at 96, 150 and 200 % DPI including the minimum window,
+all three themes, the live 150 % audits with their UI Automation dumps, the hardware drills and the
+published exe - are in [`docs/screenshots/INDEX.md`](docs/screenshots/INDEX.md).
 
 The window is borderless: the banner band doubles as the title bar (minimize / maximize / close painted
 on the gradient, drag to move, double-click to zoom), while DWM still supplies the shadow, Aero Snap and
