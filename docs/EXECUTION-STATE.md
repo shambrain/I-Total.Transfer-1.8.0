@@ -29,7 +29,7 @@ Updated: 2026-10-29 (session 1). Read this first on resume.
 - Gate E: **WPD COM leaks fixed** (enumerator, key collection, values, manager); static evidence only.
 - Gate F: **Designer coverage verified statically; accessible names added and tested**; Visual Studio
   round-trip not run (not installed).
-- Gate H: **candidate built and packaged** — exe `24AB3B61...`, source-ZIP rebuild identical, installer
+- Gate H: **candidate built and packaged** — exe `BAB60684...`, source-ZIP rebuild identical, installer
   install/uninstall re-verified. Physical hardware, Windows 11 and signing remain blocked.
 
 ## Evidence — commands actually run
@@ -44,16 +44,16 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
   after D4/D8:        Passed! Failed: 0, Passed: 481, Skipped: 2, Total: 483, Duration: 29 s
   after D5:           Passed! Failed: 0, Passed: 482, Skipped: 2, Total: 484, Duration: 31 s
   after D6:           Passed! Failed: 0, Passed: 485, Skipped: 2, Total: 487, Duration: 31 s
-  final:              Passed! Failed: 0, Passed: 509, Skipped: 2, Total: 511, Duration: 33 s
+  final:              Passed! Failed: 0, Passed: 510, Skipped: 2, Total: 512, Duration: 33 s
 ```
 
 Artifacts at baseline (unchanged by this session so far):
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `publish/I-Total.Transfer.exe` (candidate) | `F73A3872E10343F0A4207B19F8FF9DDEBD45F227EDDC49FE1C40A7F98A1E2250` (112,203,590 B) |
-| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `E0A7FA97E8E192F55DD3D184FE4FAEFCB4FB70BF5F6CC9AFDFDA5C5CE97E7F9E` |
-| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `1F9D7D0F7DD15E47B8411FBE84994E56147BCF1317275686E3992B9B8EB35C74` |
+| `publish/I-Total.Transfer.exe` (candidate) | `BAB606840BE38C11CAC8F7C2D6F63BE1389B73ACAF3BCFAFF56BBDCCDD9B6C1A` (112,207,686 B) |
+| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `548DADD481A7095AF2BFFC86443D6A2D48AA962F7685C4259A4C3A724DC05EAB` |
+| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `3FC0B856014411781CFCAAC8B127AA44E336C12C0DF7FE7A84A4E41F52C89260` |
 | `dist/I-Total.Transfer-1.8.0-win-x64.zip` and source ZIP | see `dist/SHA256SUMS.txt` after the final rebuild |
 
 The baseline artifacts (`8FCB2B50...` exe, `0E41DEC3...` deployment, `21742374...` portable,
@@ -66,7 +66,7 @@ been run against a phone.
 
 - Commits on `work/master-directive`: `0c13df2` (Gate A + size truth), `2917be1` (SQLite, reconciliation,
   retries, stability), and the final commit that carries Gate E/F/H and the rebuilt archives.
-- State: build 0/0, 509 passed, 2 skipped, 511 total, candidate exe `24AB3B61...`.
+- State: build 0/0, 510 passed, 2 skipped, 512 total, candidate exe `BAB60684...`.
 
 ## Blockers and their evidence
 
@@ -81,7 +81,7 @@ been run against a phone.
 ## Single next concrete action
 
 Attach the phones and run `docs/DEVICE_TEST_MATRIX.md` IP02/IP03/AN02/AN05/AN11 plus the 4 GB+ and
-mid-copy-pull drills against the candidate `24AB3B61...`, recording exact results. Until hardware is
+mid-copy-pull drills against the candidate `BAB60684...`, recording exact results. Until hardware is
 available, the next code work is whatever a new audit finds; no unblocked requirement from the master
 directive is knowingly left unimplemented in this session.
 

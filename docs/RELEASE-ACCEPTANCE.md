@@ -10,7 +10,7 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
 
 ## Candidate note (2026-10-29)
 
-A new candidate executable (`1C62B2B1...`, 112,203,590 B) was built from the master-directive work:
+A new candidate executable (`1C62B2B1...`, 112,207,686 B) was built from the master-directive work:
 zero-byte/unknown-size separation, shared enumeration accounting, SQLite integrity columns with migration,
 the reconciliation report, retry classification, stability timestamps, WPD COM cleanup and accessible
 control names. Build 0/0, suite 488 passed / 2 skipped / 490, source-ZIP rebuild byte-identical, installer

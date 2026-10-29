@@ -870,6 +870,12 @@ public sealed partial class MainForm : Form
 
         if (!_settings.ReuseLastKnownLibrary) return;
 
+        if (!ScanCachePolicy.ShouldReplace(scan.Scope))
+        {
+            Log("The cached listing was kept because this scan's inventory scope changed; it remains the baseline for the next comparison.", "WARN");
+            return;
+        }
+
         if (_scanCache.Save(CurrentScanCacheKey(info), scan, VersionText(), out string? note))
         {
             Log($"Cached this complete listing ({scan.Files.Count:N0} files) so the next cold scan is not a blank window.", "INFO");

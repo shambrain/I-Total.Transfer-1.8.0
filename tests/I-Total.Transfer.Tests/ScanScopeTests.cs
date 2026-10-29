@@ -120,6 +120,17 @@ public sealed class ScanScopeTests
     }
 
     [TestMethod]
+    public void AChangedScopeDoesNotReplaceTheCachedBaseline()
+    {
+        var changed = new InventoryScope(InventoryScopeStatus.Changed, 57731, 26336, [], [], "changed");
+        var stable = new InventoryScope(InventoryScopeStatus.Stable, 100, 100, [], [], "stable");
+
+        Assert.IsFalse(ScanCachePolicy.ShouldReplace(changed), "a partial mount must not erase the larger baseline");
+        Assert.IsTrue(ScanCachePolicy.ShouldReplace(stable));
+        Assert.IsTrue(ScanCachePolicy.ShouldReplace(null), "a first scan has no baseline to protect");
+    }
+
+    [TestMethod]
     public void FolderNamesAreComparedCaseInsensitivelyLikeWindows()
     {
         var before = Many("DCIM\\A", 200);

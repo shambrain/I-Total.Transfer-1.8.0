@@ -230,12 +230,12 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
   mapping; new rows always record the outcome.
 - **To close:** nothing to fix; a future schema version may backfill the column.
 
-### KI-26 - One unreproduced failure of a licensing test
+### KI-26 - Rare unreproduced failure of a licensing test
 
-- **Observation:** during the final verification on 2026-10-29, one full run reported
-  `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas` failed (490 passed, 1 failed, 2 skipped).
-  The test passed in isolation immediately afterwards, and four consecutive full runs then passed
-  (491 passed, 2 skipped, 493 total each).
+- **Observation:** the test has failed twice in full-suite runs: 2026-10-29 (490 passed, 1 failed) and
+  2026-10-30 (509 passed, 1 failed). Both times it passed immediately in isolation; on 2026-10-30 it then
+  passed **20 isolated runs** and **six consecutive full runs** (510 passed, 2 skipped, 512 total each).
+  The assertion message was not captured by the filtered output either time.
 - **Impact:** the licensing rule itself is deterministic (RSA-PSS verification over a tampered signature)
   and the test uses an in-memory trial store, so no persisted state is involved. The failure could not be
   reproduced and its assertion message was not captured by the filtered output.

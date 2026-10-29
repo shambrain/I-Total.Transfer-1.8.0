@@ -121,3 +121,14 @@ public static class ScanScope
         return map;
     }
 }
+/// <summary>
+/// Whether a fresh scan may replace the cached "last complete listing". A scan whose inventory scope
+/// changed materially is still a real enumeration, but using it as the next comparison baseline would
+/// erase the larger listing and silence the warning on the following scan. The baseline is kept until a
+/// scan of stable (or larger) scope replaces it.
+/// </summary>
+public static class ScanCachePolicy
+{
+    public static bool ShouldReplace(InventoryScope? scope) =>
+        scope is null || scope.Status != InventoryScopeStatus.Changed;
+}

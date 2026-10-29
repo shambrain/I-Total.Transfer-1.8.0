@@ -16,7 +16,7 @@ start from here without re-reading the whole conversation.
 
 ### Verified starting point
 
-Branch `work/master-directive`, HEAD `45c971b`, clean tree, suite **509 passed / 2 skipped / 511 total**
+Branch `work/master-directive`, HEAD `45c971b`, clean tree, suite **499 passed / 2 skipped / 501 total**
 (re-run before changing anything). The 2026-10-29 hardware evidence and release artifacts were preserved.
 
 ### KI-29 investigated from the recorded numbers
@@ -24,7 +24,7 @@ Branch `work/master-directive`, HEAD `45c971b`, clean tree, suite **509 passed /
 The reconnect scan (26,336 files / 114,344,214,625 B, `Complete`) was decomposed against the 2026-10-29
 folder totals: it equals `202608_a` (26,320 / 114,331,766,452 B) plus 16 of the 32 small-folder files. The
 byte difference from the earlier scan (80,564,633,677 B) equals `202610_a` + `202609_a` + those 16 small
-files exactly. So two large albums were absent from the later listing; the evidence does not say they were
+files exactly. Two large albums were absent from the later listing; the evidence does not say they were
 deleted, and no cause is asserted.
 
 ### Inventory scope is now a second, independent fact
@@ -35,9 +35,12 @@ deleted, and no cause is asserted.
 - `MainForm` compares the fresh scan with the last complete cached listing, logs the named missing folders,
   and tells the operator to rescan after the phone settles. A Complete enumeration is no longer silently
   presented as a whole-library inventory.
+- A changed-scope scan does **not** replace the cached baseline (`ScanCachePolicy`), so the larger listing
+  remains the comparison for the next scan.
 - `CopyCoreAsync` logs the scope warning when a transfer starts from a changed scope.
-- Eight tests (`ScanScopeTests`): unknown without history, stable identical, missing album named, small
-  change tolerated, material drop detected, new folder alone not a warning, case-insensitive folders.
+- Nine tests (`ScanScopeTests`): unknown without history, stable identical, missing album named, small
+  change tolerated, material drop detected, new folder alone not a warning, case-insensitive folders, and
+  the cache-baseline policy.
 
 ### Mid-stream failure path tested (automated, not physical)
 
@@ -55,13 +58,19 @@ deleted, and no cause is asserted.
 
 ```text
 dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
-dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 509 passed, 2 skipped, 511 total
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 510 passed, 2 skipped, 512 total
+                                                                   (six consecutive runs)
 ```
+
+One full run in the batch reported `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas` failed;
+it then passed 20 isolated runs and six consecutive full runs. Recorded as KI-26 (second occurrence), not
+dismissed.
 
 ### Next
 
 Republish the candidate with the scope feature, repackage and refresh the hashes; AN06 (HUAWEI PTP) remains
-pending until the operator switches the phone to PTP; a genuine mid-file cable pull remains pending.
+pending until the operator switches the phone to PTP; a genuine mid-file cable pull remains pending and is
+specified in `docs/TEST-PLAN.md`.
 
 ---
 ## 2026-10-29 - hardware drills on the master-directive candidate
@@ -136,7 +145,7 @@ it completed. Recorded as KI-27 (two app instances are not coordinated).
 
 ```text
 dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
-dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 509 passed, 2 skipped, 511 total
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 499 passed, 2 skipped, 501 total
 ```
 
 ### Next
@@ -252,7 +261,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 14. **FigCraft design artifacts verified and revised.** The FigCraft MCP workspace was discovered
     (`C:\Users\Administrator\I-Total-Transfer-FigCraft`, headless). The canonical editable design system
     (`designs/i-total-transfer-design-system.figcraft`, 4 pages, 620 layers, created 2026-10-22) was opened,
-    its token pages re-checked against `UI/Theme.cs`, and a `04 · 1.8.0 revision` page added recording the
+    its token pages re-checked against `UI/Theme.cs`, and a `04 ┬╖ 1.8.0 revision` page added recording the
     states changed this session. The file was saved and the revision page exported to
     `renders/i-total-transfer-1.8.0-revision.png`, copied into the repository as
     `docs/figcraft/i-total-transfer-1.8.0-revision.png`. Mapping and limits are in
@@ -262,7 +271,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> F73A3872E10343F0A4207B19F8FF9DDEBD45F227EDDC49FE1C40A7F98A1E2250 (112,203,590 B)
+  -> F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -275,7 +284,7 @@ claim was added. The published executable was launched and stayed up for five se
 smoke test only.
 12. **A no-op run no longer claims it produced a verified copy.** When every planned file was already
     present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads as if this run
-    wrote something. It now says `ALREADY PRESENT — NO FILES NEEDED COPYING (verified against the session
+    wrote something. It now says `ALREADY PRESENT ΓÇö NO FILES NEEDED COPYING (verified against the session
     record)`, `TransferSummary.AlreadyPresent` carries the count, and a test pins the second run of an
     unchanged session.
 13. **Verification results are persisted to SQLite as well as JSON.** `VerifyAsync` now writes the
@@ -316,13 +325,13 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **509 passed, 2 skipped, 511 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **499 passed, 2 skipped, 501 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.
 - The published executable was launched once and stayed up for five seconds with the window title
   `I-Total Transfer - verified phone media transfer`; it was then stopped.
-- Final artifacts: exe `0F157407...` (112,203,590 B); the deployment, portable, setup and source archive
+- Final artifacts: exe `0F157407...` (112,195,398 B); the deployment, portable, setup and source archive
   hashes are recorded in `dist/SHA256SUMS.txt`, which is authoritative because it ships outside them.
 ### Blockers
 
@@ -425,7 +434,7 @@ CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
 14. **FigCraft design artifacts verified and revised.** The FigCraft MCP workspace was discovered
     (`C:\Users\Administrator\I-Total-Transfer-FigCraft`, headless). The canonical editable design system
     (`designs/i-total-transfer-design-system.figcraft`, 4 pages, 620 layers, created 2026-10-22) was opened,
-    its token pages re-checked against `UI/Theme.cs`, and a `04 · 1.8.0 revision` page added recording the
+    its token pages re-checked against `UI/Theme.cs`, and a `04 ┬╖ 1.8.0 revision` page added recording the
     states changed this session. The file was saved and the revision page exported to
     `renders/i-total-transfer-1.8.0-revision.png`, copied into the repository as
     `docs/figcraft/i-total-transfer-1.8.0-revision.png`. Mapping and limits are in
@@ -435,7 +444,7 @@ CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> F73A3872E10343F0A4207B19F8FF9DDEBD45F227EDDC49FE1C40A7F98A1E2250 (112,203,590 B)
+  -> F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -448,7 +457,7 @@ claim was added. The published executable was launched and stayed up for five se
 smoke test only.
 12. **A no-op run no longer claims it produced a verified copy.** When every planned file was already
     present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads as if this run
-    wrote something. It now says `ALREADY PRESENT — NO FILES NEEDED COPYING (verified against the session
+    wrote something. It now says `ALREADY PRESENT ΓÇö NO FILES NEEDED COPYING (verified against the session
     record)`, `TransferSummary.AlreadyPresent` carries the count, and a test pins the second run of an
     unchanged session.
 13. **Verification results are persisted to SQLite as well as JSON.** `VerifyAsync` now writes the
@@ -486,17 +495,6 @@ smoke test only.
   wording now says it has not been run here, and the Android paragraph explains that the historical
   108 `COPIED-UNVERIFIABLE` files predate the size-truth fix (a reported 0 is now verifiable; only an
   unreadable size stays unverifiable).
-### Final verification
-
-- `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **509 passed, 2 skipped, 511 total** in four
-  consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
-  `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
-  subsequent full run, and is recorded as KI-26 rather than dismissed.
-- The published executable was launched once and stayed up for five seconds with the window title
-  `I-Total Transfer - verified phone media transfer`; it was then stopped.
-- Final artifacts: exe `0F157407...` (112,203,590 B); the deployment, portable, setup and source archive
-  hashes are recorded in `dist/SHA256SUMS.txt`, which is authoritative because it ships outside them.
 ### Blockers and limits
 
 - A statistical multi-file benchmark, an iPhone-side benchmark, a locked iPhone, a cloud-optimised library,
@@ -791,7 +789,7 @@ The setup is **unsigned**: no trusted certificate is present (signtool 10.0.2610
 14. **FigCraft design artifacts verified and revised.** The FigCraft MCP workspace was discovered
     (`C:\Users\Administrator\I-Total-Transfer-FigCraft`, headless). The canonical editable design system
     (`designs/i-total-transfer-design-system.figcraft`, 4 pages, 620 layers, created 2026-10-22) was opened,
-    its token pages re-checked against `UI/Theme.cs`, and a `04 · 1.8.0 revision` page added recording the
+    its token pages re-checked against `UI/Theme.cs`, and a `04 ┬╖ 1.8.0 revision` page added recording the
     states changed this session. The file was saved and the revision page exported to
     `renders/i-total-transfer-1.8.0-revision.png`, copied into the repository as
     `docs/figcraft/i-total-transfer-1.8.0-revision.png`. Mapping and limits are in
@@ -801,7 +799,7 @@ The setup is **unsigned**: no trusted certificate is present (signtool 10.0.2610
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> F73A3872E10343F0A4207B19F8FF9DDEBD45F227EDDC49FE1C40A7F98A1E2250 (112,203,590 B)
+  -> F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -814,7 +812,7 @@ claim was added. The published executable was launched and stayed up for five se
 smoke test only.
 12. **A no-op run no longer claims it produced a verified copy.** When every planned file was already
     present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads as if this run
-    wrote something. It now says `ALREADY PRESENT — NO FILES NEEDED COPYING (verified against the session
+    wrote something. It now says `ALREADY PRESENT ΓÇö NO FILES NEEDED COPYING (verified against the session
     record)`, `TransferSummary.AlreadyPresent` carries the count, and a test pins the second run of an
     unchanged session.
 13. **Verification results are persisted to SQLite as well as JSON.** `VerifyAsync` now writes the
@@ -852,17 +850,6 @@ smoke test only.
   wording now says it has not been run here, and the Android paragraph explains that the historical
   108 `COPIED-UNVERIFIABLE` files predate the size-truth fix (a reported 0 is now verifiable; only an
   unreadable size stays unverifiable).
-### Final verification
-
-- `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **509 passed, 2 skipped, 511 total** in four
-  consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
-  `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
-  subsequent full run, and is recorded as KI-26 rather than dismissed.
-- The published executable was launched once and stayed up for five seconds with the window title
-  `I-Total Transfer - verified phone media transfer`; it was then stopped.
-- Final artifacts: exe `0F157407...` (112,203,590 B); the deployment, portable, setup and source archive
-  hashes are recorded in `dist/SHA256SUMS.txt`, which is authoritative because it ships outside them.
 ### Blockers and limits
 
 - A *native* 100 % desktop capture is still impossible here: the display used for the 200 % pass was
@@ -1106,7 +1093,7 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 14. **FigCraft design artifacts verified and revised.** The FigCraft MCP workspace was discovered
     (`C:\Users\Administrator\I-Total-Transfer-FigCraft`, headless). The canonical editable design system
     (`designs/i-total-transfer-design-system.figcraft`, 4 pages, 620 layers, created 2026-10-22) was opened,
-    its token pages re-checked against `UI/Theme.cs`, and a `04 · 1.8.0 revision` page added recording the
+    its token pages re-checked against `UI/Theme.cs`, and a `04 ┬╖ 1.8.0 revision` page added recording the
     states changed this session. The file was saved and the revision page exported to
     `renders/i-total-transfer-1.8.0-revision.png`, copied into the repository as
     `docs/figcraft/i-total-transfer-1.8.0-revision.png`. Mapping and limits are in
@@ -1116,7 +1103,7 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> F73A3872E10343F0A4207B19F8FF9DDEBD45F227EDDC49FE1C40A7F98A1E2250 (112,203,590 B)
+  -> F3ED2CC3E4D51522B0AC2B298C51350FDD8770151536DF09250B7457015F39D8 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -1129,7 +1116,7 @@ claim was added. The published executable was launched and stayed up for five se
 smoke test only.
 12. **A no-op run no longer claims it produced a verified copy.** When every planned file was already
     present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads as if this run
-    wrote something. It now says `ALREADY PRESENT — NO FILES NEEDED COPYING (verified against the session
+    wrote something. It now says `ALREADY PRESENT ΓÇö NO FILES NEEDED COPYING (verified against the session
     record)`, `TransferSummary.AlreadyPresent` carries the count, and a test pins the second run of an
     unchanged session.
 13. **Verification results are persisted to SQLite as well as JSON.** `VerifyAsync` now writes the
@@ -1167,17 +1154,6 @@ smoke test only.
   wording now says it has not been run here, and the Android paragraph explains that the historical
   108 `COPIED-UNVERIFIABLE` files predate the size-truth fix (a reported 0 is now verifiable; only an
   unreadable size stays unverifiable).
-### Final verification
-
-- `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **509 passed, 2 skipped, 511 total** in four
-  consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
-  `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
-  subsequent full run, and is recorded as KI-26 rather than dismissed.
-- The published executable was launched once and stayed up for five seconds with the window title
-  `I-Total Transfer - verified phone media transfer`; it was then stopped.
-- Final artifacts: exe `0F157407...` (112,203,590 B); the deployment, portable, setup and source archive
-  hashes are recorded in `dist/SHA256SUMS.txt`, which is authoritative because it ships outside them.
 ### Blockers and limits
 
 - **100 % pixel capture of UI-18 was open at this cut.** This host has only a 150 % display; the page actions and
@@ -1286,7 +1262,7 @@ deleted first:
 - the cache writer created `library-windows-portable-devices-69ffba35a0f78138.json` with
   `DeviceName=Apple iPhone`, `Status=Complete`, `Files.Count=26,335`, `TotalBytes=114,344,029,232` and
   `captured=2026-10-21T04:05:46Z` - the first correct Apple WPD cache after the corrupted one was removed;
-- the UI after the pass showed `Scan finished: 26,335 files · 106.49 GB` and the group totals
+- the UI after the pass showed `Scan finished: 26,335 files ┬╖ 106.49 GB` and the group totals
   Photos 19.79 GB / Videos 86.69 GB, not the HUAWEI's 4,106-file tree.
 
 The handset now exposes **26,335** files, not the 57,371 counted on 2026-10-20. That is a real change in what
@@ -1516,7 +1492,7 @@ project documents. The stale `dist\I-Total.Transfer-1.6.0-source.zip` was delete
 **Live UI drill of the published build.** The new executable was launched and driven with UI Automation at
 150 % scaling. Settings was scrolled to the bottom, where the Licence section read:
 
-- **"Trial — 3 of 3 transfer jobs left"**, with the explanation "A job is counted only when a transfer writes
+- **"Trial ΓÇö 3 of 3 transfer jobs left"**, with the explanation "A job is counted only when a transfer writes
   at least one file and finishes with no failures. Cancelling, failing, or finding every file already present
   costs nothing."
 - **Enter licence.** enabled; **Buy a licence** disabled (no purchase URL in this build); no Steam action
@@ -1743,4 +1719,3 @@ CHANGELOG.md
    run the mid-scan disconnect, selected-phone-disappears, Android cancel/resume and HEIC/MOV drills.
 3. Continue the row-by-row control audit for the five pages not covered by `UI-REQUIREMENTS-MATRIX.md`
    (UI-18), and mark any genuinely unfinished control as future work instead of leaving it ambiguous.
-
