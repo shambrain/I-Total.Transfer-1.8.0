@@ -370,3 +370,20 @@ enumerator, the per-object key collection and the per-object values object are n
 instead of accumulating until finalization. That should reduce provider-side handle pressure on a large
 walk, but **it was not measured** — no phone was attached and no benchmark was run for this candidate.
 No speed claim is made here.
+
+## 2026-10-29 hardware buffer sweep (single run each)
+
+Native WPD, HUAWEI Y7 Prime 2018, one 184,296,485-byte MP4 from `Internal storage\Camera`, one copy per
+buffer size, each verified `SourceAndDestinationHash`. Scan time is excluded from the figures (the drill
+reports the copy run's own elapsed time).
+
+| Buffer | Copy time | Throughput | Result |
+| --- | --- | --- | --- |
+| 64 KiB | 5.29 s | 33.22 MB/s | hash-verified |
+| 256 KiB | 5.17 s | 34.00 MB/s | hash-verified |
+| 1 MiB | 5.19 s | 33.86 MB/s | hash-verified |
+| 4 MiB | 5.19 s | 33.86 MB/s | hash-verified |
+
+This is four single runs on one file, not a benchmark: the spread is under 2.5 % and does not justify a
+speed claim or a buffer-policy change. It is consistent with the 2026-10-24 sweep (33.56-37.83 MB/s) and
+does not replace it. Evidence: `docs/evidence/2026-10-29/sweep-*.json`.

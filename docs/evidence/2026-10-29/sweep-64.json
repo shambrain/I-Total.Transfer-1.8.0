@@ -1,0 +1,72 @@
+{
+  "Action": "copy",
+  "Device": {
+    "Status": 5,
+    "Family": 2,
+    "Name": "HUAWEI Y7 Prime 2018",
+    "StableId": "\\\\?\\usb#vid_12d1\u0026pid_1082\u0026mi_00#8\u0026219e05d9\u00262\u00260000#{6ac27878-a6fa-4155-ba85-f98f491d4f33}"
+  },
+  "Backend": "Windows Portable Devices (native)",
+  "Destination": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\opencode\\drill-2026-10-29\\sweep-64",
+  "ConflictPolicy": "PreserveAndReport",
+  "BufferSizeKb": 64,
+  "Scan": {
+    "Status": 0,
+    "Files": 4131,
+    "KnownBytes": 18653277179
+  },
+  "Runs": [
+    {
+      "Run": 1,
+      "ElapsedSeconds": 5.29,
+      "Completed": true,
+      "Status": "HASH-VERIFIED COMPLETE (source-to-destination)",
+      "Total": 1,
+      "Copied": 1,
+      "AlreadyPresent": 0,
+      "Skipped": 0,
+      "Failed": 0,
+      "Inaccessible": 0,
+      "Unverifiable": 0,
+      "BytesCopied": 184296485,
+      "WeakestLevel": "SourceAndDestinationHash",
+      "Reconciliation": {
+        "DiscoveredFiles": 1,
+        "DiscoveredKnownBytes": 184296485,
+        "UnknownSizeFiles": 0,
+        "EligibleFiles": 1,
+        "EligibleBytes": 184296485,
+        "ExcludedFiles": 0,
+        "ConflictSkippedFiles": 0,
+        "AlreadyPresentFiles": 0,
+        "AlreadyPresentBytes": 0,
+        "CopiedFiles": 1,
+        "CopiedBytes": 184296485,
+        "SourceHashVerifiedFiles": 1,
+        "DestinationHashVerifiedFiles": 0,
+        "SizeVerifiedFiles": 0,
+        "UnverifiableFiles": 0,
+        "InaccessibleFiles": 0,
+        "FailedFiles": 0,
+        "FailedBytes": 0,
+        "OutstandingFiles": 0,
+        "DuplicatePathCount": 0,
+        "FailedFolderCount": 0
+      }
+    }
+  ],
+  "Cancelled": false,
+  "Verification": {
+    "Completed": true,
+    "Total": 1,
+    "Matching": 1,
+    "Missing": 0,
+    "WrongSize": 0,
+    "WrongHash": 0,
+    "Unverifiable": 0,
+    "SourceHashVerified": 1,
+    "DestinationHashVerified": 1,
+    "Repaired": 0,
+    "Issues": []
+  }
+}

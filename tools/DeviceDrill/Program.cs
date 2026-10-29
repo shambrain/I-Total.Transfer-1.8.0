@@ -173,11 +173,13 @@ public static class Program
 
         var log = new LogService(Path.Combine(destination, "logs"));
         var filter = BuildFilter(options);
+        int bufferKb = int.TryParse(options.GetValueOrDefault("buffer-kb", "256"), out int parsedBuffer) ? parsedBuffer : 256;
         TransferOptions transfer = TransferOptions.FromSettings(AppSettings.Defaults()) with
         {
             ConflictPolicy = ParsePolicy(options.GetValueOrDefault("policy", "preserve")),
             SkipUnchanged = true,
-            MaxRetries = 2
+            MaxRetries = 2,
+            BufferSizeKb = Math.Clamp(bufferKb, 64, 4096)
         };
         var service = new TransferService(device, log, transfer, filter);
 
@@ -207,12 +209,15 @@ public static class Program
                     if (copied % 10 == 0) Console.Error.WriteLine($"COPY {p.Copied}/{p.Total} {p.CurrentFile}");
                 }
             });
+            var runClock = Stopwatch.StartNew();
             try
             {
                 TransferSummary summary = await service.CopyAsync(planned, destination, progress, cts.Token);
+                runClock.Stop();
                 runs.Add(new
                 {
                     Run = run,
+                    ElapsedSeconds = Math.Round(runClock.Elapsed.TotalSeconds, 2),
                     summary.Completed,
                     summary.Status,
                     summary.Total,
@@ -275,6 +280,7 @@ public static class Program
             Backend = device.Name,
             Destination = destination,
             ConflictPolicy = transfer.ConflictPolicy.ToString(),
+            BufferSizeKb = transfer.BufferSizeKb,
             Scan = new { scan.Status, Files = scan.Files.Count, KnownBytes = ScanAccounting.Of(scan.Files).KnownBytes },
             Runs = runs,
             Cancelled = cancelled,

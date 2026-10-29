@@ -15,6 +15,9 @@ edited by hand; the drill serialises the engine's own records.
 | `rename-run3.json` | Android rename policy, third run | `ALREADY PRESENT - NO FILES NEEDED COPYING`, no second copy |
 | `cancel-android2.json` | Android cancel after 2 s | run cancelled; the manifest in the destination records `CANCELLED` |
 | `resume-android2.json` | Android resume | 184,296,485 bytes, `HASH-VERIFIED COMPLETE`, verification 1/1 |
+| `cancel-iphone.json` | iPhone cancel after 3 s | run cancelled; the destination manifest records `CANCELLED` |
+| `resume-iphone.json` | iPhone resume | 261,575,329 bytes, `HASH-VERIFIED COMPLETE`, verification 1/1 |
+| `sweep-64/256/1024/4096.json` | Android buffer sweep | one 184,296,485-byte MP4 per buffer, each hash-verified; single runs, not a benchmark |
 
 The reports describe one run each. They are not benchmarks and do not claim statistical performance.
 The companion narrative, including the two defects these drills found, is in
