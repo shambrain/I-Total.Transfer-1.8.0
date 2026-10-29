@@ -23,10 +23,11 @@ Updated: 2026-10-29 (session 1). Read this first on resume.
 - Gate A: **complete for the audit portion** — `docs/AUDIT-1.8.0.md`, this file,
   `docs/IMPLEMENTATION-GAP-MATRIX.md`, `docs/DEVICE-COMPATIBILITY-MATRIX.md`,
   `docs/TRANSFER-ENGINE-DESIGN.md` written from inspection and executed commands.
-- Gate B: **in progress** — D1/D2/D3 fixed and tested (zero-byte vs unknown size, shared enumeration
-  accounting, unknown-size resume). Remaining: stability timestamps (D6).
-- Gate C/D: **next** — SQLite hash/verification columns (D4), reconciliation report (D8), retry
-  classification (D5).
+- Gate B: **complete for the defects found** — D1/D2/D3/D6 fixed and tested (size truth, shared
+  enumeration accounting, unknown-size resume, stability timestamps).
+- Gate C/D: **complete for the defects found** — D4 (SQLite hashes + migration), D5 (retry
+  classification), D8 (reconciliation report) fixed and tested.
+- Next: Gate E/F audits, then Gate H release refresh (rebuild, republish, repackage, update claims).
 
 ## Evidence — commands actually run
 
@@ -37,6 +38,9 @@ dotnet build I-Total.Transfer.sln -c Release --no-incremental
 dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s
   baseline (17c0b1a): Passed! Failed: 0, Passed: 460, Skipped: 2, Total: 462, Duration: 32 s
   after D1-D3:        Passed! Failed: 0, Passed: 472, Skipped: 2, Total: 474, Duration: 30 s
+  after D4/D8:        Passed! Failed: 0, Passed: 481, Skipped: 2, Total: 483, Duration: 29 s
+  after D5:           Passed! Failed: 0, Passed: 482, Skipped: 2, Total: 484, Duration: 31 s
+  after D6:           Passed! Failed: 0, Passed: 485, Skipped: 2, Total: 487, Duration: 31 s
 ```
 
 Artifacts at baseline (unchanged by this session so far):
@@ -70,22 +74,17 @@ therefore still lacks D1–D3 and must not be described as containing them.
 
 ## Single next concrete action
 
-Implement D4: add `SourceSha256`, `StagedPayloadSha256`, `DestinationSha256`, `Verification`, `SizeKnown` and
-`BytesWritten` to `SessionDatabase.Files` with an idempotent `ALTER TABLE` migration, write them in
-`UpsertFiles`, and add a migration + round-trip test. Then D8 (reconciliation report), D5 (retry
-classification), D6 (stability timestamps), updating the ledger and running the full suite after each.
+Gate E: audit `WpdDevice` COM ownership (ResetSession, WpdStream.Dispose, ListDevices), the two iPhone
+layouts and the Android volume walk for a concrete defect, fix it with a test where the logic is testable,
+then run the suite. Then Gate F (Designer verification) and Gate H (release refresh).
 
 ## Ordered remaining actions
 
-1. D4 SQLite columns + migration tests.
-2. D8 reconciliation JSON/CSV + test.
-3. D5 retry classification + test.
-4. D6 stability timestamps + unknown-size honesty + test.
-5. Gate E audit of WPD/COM/backends; fix concrete defects found.
-6. Gate F Designer verification (static + documentation; Visual Studio unavailable).
-7. Gate H: rebuild, full suite, publish candidate, update `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`,
+1. Gate E audit + fixes.
+2. Gate F Designer verification and documentation.
+3. Gate H: rebuild, full suite, publish candidate, update `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`,
    `PERFORMANCE-AUDIT.md`, `RELEASE-ACCEPTANCE.md`, refresh archives and hashes.
-8. Update `docs/PROGRESS.md`, this file and the ledger before any stop.
+4. Update `docs/PROGRESS.md`, this file and the ledger before any stop.
 
 ## Uncommitted changes to preserve
 

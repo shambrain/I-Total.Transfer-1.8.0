@@ -8,6 +8,12 @@ namespace ITotalTransfer.Services;
 /// keeps a single WAL connection for the session and writes file updates inside transactions, so a
 /// 26,000-file library does not perform 26,000 connection handshakes. JSON remains the portable,
 /// human-readable session snapshot.
+///
+/// <para>
+/// The schema is migrated in place: a database written by an earlier 1.8.0 build is opened, missing
+/// columns are added with their defaults, and existing rows are preserved. Nothing is dropped and no
+/// table is recreated, so a queue that is mid-recovery survives an application upgrade.
+/// </para>
 /// </summary>
 public sealed class SessionDatabase : IDisposable
 {
@@ -71,18 +77,71 @@ public sealed class SessionDatabase : IDisposable
             CREATE INDEX IF NOT EXISTS IX_Files_State ON Files(Destination, State);
             """;
         command.ExecuteNonQuery();
+        Migrate();
         _log.Write("SQLite schema verified (Sessions/Files/Events, WAL, indexed state).");
     }
 
-    public void BeginSession(string sessionId, string deviceName, string destination, string status)
+    /// <summary>
+    /// Adds the columns introduced after the first 1.8.0 schema. Adding a column keeps every existing
+    /// row and is idempotent, which matters because an interrupted upgrade may run this twice.
+    /// </summary>
+    private void Migrate()
+    {
+        AddColumnIfMissing("Files", "SizeKnown", "INTEGER NOT NULL DEFAULT 1");
+        AddColumnIfMissing("Files", "BytesWritten", "INTEGER NOT NULL DEFAULT 0");
+        AddColumnIfMissing("Files", "SourceSha256", "TEXT NULL");
+        AddColumnIfMissing("Files", "StagedPayloadSha256", "TEXT NULL");
+        AddColumnIfMissing("Files", "DestinationSha256", "TEXT NULL");
+        AddColumnIfMissing("Files", "Verification", "TEXT NOT NULL DEFAULT 'None'");
+        AddColumnIfMissing("Files", "SourceModifiedUtc", "TEXT NULL");
+        AddColumnIfMissing("Files", "SourceChanged", "INTEGER NOT NULL DEFAULT 0");
+        AddColumnIfMissing("Files", "Outcome", "TEXT NOT NULL DEFAULT 'None'");
+        AddColumnIfMissing("Sessions", "BackendName", "TEXT NULL");
+        AddColumnIfMissing("Sessions", "DeviceFamily", "TEXT NULL");
+        AddColumnIfMissing("Sessions", "EnumerationStatus", "TEXT NULL");
+    }
+
+    private void AddColumnIfMissing(string table, string column, string definition)
+    {
+        if (HasColumn(table, column)) return;
+        using var alter = Connection.CreateCommand();
+        // Table and column names are constants in this file, never user input; the definition is fixed.
+        alter.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {definition};";
+        alter.ExecuteNonQuery();
+        _log.Write($"SQLite schema migrated: added {table}.{column}.", "INFO");
+    }
+
+    private bool HasColumn(string table, string column)
     {
         using var command = Connection.CreateCommand();
-        command.CommandText = "INSERT INTO Sessions(SessionId,DeviceName,Destination,StartedUtc,UpdatedUtc,Status) VALUES($id,$device,$dest,$now,$now,$status) ON CONFLICT(SessionId) DO UPDATE SET UpdatedUtc=$now, Status=$status;";
+        command.CommandText = $"PRAGMA table_info({table});";
+        using SqliteDataReader reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase)) return true;
+        }
+        return false;
+    }
+
+    public void BeginSession(string sessionId, string deviceName, string destination, string status,
+        string? backendName = null, string? deviceFamily = null, string? enumerationStatus = null)
+    {
+        using var command = Connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO Sessions(SessionId,DeviceName,Destination,StartedUtc,UpdatedUtc,Status,BackendName,DeviceFamily,EnumerationStatus)
+            VALUES($id,$device,$dest,$now,$now,$status,$backend,$family,$enumeration)
+            ON CONFLICT(SessionId) DO UPDATE SET
+                UpdatedUtc=$now, Status=$status, BackendName=$backend, DeviceFamily=$family,
+                EnumerationStatus=$enumeration;
+            """;
         command.Parameters.AddWithValue("$id", sessionId);
         command.Parameters.AddWithValue("$device", deviceName);
         command.Parameters.AddWithValue("$dest", destination);
         command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$status", status);
+        command.Parameters.AddWithValue("$backend", (object?)backendName ?? DBNull.Value);
+        command.Parameters.AddWithValue("$family", (object?)deviceFamily ?? DBNull.Value);
+        command.Parameters.AddWithValue("$enumeration", (object?)enumerationStatus ?? DBNull.Value);
         command.ExecuteNonQuery();
     }
 
@@ -95,11 +154,19 @@ public sealed class SessionDatabase : IDisposable
         using var command = Connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = """
-            INSERT INTO Files(Destination,RelativePath,ExpectedBytes,State,Attempts,Error,UpdatedUtc)
-            VALUES($dest,$path,$size,$state,$attempts,$error,$updated)
+            INSERT INTO Files(Destination,RelativePath,ExpectedBytes,State,Attempts,Error,UpdatedUtc,
+                               SizeKnown,BytesWritten,SourceSha256,StagedPayloadSha256,DestinationSha256,
+                               Verification,SourceModifiedUtc,SourceChanged,Outcome)
+            VALUES($dest,$path,$size,$state,$attempts,$error,$updated,
+                   $sizeKnown,$written,$source,$staged,$destinationHash,
+                   $verification,$modified,$changed,$outcome)
             ON CONFLICT(Destination,RelativePath) DO UPDATE SET
                 ExpectedBytes=excluded.ExpectedBytes, State=excluded.State, Attempts=excluded.Attempts,
-                Error=excluded.Error, UpdatedUtc=excluded.UpdatedUtc;
+                Error=excluded.Error, UpdatedUtc=excluded.UpdatedUtc, SizeKnown=excluded.SizeKnown,
+                BytesWritten=excluded.BytesWritten, SourceSha256=excluded.SourceSha256,
+                StagedPayloadSha256=excluded.StagedPayloadSha256, DestinationSha256=excluded.DestinationSha256,
+                Verification=excluded.Verification, SourceModifiedUtc=excluded.SourceModifiedUtc,
+                SourceChanged=excluded.SourceChanged, Outcome=excluded.Outcome;
             """;
         SqliteParameter dest = command.Parameters.Add("$dest", SqliteType.Text);
         SqliteParameter path = command.Parameters.Add("$path", SqliteType.Text);
@@ -108,6 +175,15 @@ public sealed class SessionDatabase : IDisposable
         SqliteParameter attempts = command.Parameters.Add("$attempts", SqliteType.Integer);
         SqliteParameter error = command.Parameters.Add("$error", SqliteType.Text);
         SqliteParameter updated = command.Parameters.Add("$updated", SqliteType.Text);
+        SqliteParameter sizeKnown = command.Parameters.Add("$sizeKnown", SqliteType.Integer);
+        SqliteParameter written = command.Parameters.Add("$written", SqliteType.Integer);
+        SqliteParameter source = command.Parameters.Add("$source", SqliteType.Text);
+        SqliteParameter staged = command.Parameters.Add("$staged", SqliteType.Text);
+        SqliteParameter destinationHash = command.Parameters.Add("$destinationHash", SqliteType.Text);
+        SqliteParameter verification = command.Parameters.Add("$verification", SqliteType.Text);
+        SqliteParameter modified = command.Parameters.Add("$modified", SqliteType.Text);
+        SqliteParameter changed = command.Parameters.Add("$changed", SqliteType.Integer);
+        SqliteParameter outcome = command.Parameters.Add("$outcome", SqliteType.Text);
 
         foreach (TransferEntry entry in entries)
         {
@@ -118,6 +194,15 @@ public sealed class SessionDatabase : IDisposable
             attempts.Value = entry.Attempts;
             error.Value = (object?)entry.Error ?? DBNull.Value;
             updated.Value = entry.UpdatedUtc.ToString("O");
+            sizeKnown.Value = entry.SizeKnown ? 1 : 0;
+            written.Value = Math.Max(0, entry.BytesWritten);
+            source.Value = (object?)entry.SourceSha256 ?? DBNull.Value;
+            staged.Value = (object?)entry.StagedPayloadSha256 ?? DBNull.Value;
+            destinationHash.Value = (object?)entry.DestinationSha256 ?? DBNull.Value;
+            verification.Value = entry.Verification.ToString();
+            modified.Value = entry.SourceModifiedUtc is { } stamp ? stamp.ToString("O") : (object)DBNull.Value;
+            changed.Value = entry.SourceChanged ? 1 : 0;
+            outcome.Value = entry.Outcome.ToString();
             command.ExecuteNonQuery();
         }
         transaction.Commit();
@@ -176,6 +261,42 @@ public sealed class SessionDatabase : IDisposable
         return rows;
     }
 
+    /// <summary>
+    /// The persisted state of every planned file, including the hashes and the verification grade.
+    /// Used by tests and by any recovery/report path that must not depend on the JSON manifest alone.
+    /// </summary>
+    public IReadOnlyList<PersistedFileState> QueryFileStates(string destination)
+    {
+        var rows = new List<PersistedFileState>();
+        using var command = Connection.CreateCommand();
+        command.CommandText = """
+            SELECT RelativePath,ExpectedBytes,SizeKnown,BytesWritten,State,Attempts,Error,
+                   SourceSha256,StagedPayloadSha256,DestinationSha256,Verification,SourceModifiedUtc,SourceChanged,Outcome
+            FROM Files WHERE Destination=$dest ORDER BY RelativePath;
+            """;
+        command.Parameters.AddWithValue("$dest", destination);
+        using SqliteDataReader reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            rows.Add(new PersistedFileState(
+                reader.GetString(0),
+                reader.GetInt64(1),
+                reader.GetInt64(2) != 0,
+                reader.GetInt64(3),
+                reader.GetString(4),
+                reader.GetInt32(5),
+                reader.IsDBNull(6) ? null : reader.GetString(6),
+                reader.IsDBNull(7) ? null : reader.GetString(7),
+                reader.IsDBNull(8) ? null : reader.GetString(8),
+                reader.IsDBNull(9) ? null : reader.GetString(9),
+                reader.GetString(10),
+                reader.IsDBNull(11) ? null : reader.GetString(11),
+                reader.GetInt64(12) != 0,
+                reader.GetString(13)));
+        }
+        return rows;
+    }
+
     public void Dispose()
     {
         try { _connection?.Close(); _connection?.Dispose(); } catch { }
@@ -185,3 +306,8 @@ public sealed class SessionDatabase : IDisposable
 
 public sealed record SessionHistoryRow(string SessionId, string DeviceName, string Destination, string StartedUtc, string UpdatedUtc, string Status);
 public sealed record FileHistoryRow(string RelativePath, long ExpectedBytes, string State, int Attempts, string? Error);
+
+/// <summary>One persisted file row, hashes and verification included.</summary>
+public sealed record PersistedFileState(string RelativePath, long ExpectedBytes, bool SizeKnown, long BytesWritten,
+    string State, int Attempts, string? Error, string? SourceSha256, string? StagedPayloadSha256,
+    string? DestinationSha256, string Verification, string? SourceModifiedUtc, bool SourceChanged, string Outcome);

@@ -277,7 +277,7 @@ public sealed class AfcDevice : ITransferBackend
 
     public CopyResult CopyToStage(MediaFile file, string stagingDirectory, TimeSpan timeout, CancellationToken token)
     {
-        if (!RuntimeAvailable) return new CopyResult(false, null, AvailabilityMessage);
+        if (!RuntimeAvailable) return new CopyResult(false, null, AvailabilityMessage) { FailureKind = CopyFailureKind.Permanent };
         try
         {
             Directory.CreateDirectory(stagingDirectory);
@@ -312,7 +312,7 @@ public sealed class AfcDevice : ITransferBackend
                     }
                     output.Flush(true);
                 }
-                if (file.Size > 0 && written != file.Size)
+                if (file.SizeKnown && written != file.Size)
                 {
                     TryDelete(stagePath);
                     return new CopyResult(false, null, $"AFC size mismatch: expected {file.Size}, read {written}.") { BytesWritten = written };
@@ -329,12 +329,12 @@ public sealed class AfcDevice : ITransferBackend
             }
         }
         catch (OperationCanceledException) { throw; }
-        catch (Exception ex) { Reset(); return new CopyResult(false, null, "AFC copy failed: " + ex.Message); }
+        catch (Exception ex) { Reset(); return new CopyResult(false, null, "AFC copy failed: " + ex.Message) { FailureKind = CopyFailures.Classify(ex) }; }
     }
 
     public CopyResult CopyToDevice(string localSourcePath, MediaFile deviceDestination, TimeSpan timeout, CancellationToken cancellationToken)
     {
-        if (!RuntimeAvailable) return new CopyResult(false, null, AvailabilityMessage);
+        if (!RuntimeAvailable) return new CopyResult(false, null, AvailabilityMessage) { FailureKind = CopyFailureKind.Permanent };
         string? remoteTemp = null;
         IntPtr handle = IntPtr.Zero;
         try
@@ -429,7 +429,7 @@ public sealed class AfcDevice : ITransferBackend
             CloseWriteHandle(ref handle);
             if (remoteTemp is not null) TryDeleteRemote(remoteTemp);
             Reset();
-            return new CopyResult(false, null, "AFC write failed: " + ex.Message);
+            return new CopyResult(false, null, "AFC write failed: " + ex.Message) { FailureKind = CopyFailures.Classify(ex) };
         }
         finally { CloseWriteHandle(ref handle); }
     }

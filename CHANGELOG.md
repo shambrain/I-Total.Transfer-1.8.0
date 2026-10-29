@@ -1,5 +1,17 @@
 ## 1.8.0 — 2026-10-20 — borderless chrome, honest device detection, unfinished-session recovery, Android storage
 
+- **The queue now persists what was verified, and the report reconciles every object (2026-10-29).**
+  `SessionDatabase` gained `SizeKnown`, `BytesWritten`, `SourceSha256`, `StagedPayloadSha256`,
+  `DestinationSha256`, `Verification`, `SourceModifiedUtc`, `SourceChanged` and `Outcome` through an
+  idempotent `ALTER TABLE` migration, so a recovery or report path no longer depends on the JSON manifest
+  for the integrity record; a database written by the previous schema keeps its rows and gains the columns.
+  `ReconciliationReport` counts every scanned object once by outcome and is written to the session JSON and
+  `I-total-reconciliation.csv`. `CopyFailures` stops the retry loop on permanent failures (denied, missing,
+  unsupported, device gone) while transient failures are still retried, and `ScanStability` now compares
+  modification times and size readability as well as size. Tests: `SessionDatabaseTests` (4),
+  `ReconciliationReportTests` (5), the retry test and three stability tests; suite 485 passed, 2 skipped,
+  487 total.
+
 - **Zero-byte files are no longer confused with unreadable sizes (2026-10-29).** `MediaFile.Size` could not
   distinguish a measured 0 from "the device did not report a size", so every genuine zero-byte file was
   counted as both zero-byte and unknown and was copied as `CopiedUnverified`. `MediaFile.SizeKnown` and

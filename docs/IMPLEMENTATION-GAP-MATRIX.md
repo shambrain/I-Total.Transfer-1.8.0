@@ -37,7 +37,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | B8 | Stable session identity; a different phone is refused | `ManifestStore.SourceIdentityProblem`, `DeviceSelectionGuard`, `ScanResult.BelongsTo` | AT `DeviceSelectionTests`, recovery tests | AUTOMATED TEST VERIFIED | physical disappearance drill (IP09/BT08) |
 | B9 | Unplug mid-scan produces Incomplete and no cache | `ScanCacheStore`, WPD folder outcomes | AT simulated; LIVE iPhone (2026-10-24) | PHYSICAL DEVICE VERIFIED (historical) | re-run after publish |
 | B10 | iCloud/cloud-only scope warning, no false coverage claim | `WpdDevice` probe messages, README | STATIC; LIVE message observed | IMPLEMENTED — NOT VERIFIED | needs an Optimize-Storage device |
-| B11 | Scan stability detects changes between two passes | `ScanStability.ChangedPaths` | AT stability tests (path/size only) | IN PROGRESS | add timestamp comparison (D6) |
+| B11 | Scan stability detects changes between two passes | `ScanStability.ChangedPaths` (path, size, size-known, timestamps) | AT `ScanStabilityTests` (10) | AUTOMATED TEST VERIFIED | — |
 | B12 | Enumeration duration and items/second recorded | `ScanProgressReporter`, scan log line | STATIC; LIVE 55,185 files / 23.3 min | PHYSICAL DEVICE VERIFIED (historical) | — |
 
 ## Gate C — planner, persistence and recovery
@@ -45,11 +45,11 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | ID | Requirement | Where | Evidence | Status | Next action |
 | --- | --- | --- | --- | --- | --- |
 | C1 | Persistent queue with explicit states | `SessionManifest`, `TransferEntry.State`, `SessionDatabase` | AT `RecoveryFlowTests`, `SessionRecoveryTests` | AUTOMATED TEST VERIFIED | — |
-| C2 | SQLite persists hashes, verification grade, byte counts | `SessionDatabase.Initialize/UpsertFiles` | STATIC — columns absent | NOT STARTED | add columns + migration + round-trip tests (D4) |
+| C2 | SQLite persists hashes, verification grade, byte counts | `SessionDatabase` (columns + idempotent migration), `QueryFileStates` | AT `SessionDatabaseTests` (4) | AUTOMATED TEST VERIFIED | — |
 | C3 | Free-space preflight with reserve | `CopyCoreAsync` (`AvailableFreeSpace`) | AT insufficient-space test | AUTOMATED TEST VERIFIED | — |
 | C4 | Collision policy never overwrites unrelated content by default | `TransferRules.ClassifyExistingDestination`, `HandleExistingAsync` | AT conflict tests | AUTOMATED TEST VERIFIED | — |
 | C5 | Overwrite is reversible until the new bytes verify | `RestoreReplacedTarget`, `.i-total/backup` | AT `AFailedOverwriteRestoresTheOriginalDestination` | AUTOMATED TEST VERIFIED | — |
-| C6 | Bounded retries with backoff; permanent errors not retried | `CopyCoreAsync` attempt loop | STATIC — retries everything | NOT STARTED | error classification (D5) |
+| C6 | Bounded retries with backoff; permanent errors not retried | `CopyFailures`, `CopyResult.FailureKind`, `CopyCoreAsync` attempt loop | AT `APermanentFailureIsNotRetriedButATransientOneIs` | AUTOMATED TEST VERIFIED | — |
 | C7 | Crash/kill recovery reconciles DB with files | `SessionRecovery`, `ManifestStore.LoadOrCreate` | AT recovery suite | AUTOMATED TEST VERIFIED | SQLite hashes (C2) |
 | C8 | Resume only when source identity and destination state reconcile | `SourceIdentityProblem`, `HandleExistingAsync` | AT | AUTOMATED TEST VERIFIED | — |
 | C9 | Unknown-size resume does not become a collision | `ClassifyExistingDestination`, digest-first rule | AT `EnumerationAccountingTests` | AUTOMATED TEST VERIFIED | — |
@@ -65,7 +65,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | D4 | Verification separates wrong size from wrong hash; corruption marks Failed | `VerifyCoreAsync` | AT verification suite | AUTOMATED TEST VERIFIED | — |
 | D5 | Repair verifies repaired bytes and discards a corrupt repair | `VerifyCoreAsync` repair branch | AT `RepairingWithCorruptBytesIsReportedAndDiscarded` | AUTOMATED TEST VERIFIED | — |
 | D6 | Checked arithmetic for byte totals | `ScanAccounting.Of` (`checked`), `Enumerable.Sum` | STATIC + AT | AUTOMATED TEST VERIFIED | extend to report totals (D8) |
-| D7 | JSON/CSV report with reconciliation counts and bytes | `ExportReports` | STATIC — no reconciliation section | NOT STARTED | implement (D8) |
+| D7 | JSON/CSV report with reconciliation counts and bytes | `ReconciliationReport`, `ExportReports` (JSON + `I-total-reconciliation.csv`) | AT `ReconciliationReportTests` (5) | AUTOMATED TEST VERIFIED | — |
 | D8 | Unknown size stays unknown in reports and totals | `TransferEntry.SizeKnown/BytesWritten`, `ScanAccounting` | AT engine tests | AUTOMATED TEST VERIFIED | include in reconciliation report |
 | D9 | Unicode, long paths, reserved names | `TransferRules.ValidateRelativePath/SanitizeSegment` | AT reserved-name and traversal tests | AUTOMATED TEST VERIFIED | long-path (>260) drill not run |
 | D10 | Zero-byte files verify | engine + `EnumerationAccountingTests` | AT | AUTOMATED TEST VERIFIED | live confirmation |
@@ -121,7 +121,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 
 | ID | Defect | Status | Next action |
 | --- | --- | --- | --- |
-| D4 | SQLite lacks hash/verification columns | NOT STARTED | schema migration + tests |
-| D5 | Permanent errors retried | NOT STARTED | error classification + tests |
-| D6 | Stability pass ignores timestamps | NOT STARTED | compare `ModifiedUtc`, treat unknown sizes honestly |
-| D8 | Report lacks reconciliation totals | NOT STARTED | JSON/CSV reconciliation + tests |
+| D4 | SQLite lacked hash/verification columns | AUTOMATED TEST VERIFIED | closed by `SessionDatabase` migration + `SessionDatabaseTests` |
+| D5 | Permanent errors retried | AUTOMATED TEST VERIFIED | closed by `CopyFailures` + retry test |
+| D6 | Stability pass ignored timestamps | AUTOMATED TEST VERIFIED | closed by `ScanStability` stamp comparison |
+| D8 | Report lacked reconciliation totals | AUTOMATED TEST VERIFIED | closed by `ReconciliationReport` + JSON/CSV tests |

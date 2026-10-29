@@ -401,7 +401,7 @@ public sealed class ShellIPhoneDevice : ITransferBackend
             throw new TimeoutException($"Timed out waiting for Shell copy of '{file.RelativePath}'.");
         }
         catch (OperationCanceledException) { throw; }
-        catch (Exception ex) { return new CopyResult(false, null, ex.Message); }
+        catch (Exception ex) { return new CopyResult(false, null, ex.Message) { FailureKind = CopyFailures.Classify(ex) }; }
         finally { Release(destination); Release(source); }
     }
 

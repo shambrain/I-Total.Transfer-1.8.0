@@ -24,6 +24,34 @@ public sealed class TransferEngineTests
     }
 
     [TestMethod]
+    public async Task APermanentFailureIsNotRetriedButATransientOneIs()
+    {
+        // A denied or missing object fails identically on every attempt. Retrying it triples the delay
+        // and makes the log read like an unstable phone. A transient refusal is retried.
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 2);
+        backend.PermanentFailurePaths.Add("DCIM\\IMG_0000.bin");
+        backend.FailPaths.Add("DCIM\\IMG_0001.bin");
+        string destination = TempDestination();
+        try
+        {
+            TransferSummary summary = await RunCopyAsync(backend, destination, retries: 2);
+
+            Assert.AreEqual(2, summary.Failed);
+            Assert.AreEqual(1, backend.FetchedPaths.Count(path => path == "DCIM\\IMG_0000.bin"),
+                "a permanent failure must be attempted once");
+            Assert.AreEqual(2, backend.FetchedPaths.Count(path => path == "DCIM\\IMG_0001.bin"),
+                "a transient failure is retried");
+
+            var manifest = System.Text.Json.JsonSerializer.Deserialize<SessionManifest>(
+                File.ReadAllText(Path.Combine(destination, ".i-total", "session.json")));
+            Assert.IsNotNull(manifest);
+            Assert.AreEqual(1, manifest.Entries.Single(e => e.RelativePath.EndsWith("IMG_0000.bin", StringComparison.Ordinal)).Attempts);
+            Assert.AreEqual(2, manifest.Entries.Single(e => e.RelativePath.EndsWith("IMG_0001.bin", StringComparison.Ordinal)).Attempts);
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
     public void PlanSummaryUsesTheActiveFilterAndNeverTheWholeScan()
     {
         using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1);

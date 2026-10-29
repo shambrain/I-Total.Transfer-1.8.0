@@ -118,6 +118,7 @@ public sealed class TransferService
                 if (entries.TryGetValue(TransferRules.ValidateRelativePath(file.Folder, file.Name), out TransferEntry? ex))
                 {
                     ex.State = TransferState.Skipped;
+                    ex.Outcome = OutcomeReason.FilterExcluded;
                     ex.Error = "Excluded by filter.";
                 }
             }
@@ -333,6 +334,13 @@ public sealed class TransferService
                     }
                     if (File.Exists(stagePath)) { try { File.Delete(stagePath); } catch { } }
                     _log.Write($"Attempt {attempt}/{attempts} failed for {relative}: {lastError}", "WARN");
+                    // A denial, a missing object or an unsupported resource will fail identically on the
+                    // next attempt; retrying only delays the report and inflates the log.
+                    if (!stageResult.Success && stageResult.FailureKind == CopyFailureKind.Permanent)
+                    {
+                        _log.Write($"Not retrying {relative}: the failure is permanent for this run ({lastError}).", "WARN");
+                        break;
+                    }
                     if (attempt < attempts) await Task.Delay(TimeSpan.FromSeconds(Math.Min(2 * attempt, 10)), token);
                 }
 
@@ -348,7 +356,7 @@ public sealed class TransferService
                         entry.Verification == VerificationLevel.SourceAndDestinationHash;
                     if (file.SizeKnown || verifiedWithoutSize)
                     {
-                        entry.State = TransferState.IntegrityVerified; entry.Error = null;
+                        entry.State = TransferState.IntegrityVerified; entry.Outcome = OutcomeReason.Copied; entry.Error = null;
                         string note = entry.Verification == VerificationLevel.SourceAndDestinationHash
                             ? "Source and destination SHA-256 match (raw source bytes were read and hashed)."
                             : "Staged payload and destination SHA-256 match, but the backend cannot hash raw source bytes, so byte identity with the original is not asserted.";
@@ -357,14 +365,14 @@ public sealed class TransferService
                     }
                     else
                     {
-                        unverifiable++; entry.State = TransferState.CopiedUnverified;
+                        unverifiable++; entry.State = TransferState.CopiedUnverified; entry.Outcome = OutcomeReason.Copied;
                         entry.Error = "The source reported no readable size and no source-byte hash was available; the copy completed but cannot be called verified.";
                         _log.Write($"COPIED-UNVERIFIABLE {relative}: source size unavailable and no source-byte digest; cannot claim verified completion.", "WARN");
                     }
                 }
                 else
                 {
-                    failed++; entry.State = TransferState.Failed; entry.Error = lastError;
+                    failed++; entry.State = TransferState.Failed; entry.Outcome = OutcomeReason.Failed; entry.Error = lastError;
                     _log.Write($"FAILED {relative}: {lastError}", "ERROR");
                 }
                 entry.UpdatedUtc = DateTimeOffset.UtcNow;
@@ -450,12 +458,13 @@ public sealed class TransferService
         string summaryLevel = complete ? "OK" : failed == 0 && inaccessible == 0 ? "WARN" : "ERROR";
         _log.Write($"SUMMARY {status}; processed={processed}/{total}; copied={copied}; skipped={skipped}; failed={failed}; inaccessible={inaccessible}; unverifiable={unverifiable}; elapsed={timer.Elapsed:hh\\:mm\\:ss}", summaryLevel);
         TryDatabase(() => database?.EndSession(sessionId, status), "session summary");
-        ExportReports(destination, scan, manifest, status, weakest);
+        ReconciliationReport reconciliation = ExportReports(destination, scan, manifest, status, weakest);
         return new TransferSummary(total, copied, skipped, failed, inaccessible, unverifiable, required, timer.Elapsed,
             complete, status, _store.Path)
         {
             BytesCopied = bytesCopied,
             WeakestLevel = weakest,
+            Reconciliation = reconciliation,
             ReportPath = Path.Combine(destination, "I-total-session-report.json"),
             // One id per run. It is what makes the trial ledger idempotent: a resumed session and a fresh
             // session are different runs, but reporting the same finished run twice is recognised.
@@ -503,7 +512,7 @@ public sealed class TransferService
         switch (_options.ConflictPolicy)
         {
             case ConflictPolicy.Skip:
-                entry.State = TransferState.Skipped; entry.Error = "Destination exists; skipped by policy.";
+                entry.State = TransferState.Skipped; entry.Outcome = OutcomeReason.ConflictSkipped; entry.Error = "Destination exists; skipped by policy.";
                 entry.UpdatedUtc = DateTimeOffset.UtcNow;
                 _store!.MarkDirty(); TryDatabase(() => database?.UpsertFile(destination, entry), relative);
                 progress.Report(BuildProgress("Copy", processed, total, bytesDone, required, bytesCopied, fileRates, timer, relative, "Destination exists; skipped by conflict policy."));
@@ -526,6 +535,7 @@ public sealed class TransferService
                     if (d == ResumeDecision.SkipVerified)
                     {
                         entry.State = TransferState.IntegrityVerified;
+                        entry.Outcome = OutcomeReason.AlreadyPresent;
                         entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, null, entry.DestinationSha256, file.SizeKnown);
                         entry.UpdatedUtc = DateTimeOffset.UtcNow;
                         _store!.MarkDirty(); TryDatabase(() => database?.UpsertFile(destination, entry), relative);
@@ -540,6 +550,7 @@ public sealed class TransferService
                 if (sourceChanged)
                 {
                     entry.State = TransferState.Failed;
+                    entry.Outcome = OutcomeReason.Failed;
                     entry.Verification = VerificationLevel.None;
                     entry.Error = "The source file changed since it was copied (size or modification time). " +
                         "The existing destination was preserved; choose Overwrite or Rename to replace it.";
@@ -566,6 +577,7 @@ public sealed class TransferService
                     string.Equals(existingHash, entry.DestinationSha256, StringComparison.OrdinalIgnoreCase))
                 {
                     entry.State = TransferState.CopiedUnverified;
+                    entry.Outcome = OutcomeReason.AlreadyPresent;
                     entry.Verification = VerificationLevel.None;
                     entry.Error = "Already copied but unverified: the source size is unavailable. The existing destination matches the recorded SHA-256 and was preserved.";
                     entry.UpdatedUtc = DateTimeOffset.UtcNow;
@@ -580,6 +592,7 @@ public sealed class TransferService
                 {
                     case ResumeDecision.SkipVerified:
                         entry.State = TransferState.IntegrityVerified;
+                        entry.Outcome = OutcomeReason.AlreadyPresent;
                         entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, null, entry.DestinationSha256, file.SizeKnown);
                         entry.Error = null; entry.UpdatedUtc = DateTimeOffset.UtcNow;
                         _store!.MarkDirty(); TryDatabase(() => database?.UpsertFile(destination, entry), relative);
@@ -589,6 +602,7 @@ public sealed class TransferService
                     case ResumeDecision.RecordBaselineSkip:
                         entry.DestinationSha256 = existingHash;
                         entry.State = TransferState.SizeVerified;
+                        entry.Outcome = OutcomeReason.AlreadyPresent;
                         entry.Verification = VerificationLevel.SizeOnly;
                         entry.Error = "Legacy file baseline SHA-256 recorded from destination; source identity remains unverified.";
                         entry.UpdatedUtc = DateTimeOffset.UtcNow;
@@ -597,7 +611,7 @@ public sealed class TransferService
                         return new ResumeOutcome(true, ResumeKind.Skipped, target);
 
                     case ResumeDecision.PreserveHashMismatch:
-                        entry.State = TransferState.Failed; entry.Verification = VerificationLevel.None;
+                        entry.State = TransferState.Failed; entry.Outcome = OutcomeReason.Failed; entry.Verification = VerificationLevel.None;
                         entry.Error = "Existing destination file's SHA-256 differs from the saved manifest. File preserved; manual review required.";
                         entry.UpdatedUtc = DateTimeOffset.UtcNow;
                         _store!.MarkDirty(force: true); TryDatabase(() => database?.UpsertFile(destination, entry), relative);
@@ -605,7 +619,7 @@ public sealed class TransferService
                         return new ResumeOutcome(true, ResumeKind.Failed, target);
 
                     default: // PreserveCollision
-                        entry.State = TransferState.Failed; entry.Verification = VerificationLevel.None;
+                        entry.State = TransferState.Failed; entry.Outcome = OutcomeReason.Failed; entry.Verification = VerificationLevel.None;
                         entry.Error = !file.SizeKnown
                             ? $"Source size is unavailable; existing destination file ({existingSize} bytes) was preserved because it cannot be safely classified."
                             : $"Destination collision: existing file size {existingSize} differs from source-reported size {file.Size}. Existing file was preserved.";
@@ -955,7 +969,8 @@ public sealed class TransferService
         {
             var database = new SessionDatabase(Path.Combine(destination, ".i-total", "session.db"), _log);
             database.Initialize();
-            database.BeginSession(sessionId, scan.DeviceName, destination, "RUNNING");
+            database.BeginSession(sessionId, scan.DeviceName, destination, "RUNNING",
+                _device.Name, scan.Family.ToString(), scan.Status.ToString());
             // One transaction for the whole plan. Opening the session used to commit a transaction per
             // planned entry, so a 26,335-file camera roll queued 26,335 commits before the first byte
             // moved - all of it ahead of any user-visible progress.
@@ -1020,8 +1035,11 @@ public sealed class TransferService
         return c.StartsWith(full, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static void ExportReports(string destination, ScanResult scan, SessionManifest manifest, string status, VerificationLevel weakest)
+    private static ReconciliationReport ExportReports(string destination, ScanResult scan, SessionManifest manifest, string status, VerificationLevel weakest)
     {
+        // The report describes what happened, per object. The reconciliation is computed from the
+        // persisted entries, not from the run's counters, so a resumed session reconciles the whole plan.
+        ReconciliationReport reconciliation = ReconciliationReport.Build(scan, manifest.Entries);
         var report = new
         {
             Product = "I-Total Transfer by Deveg",
@@ -1035,15 +1053,23 @@ public sealed class TransferService
             DiscoveredBytes = scan.TotalBytes,
             Status = status,
             WeakestVerification = weakest.ToString(),
+            Reconciliation = reconciliation,
             manifest.Entries
         };
         LogService.ExportJson(Path.Combine(destination, "I-total-session-report.json"), report);
-        var csv = new StringBuilder("RelativePath,ExpectedBytes,State,Attempts,Verification,SourceSha256,DestinationSha256,Error\r\n");
+        var csv = new StringBuilder("RelativePath,ExpectedBytes,SizeKnown,BytesWritten,State,Outcome,Attempts,Verification,SourceSha256,DestinationSha256,Error\r\n");
         foreach (TransferEntry e in manifest.Entries)
-            csv.Append(Csv(e.RelativePath)).Append(',').Append(e.ExpectedBytes).Append(',').Append(e.State).Append(',')
-               .Append(e.Attempts).Append(',').Append(e.Verification).Append(',').Append(Csv(e.SourceSha256 ?? "")).Append(',')
+            csv.Append(Csv(e.RelativePath)).Append(',').Append(e.ExpectedBytes).Append(',').Append(e.SizeKnown ? 1 : 0).Append(',')
+               .Append(e.BytesWritten).Append(',').Append(e.State).Append(',').Append(e.Outcome).Append(',').Append(e.Attempts).Append(',')
+               .Append(e.Verification).Append(',').Append(Csv(e.SourceSha256 ?? "")).Append(',')
                .Append(Csv(e.DestinationSha256 ?? "")).Append(',').Append(Csv(e.Error ?? "")).Append("\r\n");
         File.WriteAllText(Path.Combine(destination, "I-total-session-report.csv"), csv.ToString(), new UTF8Encoding(true));
+
+        var summary = new StringBuilder("Metric,Value\r\n");
+        foreach ((string metric, string value) in reconciliation.Rows())
+            summary.Append(metric).Append(',').Append(value).Append("\r\n");
+        File.WriteAllText(Path.Combine(destination, "I-total-reconciliation.csv"), summary.ToString(), new UTF8Encoding(true));
+        return reconciliation;
     }
 
     private static string Csv(string value) => "\"" + value.Replace("\"", "\"\"") + "\"";

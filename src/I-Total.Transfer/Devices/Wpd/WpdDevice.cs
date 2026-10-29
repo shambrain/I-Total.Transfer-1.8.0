@@ -454,7 +454,7 @@ public sealed class WpdDevice : ITransferBackend
                 TryDelete(stagePath);
             }
 
-            if (file.Size > 0 && written != file.Size)
+            if (file.SizeKnown && written != file.Size)
             {
                 TryDelete(stagePath);
                 return new CopyResult(false, null, $"WPD stream size mismatch: expected {file.Size} bytes, read {written}.") { BytesWritten = written };
@@ -467,7 +467,10 @@ public sealed class WpdDevice : ITransferBackend
         catch (Exception ex)
         {
             ResetSessionOnFailure(ex);
-            return new CopyResult(false, null, "WPD copy failed: " + ex.Message);
+            return new CopyResult(false, null, "WPD copy failed: " + ex.Message)
+            {
+                FailureKind = CopyFailures.Classify(ex)
+            };
         }
     });
 

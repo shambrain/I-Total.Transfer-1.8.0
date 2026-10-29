@@ -47,6 +47,11 @@ public sealed record CopyResult(bool Success, string? SourceSha256, string Error
 {
     public long BytesWritten { get; init; }
     public bool SourceHashComputed => !string.IsNullOrWhiteSpace(SourceSha256);
+    /// <summary>
+    /// Whether a retry can plausibly succeed. Only consulted for a failed result; a permanent failure
+    /// (denied, missing, unsupported) is not retried.
+    /// </summary>
+    public CopyFailureKind FailureKind { get; init; } = CopyFailureKind.None;
 }
 
 /// <summary>

@@ -54,6 +54,12 @@ public sealed class MockBackend : ITransferBackend
     public HashSet<string> FailPaths { get; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
+    /// Relative paths that fail with a permanent error (denied or missing). The engine must not spend
+    /// its retry budget on these.
+    /// </summary>
+    public HashSet<string> PermanentFailurePaths { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
     /// Relative paths whose fetch throws instead of reporting a failure, emulating a backend fault (a
     /// dropped device, a COM failure) as opposed to a file that simply could not be read.
     /// </summary>
@@ -106,6 +112,8 @@ public sealed class MockBackend : ITransferBackend
         OnCopy?.Invoke(file);
         if (ThrowPaths.Contains(file.RelativePath))
             throw new IOException("mock backend fault while fetching " + file.RelativePath);
+        if (PermanentFailurePaths.Contains(file.RelativePath))
+            return new CopyResult(false, null, "mock access denied") { FailureKind = CopyFailureKind.Permanent };
         if (FailPaths.Contains(file.RelativePath))
             return new CopyResult(false, null, "mock staging refusal");
         if (!_contentByRelativePath.TryGetValue(file.RelativePath, out byte[]? bytes))

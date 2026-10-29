@@ -29,13 +29,13 @@ public static class ScanStability
         ArgumentNullException.ThrowIfNull(second);
         if (take <= 0) return [];
 
-        Dictionary<string, long> before = Index(first);
-        Dictionary<string, long> after = Index(second);
+        Dictionary<string, Stamp> before = Index(first);
+        Dictionary<string, Stamp> after = Index(second);
         var changed = new List<string>();
 
-        foreach (KeyValuePair<string, long> entry in after)
+        foreach (KeyValuePair<string, Stamp> entry in after)
         {
-            if (!before.TryGetValue(entry.Key, out long previous) || previous != entry.Value)
+            if (!before.TryGetValue(entry.Key, out Stamp previous) || Differs(previous, entry.Value))
             {
                 changed.Add(entry.Key);
                 if (changed.Count >= take) return changed;
@@ -62,10 +62,28 @@ public static class ScanStability
     /// path keeps the last entry rather than throwing, matching how the manifest treats one (the scan has
     /// already been classified incomplete and warned about it).
     /// </summary>
-    private static Dictionary<string, long> Index(ScanResult scan)
+    private static Dictionary<string, Stamp> Index(ScanResult scan)
     {
-        var map = new Dictionary<string, long>(scan.Files.Count, StringComparer.OrdinalIgnoreCase);
-        foreach (MediaFile file in scan.Files) map[file.RelativePath] = file.Size;
+        var map = new Dictionary<string, Stamp>(scan.Files.Count, StringComparer.OrdinalIgnoreCase);
+        foreach (MediaFile file in scan.Files)
+            map[file.RelativePath] = new Stamp(file.Size, file.SizeKnown, file.ModifiedUtc);
         return map;
     }
+
+    /// <summary>
+    /// A path changed when its measured size changed, when a size became readable or unreadable, or when
+    /// both passes reported a modification time and those times differ. Two unknown sizes are not
+    /// evidence of equality, but neither are they evidence of a change, so they are not reported.
+    /// A timestamp present on one side only is also not treated as a change: providers report it
+    /// intermittently and inventing instability would block a healthy listing.
+    /// </summary>
+    private static bool Differs(Stamp first, Stamp second)
+    {
+        if (first.SizeKnown != second.SizeKnown) return true;
+        if (first.SizeKnown && first.Size != second.Size) return true;
+        if (first.ModifiedUtc is { } a && second.ModifiedUtc is { } b && a != b) return true;
+        return false;
+    }
+
+    private readonly record struct Stamp(long Size, bool SizeKnown, DateTimeOffset? ModifiedUtc);
 }

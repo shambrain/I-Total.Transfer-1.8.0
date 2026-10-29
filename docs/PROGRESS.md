@@ -60,11 +60,40 @@ the new tests (a zero-byte count and the old "0 means unknown" convention), and 
 resume rule and the backend completeness classification). All four were corrected in product or test, and
 the rerun is the 472/2/474 above.
 
-### Remaining from the audit
+### Continued: SQLite hashes, reconciliation, retry classification, stability timestamps
 
-SQLite does not persist hashes/verification (D4), the session report has no reconciliation section (D8),
-permanent errors are retried (D5), and the stability pass ignores timestamps (D6). These are the next
-phases, in that order, recorded in `docs/EXECUTION-STATE.md`.
+5. **SQLite did not persist what was verified (D4).** `Files` held state and error text only; the hashes
+   and the verification grade lived in the JSON manifest. `SessionDatabase` now adds `SizeKnown`,
+   `BytesWritten`, `SourceSha256`, `StagedPayloadSha256`, `DestinationSha256`, `Verification`,
+   `SourceModifiedUtc`, `SourceChanged` and `Outcome` with an idempotent `ALTER TABLE` migration, writes
+   them in `UpsertFiles`, and exposes `QueryFileStates`. `SessionDatabaseTests` covers the round-trip, an
+   unknown size staying unknown, the migration of a database created by the old schema (row preserved,
+   defaults applied), and the session row.
+6. **The session report had no reconciliation (D8).** `ReconciliationReport` counts every scanned object
+   once under the outcome that happened (copied, already present, filter-excluded, conflict-skipped,
+   failed, inaccessible, outstanding), with bytes and verification grades; `TransferSummary.Reconciliation`
+   exposes it, the JSON report carries it, and `I-total-reconciliation.csv` is written beside the report.
+   `OutcomeReason` is recorded per entry and persisted in both stores.
+7. **Permanent failures were retried (D5).** `CopyFailures` classifies exceptions (denied, missing,
+   invalid, unsupported, device-not-connected) and AFC statuses; `CopyResult.FailureKind` carries the
+   verdict; the engine stops the retry loop on a permanent failure and logs why. A transient failure is
+   still retried. Test: `APermanentFailureIsNotRetriedButATransientOneIs` (fetch counts 1 vs 2).
+8. **The stability pass compared only path and size (D6).** `ScanStability` now compares size, whether the
+   size was readable, and the modification time when both passes report one. Three tests cover a same-size
+   edit, a size that became unreadable, and the documented limitation that a timestamp present on only one
+   side is not evidence of a change.
+
+### Commands and results after the continuation
+
+```text
+dotnet build I-Total.Transfer.sln -c Release --no-incremental
+  -> 0 Warning(s), 0 Error(s)
+
+dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s
+  after D4/D8: Passed! Failed: 0, Passed: 481, Skipped: 2, Total: 483
+  after D5:    Passed! Failed: 0, Passed: 482, Skipped: 2, Total: 484
+  after D6:    Passed! Failed: 0, Passed: 485, Skipped: 2, Total: 487
+```
 
 ### Blockers
 

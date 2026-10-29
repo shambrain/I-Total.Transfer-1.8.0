@@ -131,13 +131,13 @@ phase (schema migration + write path + round-trip and migration tests).
 
 `CopyCoreAsync` retries any failure up to `maxRetries` with linear backoff. Access-denied, unsupported
 resource and missing-object failures are permanent; retrying them costs time and produces misleading
-"attempt 2/3" logs. `CopyResult` has no error classification. **Open** — scheduled after D4.
+"attempt 2/3" logs. `CopyResult` has no error classification. **Fixed** — `CopyFailures` classifies exceptions and AFC statuses; `CopyResult.FailureKind` carries the verdict; the engine stops retrying a permanent failure. Test: `APermanentFailureIsNotRetriedButATransientOneIs`.
 
 ### D6 (S2) — the stability pass compares only path and size
 
 `ScanStability.ChangedPaths` indexes `file.Size`. A same-size content change between the two passes is
 invisible, and two passes that both failed to read a size "agree". Timestamps are available in
-`MediaFile.ModifiedUtc` but not compared. **Open** — scheduled with the next correctness batch.
+`MediaFile.ModifiedUtc` but not compared. **Fixed** — `ScanStability` compares size, size-known and modification time (when both passes report one); three tests added.
 
 ### D7 (S3) — stale documentation
 
@@ -151,7 +151,7 @@ difference is recorded, not renamed, to avoid breaking links.
 
 `ExportReports` writes the manifest entries and a CSV of them, but not the Part 3 reconciliation totals
 (discovered, eligible, excluded, already present, copied, source-hash verified, destination-only, size-only,
-unverifiable, inaccessible, failed, outstanding, unknown-size counts/bytes). **Open** — scheduled.
+unverifiable, inaccessible, failed, outstanding, unknown-size counts/bytes). **Fixed** — `ReconciliationReport` counts every scanned object once by outcome, `TransferSummary.Reconciliation` exposes it, and the session report writes it to JSON and `I-total-reconciliation.csv`.
 
 ## 6. Strengths confirmed by inspection
 

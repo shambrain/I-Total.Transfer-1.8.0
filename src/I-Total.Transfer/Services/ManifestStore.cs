@@ -117,7 +117,10 @@ public sealed class ManifestStore
                     entry.SourceChanged = true;
                     if (entry.State is TransferState.SizeVerified or TransferState.IntegrityVerified
                         or TransferState.CopiedUnverified or TransferState.Skipped)
+                    {
                         entry.State = TransferState.Queued;
+                        entry.Outcome = OutcomeReason.Planned;
+                    }
                 }
                 if (entry.State is TransferState.Copying or TransferState.Paused) entry.State = TransferState.Queued;
             }
@@ -129,6 +132,7 @@ public sealed class ManifestStore
                     ExpectedBytes = file.Size,
                     SizeKnown = file.SizeKnown,
                     State = TransferState.Queued,
+                    Outcome = OutcomeReason.Planned,
                     SourceModifiedUtc = file.ModifiedUtc
                 });
             }

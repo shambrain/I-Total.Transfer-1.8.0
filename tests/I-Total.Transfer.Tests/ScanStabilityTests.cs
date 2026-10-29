@@ -90,6 +90,41 @@ public sealed class ScanStabilityTests
     }
 
     [TestMethod]
+    public void ASameSizeChangeWithADifferentTimestampIsReported()
+    {
+        MediaFile First(string name, DateTimeOffset? modified) => new("DCIM", name, 100, ".heic") { ModifiedUtc = modified };
+        var first = new ScanResult("iPhone", Now, Now, [First("IMG_0001.HEIC", Now.AddDays(-2))], []);
+        var second = new ScanResult("iPhone", Now, Now, [First("IMG_0001.HEIC", Now.AddDays(-1))], []);
+
+        IReadOnlyList<string> changed = ScanStability.ChangedPaths(first, second);
+
+        Assert.AreEqual(1, changed.Count, "a same-size edit is visible through the modification time");
+        Assert.IsFalse(ScanStability.Agree(first, second));
+    }
+
+    [TestMethod]
+    public void AChangeFromMeasuredToUnreadableSizeIsReported()
+    {
+        var first = new ScanResult("iPhone", Now, Now, [new MediaFile("DCIM", "IMG_0001.HEIC", 100, ".heic")], []);
+        var second = new ScanResult("iPhone", Now, Now,
+            [new MediaFile("DCIM", "IMG_0001.HEIC", 0, ".heic") { SizeKnown = false }], []);
+
+        Assert.IsFalse(ScanStability.Agree(first, second),
+            "losing the size is a change in the evidence, not an unchanged file");
+    }
+
+    [TestMethod]
+    public void AMissingTimestampOnOneSideIsNotInventedAsAChange()
+    {
+        var first = new ScanResult("iPhone", Now, Now, [new MediaFile("DCIM", "IMG_0001.HEIC", 100, ".heic")], []);
+        var second = new ScanResult("iPhone", Now, Now,
+            [new MediaFile("DCIM", "IMG_0001.HEIC", 100, ".heic") { ModifiedUtc = Now }], []);
+
+        Assert.IsTrue(ScanStability.Agree(first, second),
+            "providers report timestamps intermittently; absence is not evidence of an edit");
+    }
+
+    [TestMethod]
     [Timeout(120_000)]
     public void ALargeCameraRollIsComparedInLinearTime()
     {
