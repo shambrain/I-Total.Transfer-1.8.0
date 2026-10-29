@@ -419,3 +419,28 @@ never enable the AFC backend.
 
 Run `Test-Project.bat` and `Build-Release.bat` on Windows 10 and Windows 11, then work through the
 hardware checklist in `docs/TEST-PLAN.md` with a physical iPhone.
+## Latest recorded candidate checkpoint — 2026-10-30
+
+**Evidence source:** `docs/PROGRESS.md`, `docs/EXECUTION-STATE.md`, and `dist/SHA256SUMS.txt` at the scope-semantics checkpoint (`9ae20fdd1f9522d9349b5662cd27aa08d45eda87`). The following values are the recorded results from that checkpoint, not a build or test run performed during this documentation reconciliation.
+
+```text
+dotnet build I-Total.Transfer.sln -c Release --no-incremental
+  -> Build succeeded, 0 warnings, 0 errors
+
+dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s
+  -> 511 passed, 0 failed, 2 skipped, 513 total
+```
+
+The latest user-reported run took approximately 32 seconds; the committed checkpoint records 31 seconds. After an intermittent licensing-test failure, the recorded follow-up was 20 isolated passes and six consecutive full-suite passes. See `docs/KNOWN_ISSUES.md` KI-26 for the two observed occurrences and the instruction to capture complete output if it recurs.
+
+### Candidate artifact hashes recorded at the same checkpoint
+
+| Artifact | SHA-256 | Recorded size |
+| --- | --- | --- |
+| `publish/I-Total.Transfer.exe` | `BAB606840BE38C11CAC8F7C2D6F63BE1389B73ACAF3BCFAFF56BBDCCDD9B6C1A` | 112,207,686 B |
+| `dist/I-Total.Transfer-1.8.0-win-x64.zip` | `66E3EADF300A5FB1AEA8F3C8A432076EECB119818615C227C88E4D4EE330D81A` | 54.46 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `548DADD481A7095AF2BFFC86443D6A2D48AA962F7685C4259A4C3A724DC05EAB` | 44.72 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `3FC0B856014411781CFCAAC8B127AA44E336C12C0DF7FE7A84A4E41F52C89260` | 35.30 MB |
+| `dist/I-Total.Transfer-1.8.0-source.zip` | `B738EC4373E3893AE9700A5A1606AFE81ACA0FCE35A67B66AF23059A55D96DDE` | 15.05 MB |
+
+The checkpoint records that the source ZIP documentation comparison had zero mismatches, setup install/uninstall was rechecked, and the executable was reproducible from the source ZIP. Re-verify the hashes if any source or packaged artifact changes. The setup and executable are not Authenticode-signed with a trusted certificate; see KI-05.
