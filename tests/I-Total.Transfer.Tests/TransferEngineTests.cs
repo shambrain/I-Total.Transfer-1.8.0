@@ -24,6 +24,29 @@ public sealed class TransferEngineTests
     }
 
     [TestMethod]
+    public async Task ATransferStillCompletesWhenTheSqliteDatabaseCannotBeOpened()
+    {
+        // SQLite is the queryable history; the JSON manifest is the recovery plan. If the database is
+        // unusable (locked, corrupt, replaced by a folder), the run must continue and report honestly
+        // rather than aborting or pretending the queue was written.
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 2);
+        string destination = TempDestination();
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(destination, ".i-total", "session.db"));
+
+            TransferSummary summary = await RunCopyAsync(backend, destination);
+
+            Assert.IsTrue(summary.Completed);
+            Assert.AreEqual(2, summary.Copied);
+            Assert.IsTrue(File.Exists(Path.Combine(destination, ".i-total", "session.json")),
+                "the JSON manifest remains the durable record");
+            Assert.IsTrue(File.Exists(Path.Combine(destination, "DCIM", "IMG_0000.bin")));
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
     public async Task ARerunWhereEverythingIsAlreadyPresentIsANoOpNotAFreshVerifiedCopy()
     {
         using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 2);

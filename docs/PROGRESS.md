@@ -129,7 +129,9 @@ same SHA-256, so the source-only rebuild is byte-identical. `Build-Installer.ps1
 `00E46FB8...` and setup `9DE4D08F...`; the setup was installed silently into a temporary folder (exe and
 README hashes matched), then uninstalled: folder, HKCU entry and shortcuts removed, `%APPDATA%` kept. `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`, `RELEASE-ACCEPTANCE.md`,
 `PERFORMANCE-AUDIT.md` and `KNOWN_ISSUES.md` were updated for the candidate; no hardware or performance
-claim was added.
+claim was added. The published executable was launched and stayed up for five seconds with the window title
+`I-Total Transfer - verified phone media transfer` (working set 161.6 MB), then stopped; this is a launch
+smoke test only.
 12. **A no-op run no longer claims it produced a verified copy.** When every planned file was already
     present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads as if this run
     wrote something. It now says `ALREADY PRESENT — NO FILES NEEDED COPYING (verified against the session
@@ -252,7 +254,9 @@ same SHA-256, so the source-only rebuild is byte-identical. `Build-Installer.ps1
 `00E46FB8...` and setup `9DE4D08F...`; the setup was installed silently into a temporary folder (exe and
 README hashes matched), then uninstalled: folder, HKCU entry and shortcuts removed, `%APPDATA%` kept. `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`, `RELEASE-ACCEPTANCE.md`,
 `PERFORMANCE-AUDIT.md` and `KNOWN_ISSUES.md` were updated for the candidate; no hardware or performance
-claim was added.
+claim was added. The published executable was launched and stayed up for five seconds with the window title
+`I-Total Transfer - verified phone media transfer` (working set 161.6 MB), then stopped; this is a launch
+smoke test only.
 12. **A no-op run no longer claims it produced a verified copy.** When every planned file was already
     present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads as if this run
     wrote something. It now says `ALREADY PRESENT — NO FILES NEEDED COPYING (verified against the session
@@ -568,7 +572,9 @@ same SHA-256, so the source-only rebuild is byte-identical. `Build-Installer.ps1
 `00E46FB8...` and setup `9DE4D08F...`; the setup was installed silently into a temporary folder (exe and
 README hashes matched), then uninstalled: folder, HKCU entry and shortcuts removed, `%APPDATA%` kept. `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`, `RELEASE-ACCEPTANCE.md`,
 `PERFORMANCE-AUDIT.md` and `KNOWN_ISSUES.md` were updated for the candidate; no hardware or performance
-claim was added.
+claim was added. The published executable was launched and stayed up for five seconds with the window title
+`I-Total Transfer - verified phone media transfer` (working set 161.6 MB), then stopped; this is a launch
+smoke test only.
 12. **A no-op run no longer claims it produced a verified copy.** When every planned file was already
     present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads as if this run
     wrote something. It now says `ALREADY PRESENT — NO FILES NEEDED COPYING (verified against the session
@@ -833,7 +839,9 @@ same SHA-256, so the source-only rebuild is byte-identical. `Build-Installer.ps1
 `00E46FB8...` and setup `9DE4D08F...`; the setup was installed silently into a temporary folder (exe and
 README hashes matched), then uninstalled: folder, HKCU entry and shortcuts removed, `%APPDATA%` kept. `PROJECT-STATUS.md`, `BUILD-VALIDATION.md`, `RELEASE-ACCEPTANCE.md`,
 `PERFORMANCE-AUDIT.md` and `KNOWN_ISSUES.md` were updated for the candidate; no hardware or performance
-claim was added.
+claim was added. The published executable was launched and stayed up for five seconds with the window title
+`I-Total Transfer - verified phone media transfer` (working set 161.6 MB), then stopped; this is a launch
+smoke test only.
 12. **A no-op run no longer claims it produced a verified copy.** When every planned file was already
     present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads as if this run
     wrote something. It now says `ALREADY PRESENT — NO FILES NEEDED COPYING (verified against the session

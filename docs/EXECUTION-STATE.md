@@ -44,7 +44,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
   after D4/D8:        Passed! Failed: 0, Passed: 481, Skipped: 2, Total: 483, Duration: 29 s
   after D5:           Passed! Failed: 0, Passed: 482, Skipped: 2, Total: 484, Duration: 31 s
   after D6:           Passed! Failed: 0, Passed: 485, Skipped: 2, Total: 487, Duration: 31 s
-  after Gate E/F:     Passed! Failed: 0, Passed: 490, Skipped: 2, Total: 492, Duration: 31 s
+  after Gate E/F:     Passed! Failed: 0, Passed: 491, Skipped: 2, Total: 493, Duration: 31 s
 ```
 
 Artifacts at baseline (unchanged by this session so far):
@@ -66,7 +66,7 @@ been run against a phone.
 
 - Commits on `work/master-directive`: `0c13df2` (Gate A + size truth), `2917be1` (SQLite, reconciliation,
   retries, stability), and the final commit that carries Gate E/F/H and the rebuilt archives.
-- State: build 0/0, 490 passed, 2 skipped, 492 total, candidate exe `1C62B2B1...`.
+- State: build 0/0, 491 passed, 2 skipped, 493 total, candidate exe `1C62B2B1...`.
 
 ## Blockers and their evidence
 
