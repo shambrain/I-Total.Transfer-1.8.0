@@ -26,6 +26,12 @@ this session worked on the engine and its tests rather than on a device.
    pin restore and success.
 3. **Failed/cancelled attempts left `.partial` staging files.** WPD and AFC now delete the partial in a
    finally block.
+4. **Verification reported digest failures as size failures.** One `wrong` counter fed `WrongSize`, so a
+   same-size corrupted destination was reported as a size mismatch. `WrongHash` is separate now, the
+   report/UI/log name both, and a corrupted destination is recorded as `Failed` in the manifest.
+5. **Repair did not verify the repaired bytes.** The repair path moved the staged file and marked it
+   verified without comparing hashes. It now checks the staged size and SHA-256, discards a corrupt
+   repair, marks the entry `Failed` and leaves the file missing.
 
 ### Commands and exact results
 
@@ -34,17 +40,18 @@ dotnet build I-Total.Transfer.sln -c Release --no-incremental
 # Build succeeded. 0 Warning(s), 0 Error(s)
 
 dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s
-# Passed! - Failed: 0, Passed: 458, Skipped: 2, Total: 460, Duration: 30 s
+# Passed! - Failed: 0, Passed: 460, Skipped: 2, Total: 462, Duration: 28 s
 
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 # publish\I-Total.Transfer.exe: 112,158,534 B
-# SHA-256 25397B1FB167442052DBC6A42DE04C7A9888E9148CFC935ADBDE257565A48AF6
+# SHA-256 8FCB2B5095365995813AF028EFE4A27E6EC538A32ADEA12F153919AD0E61CABB
 ```
 
-The two key regressions were also run against the pre-fix engine by stashing only the source changes:
-`AChangedSourceIsCopiedAgainWhenOverwriteIsChosen` failed (`Expected:<2>. Actual:<1>`) and
+The key regressions were also run against the pre-fix engine by stashing only the source changes:
+`AChangedSourceIsCopiedAgainWhenOverwriteIsChosen` failed (`Expected:<2>. Actual:<1>`),
 `AFailedOverwriteRestoresTheOriginalDestination` failed ("The previous destination must survive a failed
-overwrite"); both pass with the fixes.
+overwrite"), and `RepairingWithCorruptBytesIsReportedAndDiscarded` reported success on the old repair path.
+All pass with the fixes.
 
 ### Files changed
 
@@ -52,10 +59,13 @@ overwrite"); both pass with the fixes.
 src/I-Total.Transfer/Core/Models.cs
 src/I-Total.Transfer/Services/ManifestStore.cs
 src/I-Total.Transfer/Services/TransferService.cs
+src/I-Total.Transfer/UI/MainForm.cs
+src/I-Total.Transfer/UI/Pages/LibraryPage.cs
 src/I-Total.Transfer/Devices/Wpd/WpdDevice.cs
 src/I-Total.Transfer/Devices/Afc/AfcDevice.cs
 tests/I-Total.Transfer.Tests/MockBackend.cs
 tests/I-Total.Transfer.Tests/TransferEngineTests.cs
+tests/I-Total.Transfer.Tests/VerificationFlowTests.cs
 CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
 ```
 

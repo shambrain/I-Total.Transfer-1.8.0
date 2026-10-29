@@ -249,6 +249,7 @@ public partial class LibraryPage : UserControl, IThemedPage
         sb.AppendLine($"Destination hashed : {result.DestinationHashVerified:N0}");
         sb.AppendLine($"Missing            : {result.Missing:N0}");
         sb.AppendLine($"Size mismatches    : {result.WrongSize:N0}");
+        sb.AppendLine($"Hash mismatches    : {result.WrongHash:N0}");
         sb.AppendLine($"Unverifiable       : {result.Unverifiable:N0}");
         sb.AppendLine($"Collisions         : {result.Collisions:N0}");
         sb.AppendLine($"Repaired           : {result.Repaired:N0}");

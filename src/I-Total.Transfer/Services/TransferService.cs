@@ -703,7 +703,7 @@ public sealed class TransferService
         Dictionary<string, TransferEntry> manifestByPath = _store.Index();
 
         var issues = new List<string>();
-        int matching = 0, missing = 0, wrong = 0, unverifiable = 0, collisions = 0, sourceVerified = 0, destVerified = 0, repaired = 0;
+        int matching = 0, missing = 0, wrongSize = 0, wrongHash = 0, wrong = 0, unverifiable = 0, collisions = 0, sourceVerified = 0, destVerified = 0, repaired = 0;
         int total = scan.Files.Count, current = 0;
         bool enumerationComplete = scan.Status == EnumerationStatus.Complete;
         if (!enumerationComplete)
@@ -726,27 +726,53 @@ public sealed class TransferService
                 issues.Add($"MISSING: {relative}");
                 if (repair && entry is not null)
                 {
+                    string staged = Path.Combine(destination, ".i-total", "staging", file.Folder, file.Name);
                     try
                     {
-                        CopyResult copy = await Task.Run(() => _device.CopyToStage(file, Path.Combine(destination, ".i-total", "staging", file.Folder),
+                        CopyResult copy = await Task.Run(() => _device.CopyToStage(file, Path.GetDirectoryName(staged)!,
                             TimeSpan.FromSeconds(_options.CopyTimeoutSeconds), token), token);
-                        if (copy.Success)
+                        if (!copy.Success)
                         {
-                            string staged = Path.Combine(destination, ".i-total", "staging", file.Folder, file.Name);
+                            entry.State = TransferState.Failed;
+                            entry.Error = "Repair failed: " + copy.Error;
+                            _store.MarkDirty(force: true);
+                            issues.Add($"REPAIR FAILED: {relative}; {copy.Error}");
+                        }
+                        else
+                        {
+                            long stagedSize = new FileInfo(staged).Length;
+                            if (file.Size > 0 && stagedSize != file.Size)
+                                throw new InvalidDataException($"Repaired staging size mismatch: expected {file.Size}, got {stagedSize}.");
                             string stagedHash = await ComputeSha256Async(staged, token);
                             if (File.Exists(path)) File.Delete(path);
                             File.Move(staged, path);
-                            entry.DestinationSha256 = await ComputeSha256Async(path, token);
+                            string destinationHash = await ComputeSha256Async(path, token);
+                            string? expected = copy.SourceSha256 ?? stagedHash;
+                            if (!string.Equals(expected, destinationHash, StringComparison.OrdinalIgnoreCase))
+                            {
+                                try { File.Delete(path); } catch { }
+                                throw new InvalidDataException("Repaired copy failed its SHA-256 comparison; the file was discarded.");
+                            }
                             entry.SourceSha256 = copy.SourceSha256 ?? entry.SourceSha256;
+                            entry.StagedPayloadSha256 = string.IsNullOrWhiteSpace(copy.SourceSha256) ? stagedHash : null;
+                            entry.DestinationSha256 = destinationHash;
                             entry.State = TransferState.IntegrityVerified;
                             entry.Error = null;
-                            entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, stagedHash, entry.DestinationSha256, file.Size > 0);
+                            entry.SourceChanged = false;
+                            entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, entry.StagedPayloadSha256, destinationHash, file.Size > 0);
                             _store.MarkDirty(force: true);
                             repaired++; matching++; missing--;
                             issues.Add($"REPAIRED: {relative}");
                         }
                     }
-                    catch (Exception ex) { issues.Add($"REPAIR FAILED: {relative}; {ex.Message}"); }
+                    catch (Exception ex)
+                    {
+                        if (File.Exists(staged)) { try { File.Delete(staged); } catch { } }
+                        entry.State = TransferState.Failed;
+                        entry.Error = "Repair failed: " + ex.Message;
+                        _store.MarkDirty(force: true);
+                        issues.Add($"REPAIR FAILED: {relative}; {ex.Message}");
+                    }
                 }
             }
             else if (file.Size <= 0)
@@ -756,7 +782,19 @@ public sealed class TransferService
             else
             {
                 long actual = new FileInfo(path).Length;
-                if (actual != file.Size) { wrong++; issues.Add($"SIZE MISMATCH: {relative}; expected={file.Size}; actual={actual}"); }
+                if (actual != file.Size)
+                {
+                    wrongSize++;
+                    wrong++;
+                    if (entry is not null)
+                    {
+                        entry.State = TransferState.Failed;
+                        entry.Error = $"Destination size mismatch during verification: expected {file.Size}, found {actual}.";
+                        entry.Verification = VerificationLevel.None;
+                        _store.MarkDirty(force: true);
+                    }
+                    issues.Add($"SIZE MISMATCH: {relative}; expected={file.Size}; actual={actual}");
+                }
                 else if (string.IsNullOrWhiteSpace(entry?.DestinationSha256))
                 {
                     unverifiable++; issues.Add($"NO SAVED HASH: {relative}; size matches but no prior destination SHA-256 is recorded.");
@@ -766,7 +804,13 @@ public sealed class TransferService
                     string actualHash = await ComputeSha256Async(path, token);
                     if (!string.Equals(actualHash, entry.DestinationSha256, StringComparison.OrdinalIgnoreCase))
                     {
-                        wrong++; issues.Add($"SHA-256 MISMATCH: {relative}; destination bytes differ from the saved destination digest.");
+                        wrongHash++;
+                        wrong++;
+                        entry.State = TransferState.Failed;
+                        entry.Error = "Destination SHA-256 differs from the saved digest; the file was changed after it was verified.";
+                        entry.Verification = VerificationLevel.None;
+                        _store.MarkDirty(force: true);
+                        issues.Add($"SHA-256 MISMATCH: {relative}; destination bytes differ from the saved destination digest.");
                     }
                     else
                     {
@@ -781,11 +825,18 @@ public sealed class TransferService
                                 if (string.Equals(liveSource, actualHash, StringComparison.OrdinalIgnoreCase))
                                 {
                                     sourceVerified++; matching++;
+                                    entry.SourceSha256 = liveSource;
                                     entry.Verification = VerificationLevel.SourceAndDestinationHash;
+                                    _store.MarkDirty();
                                 }
                                 else
                                 {
+                                    wrongHash++;
                                     wrong++;
+                                    entry.State = TransferState.Failed;
+                                    entry.Error = "Live source SHA-256 differs from the destination during verification.";
+                                    entry.Verification = VerificationLevel.None;
+                                    _store.MarkDirty(force: true);
                                     issues.Add($"SOURCE/DESTINATION MISMATCH: {relative}; live source SHA-256 differs from destination.");
                                 }
                             }
@@ -805,17 +856,18 @@ public sealed class TransferService
         bool complete = enumerationComplete && total > 0 && matching == total && missing == 0 &&
                         wrong == 0 && unverifiable == 0 && collisions == 0;
         _store.Flush();
-        _log.Write($"Verification: matching={matching}/{total}; source-hash-verified={sourceVerified}; destination-hash-verified={destVerified}; missing={missing}; mismatches={wrong}; unverifiable={unverifiable}; repaired={repaired}; enumeration={scan.Status}.", complete ? "OK" : "ERROR");
+        _log.Write($"Verification: matching={matching}/{total}; source-hash-verified={sourceVerified}; destination-hash-verified={destVerified}; missing={missing}; size-mismatches={wrongSize}; hash-mismatches={wrongHash}; unverifiable={unverifiable}; repaired={repaired}; enumeration={scan.Status}.", complete ? "OK" : "ERROR");
         string reportPath = Path.Combine(destination, "I-total-verification.json");
         LogService.ExportJson(reportPath, new
         {
             CreatedUtc = DateTimeOffset.UtcNow, Device = scan.DeviceName, Backend = _device.Name, Total = total,
             Matching = matching, SourceHashVerified = sourceVerified, DestinationHashVerified = destVerified,
-            Missing = missing, WrongSize = wrong, Unverifiable = unverifiable, Collisions = collisions,
+            Missing = missing, WrongSize = wrongSize, WrongHash = wrongHash, Unverifiable = unverifiable, Collisions = collisions,
             Repaired = repaired, Completed = complete, Issues = issues
         });
-        return new VerificationResult(total, matching, missing, wrong, unverifiable, collisions, complete, issues)
+        return new VerificationResult(total, matching, missing, wrongSize, unverifiable, collisions, complete, issues)
         {
+            WrongHash = wrongHash,
             SourceHashVerified = sourceVerified,
             DestinationHashVerified = destVerified,
             Repaired = repaired,

@@ -1456,9 +1456,10 @@ public sealed partial class MainForm : Form
         VerificationResult result = await _service.VerifyAsync(_scan, CurrentDestination(), progress, _cts?.Token ?? CancellationToken.None, repair);
         _library.SetVerification(result);
         ShowPage(_library);
-        _dashboard.SetMetrics(_scan.Files.Count, _scan.TotalBytes, result.Matching, result.Missing + result.WrongSize, result.Unverifiable);
+        _dashboard.SetMetrics(_scan.Files.Count, _scan.TotalBytes, result.Matching,
+            result.Missing + result.WrongSize + result.WrongHash, result.Unverifiable);
         Log($"Verification: {result.Matching:N0}/{result.Total:N0} matched; source+dest hashed={result.SourceHashVerified:N0}; " +
-            $"missing={result.Missing:N0}; size mismatches={result.WrongSize:N0}; unverifiable={result.Unverifiable:N0}; repaired={result.Repaired:N0}.",
+            $"missing={result.Missing:N0}; size mismatches={result.WrongSize:N0}; hash mismatches={result.WrongHash:N0}; unverifiable={result.Unverifiable:N0}; repaired={result.Repaired:N0}.",
             result.Completed ? "OK" : "ERROR");
         RefreshQueue();
     }

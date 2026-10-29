@@ -237,6 +237,8 @@ public sealed record TransferSummary(int Total, int Copied, int Skipped, int Fai
 public sealed record VerificationResult(int Total, int Matching, int Missing, int WrongSize, int Unverifiable, int Collisions,
     bool Completed, IReadOnlyList<string> Issues)
 {
+    /// <summary>Files whose size matched but whose SHA-256 did not.</summary>
+    public int WrongHash { get; init; }
     public int SourceHashVerified { get; init; }
     public int DestinationHashVerified { get; init; }
     public int Repaired { get; init; }

@@ -6,7 +6,7 @@
   `net10.0-windows`.
 - `dotnet build I-Total.Transfer.sln -c Release` → **0 warnings, 0 errors**.
 - `dotnet test tests\I-Total.Transfer.Tests -c Release --blame-hang --blame-hang-timeout 240s` → **449
-  passed, 0 failed, 2 skipped (opt-in hardware tests), 460 total**, in about thirty seconds.
+  passed, 0 failed, 2 skipped (opt-in hardware tests), 462 total**, in about thirty seconds.
   The 2026-10-21 addition is the two-phone isolation guard (`DeviceSelectionGuardTests` 6,
   `ScanIdentityTests` 8); the 2026-10-22 additions are the Appearance preview suite (4), the expanded
   token/contrast coverage and the no-device neutral-wording regression, the non-elevated private-LAN bind, the five page-control tests and the filtered-plan summary test, plus the 2026-10-24 96-DPI

@@ -314,7 +314,7 @@ Design references for a copy engine (patterns only — nothing copied, and none 
 ## 8. Result
 
 - Release build: **0 warnings / 0 errors**.
-- Tests: **458 passed, 0 failed, 2 skipped (opt-in hardware), 460 total** in about thirty seconds
+- Tests: **460 passed, 0 failed, 2 skipped (opt-in hardware), 462 total** in about thirty seconds
   without a phone. That total includes the 26,400-entry scan, the 300,000-entry nested walk, the
   context-capture
   regression tests, the engine-throughput benchmarks, the scan-cache rules and persistence, the

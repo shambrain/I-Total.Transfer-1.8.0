@@ -147,4 +147,72 @@ public sealed class VerificationFlowTests
         }
         finally { Directory.Delete(destination, true); }
     }
+
+    [TestMethod]
+    public async Task ASameSizeDestinationChangeIsNotAMatchAndMarksTheEntryFailed()
+    {
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1);
+        string destination = TempDestination();
+        try
+        {
+            var service = new TransferService(backend, new LogService(destination));
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+            await service.CopyAsync(scan, destination, 1, Quiet(), CancellationToken.None);
+
+            string file = Path.Combine(destination, "DCIM", "IMG_0000.bin");
+            byte[] bytes = File.ReadAllBytes(file);
+            bytes[10] ^= 0xFF;
+            File.WriteAllBytes(file, bytes);
+
+            VerificationResult result = await service.VerifyAsync(scan, destination, Quiet(), CancellationToken.None);
+
+            Assert.IsFalse(result.Completed);
+            Assert.AreEqual(0, result.Matching);
+            Assert.AreEqual(0, result.WrongSize, "The size is unchanged; it is not a size failure.");
+            Assert.AreEqual(1, result.WrongHash, "The digest must be reported as a hash mismatch, not as a size mismatch.");
+            Assert.IsTrue(result.Issues.Any(i => i.Contains("SHA-256 MISMATCH", StringComparison.Ordinal)));
+
+            var manifest = System.Text.Json.JsonSerializer.Deserialize<SessionManifest>(
+                File.ReadAllText(Path.Combine(destination, ".i-total", "session.json")));
+            Assert.IsNotNull(manifest);
+            Assert.AreEqual(TransferState.Failed, manifest.Entries.Single().State,
+                "Verification must record a corrupted destination in the manifest, not leave it looking verified.");
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
+    public async Task RepairingWithCorruptBytesIsReportedAndDiscarded()
+    {
+        // A repair that moves bytes without comparing them would mark a corrupt file verified. The
+        // repaired payload must pass the same source/destination comparison as a normal copy.
+        using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1);
+        backend.CorruptPaths.Add(Path.Combine("DCIM", "IMG_0000.bin"));
+        string destination = TempDestination();
+        try
+        {
+            var service = new TransferService(backend, new LogService(destination));
+            ScanResult scan = await service.ScanAsync(CancellationToken.None);
+            await service.CopyAsync(scan, destination, 1, Quiet(), CancellationToken.None);
+
+            string file = Path.Combine(destination, "DCIM", "IMG_0000.bin");
+            File.Delete(file);
+
+            VerificationResult result = await service.VerifyAsync(
+                scan, destination, Quiet(), CancellationToken.None, repair: true);
+
+            Assert.IsFalse(result.Completed);
+            Assert.AreEqual(0, result.Repaired);
+            Assert.AreEqual(1, result.Missing);
+            Assert.IsFalse(File.Exists(file), "A repaired copy that fails its digest must not stay on disk.");
+            Assert.IsTrue(result.Issues.Any(i => i.Contains("REPAIR FAILED", StringComparison.Ordinal)));
+
+            var manifest = System.Text.Json.JsonSerializer.Deserialize<SessionManifest>(
+                File.ReadAllText(Path.Combine(destination, ".i-total", "session.json")));
+            Assert.IsNotNull(manifest);
+            Assert.AreEqual(TransferState.Failed, manifest.Entries.Single().State);
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
 }
