@@ -6,6 +6,12 @@ start from here without re-reading the whole conversation.
 
 ---
 
+> **Publication note (2026-10-29).** Before the repository was published, its history was rewritten with
+> `git filter-repo` to remove four testhost crash dumps (about 1.1 GB) that predated the `**/TestResults/`
+> ignore rule. GitHub rejects blobs over 100 MB, and those dumps were never part of the product. Commit
+> hashes quoted in this log before this note identify the pre-publication history; the file contents, tests
+> and evidence are unchanged. The release executable is unaffected.
+
 ## 2026-10-29 - copy-path correctness audit (changed source, overwrite restore, staging)
 
 ### Starting point
