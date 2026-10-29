@@ -129,7 +129,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 8EC5BDA6D737A23F3C071FF357676BD96B4546E06662D94424A6C3828C0CA89F (112,195,398 B)
+  -> 91A4DE630421AACE1D90A803B47B6DED7C5C9EC1115DBD1B080835E797857066 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -157,7 +157,9 @@ smoke test only.
     size/hash mismatch, and every rerun added another copy. `TransferEntry.CommittedPath` now records the
     path the bytes actually landed on (persisted in JSON and SQLite through the existing migration),
     verification checks that file and reports `STORED AS`, and a rerun accepts the recorded copy when its
-    bytes still match. Three tests: storage/preservation, verification of the renamed copy, and the rerun.
+    bytes still match. A changed source is never served from the old renamed copy: the reuse check now
+    requires `!SourceChanged`, so the new bytes are stored under a fresh name. Four tests:
+    storage/preservation, verification of the renamed copy, the unchanged rerun, and the changed source.
 ### Runtime UI audit and README reconciliation
 
 - The published candidate was driven through UI Automation with no device attached: the window was found,
@@ -174,7 +176,7 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **494 passed, 2 skipped, 496 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **495 passed, 2 skipped, 497 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.
@@ -293,7 +295,7 @@ CHANGELOG.md, PROJECT-STATUS.md, README.md, docs/*
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 8EC5BDA6D737A23F3C071FF357676BD96B4546E06662D94424A6C3828C0CA89F (112,195,398 B)
+  -> 91A4DE630421AACE1D90A803B47B6DED7C5C9EC1115DBD1B080835E797857066 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -321,7 +323,9 @@ smoke test only.
     size/hash mismatch, and every rerun added another copy. `TransferEntry.CommittedPath` now records the
     path the bytes actually landed on (persisted in JSON and SQLite through the existing migration),
     verification checks that file and reports `STORED AS`, and a rerun accepts the recorded copy when its
-    bytes still match. Three tests: storage/preservation, verification of the renamed copy, and the rerun.
+    bytes still match. A changed source is never served from the old renamed copy: the reuse check now
+    requires `!SourceChanged`, so the new bytes are stored under a fresh name. Four tests:
+    storage/preservation, verification of the renamed copy, the unchanged rerun, and the changed source.
 ### Runtime UI audit and README reconciliation
 
 - The published candidate was driven through UI Automation with no device attached: the window was found,
@@ -338,7 +342,7 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **494 passed, 2 skipped, 496 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **495 passed, 2 skipped, 497 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.
@@ -650,7 +654,7 @@ The setup is **unsigned**: no trusted certificate is present (signtool 10.0.2610
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 8EC5BDA6D737A23F3C071FF357676BD96B4546E06662D94424A6C3828C0CA89F (112,195,398 B)
+  -> 91A4DE630421AACE1D90A803B47B6DED7C5C9EC1115DBD1B080835E797857066 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -678,7 +682,9 @@ smoke test only.
     size/hash mismatch, and every rerun added another copy. `TransferEntry.CommittedPath` now records the
     path the bytes actually landed on (persisted in JSON and SQLite through the existing migration),
     verification checks that file and reports `STORED AS`, and a rerun accepts the recorded copy when its
-    bytes still match. Three tests: storage/preservation, verification of the renamed copy, and the rerun.
+    bytes still match. A changed source is never served from the old renamed copy: the reuse check now
+    requires `!SourceChanged`, so the new bytes are stored under a fresh name. Four tests:
+    storage/preservation, verification of the renamed copy, the unchanged rerun, and the changed source.
 ### Runtime UI audit and README reconciliation
 
 - The published candidate was driven through UI Automation with no device attached: the window was found,
@@ -695,7 +701,7 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **494 passed, 2 skipped, 496 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **495 passed, 2 skipped, 497 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.
@@ -956,7 +962,7 @@ docs/MASTER_IMPLEMENTATION_PLAN.md, docs/DEVICE_TEST_MATRIX.md
 ```text
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> 8EC5BDA6D737A23F3C071FF357676BD96B4546E06662D94424A6C3828C0CA89F (112,195,398 B)
+  -> 91A4DE630421AACE1D90A803B47B6DED7C5C9EC1115DBD1B080835E797857066 (112,195,398 B)
 ```
 
 The source ZIP was extracted into a clean folder and published there: the resulting executable has the
@@ -984,7 +990,9 @@ smoke test only.
     size/hash mismatch, and every rerun added another copy. `TransferEntry.CommittedPath` now records the
     path the bytes actually landed on (persisted in JSON and SQLite through the existing migration),
     verification checks that file and reports `STORED AS`, and a rerun accepts the recorded copy when its
-    bytes still match. Three tests: storage/preservation, verification of the renamed copy, and the rerun.
+    bytes still match. A changed source is never served from the old renamed copy: the reuse check now
+    requires `!SourceChanged`, so the new bytes are stored under a fresh name. Four tests:
+    storage/preservation, verification of the renamed copy, the unchanged rerun, and the changed source.
 ### Runtime UI audit and README reconciliation
 
 - The published candidate was driven through UI Automation with no device attached: the window was found,
@@ -1001,7 +1009,7 @@ smoke test only.
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
-- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **494 passed, 2 skipped, 496 total** in four
+- `dotnet test ... --blame-hang --blame-hang-timeout 240s`: **495 passed, 2 skipped, 497 total** in four
   consecutive runs (32 s each). One earlier run in the same batch reported a single failure in
   `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`; it passed in isolation and in every
   subsequent full run, and is recorded as KI-26 rather than dismissed.

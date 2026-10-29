@@ -301,12 +301,12 @@ dotnet build I-Total.Transfer.sln -c Release --no-incremental
   -> Build succeeded. 0 Warning(s), 0 Error(s)
 
 dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s
-  -> Passed! Failed: 0, Passed: 494, Skipped: 2, Total: 496, Duration: 31 s
+  -> Passed! Failed: 0, Passed: 495, Skipped: 2, Total: 497, Duration: 31 s
 
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
   -> publish\I-Total.Transfer.exe, 112,195,398 bytes
-     SHA-256 8EC5BDA6D737A23F3C071FF357676BD96B4546E06662D94424A6C3828C0CA89F
+     SHA-256 91A4DE630421AACE1D90A803B47B6DED7C5C9EC1115DBD1B080835E797857066
 ```
 
 The source ZIP was extracted into a clean folder, published there, and produced the **same** executable

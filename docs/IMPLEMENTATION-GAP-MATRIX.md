@@ -53,7 +53,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | C7 | Crash/kill recovery reconciles DB with files | `SessionRecovery`, `ManifestStore.LoadOrCreate` | AT recovery suite | AUTOMATED TEST VERIFIED | SQLite hashes (C2) |
 | C8 | Resume only when source identity and destination state reconcile | `SourceIdentityProblem`, `HandleExistingAsync` | AT | AUTOMATED TEST VERIFIED | — |
 | C9 | Unknown-size resume does not become a collision | `ClassifyExistingDestination`, digest-first rule | AT `EnumerationAccountingTests` | AUTOMATED TEST VERIFIED | — |
-| C12 | A renamed copy is verified at its committed path and not duplicated on rerun | `TransferEntry.CommittedPath`, `HandleExistingAsync`, `VerifyCoreAsync` | AT `RenameConflictTests` (3) | AUTOMATED TEST VERIFIED | — |
+| C12 | A renamed copy is verified at its committed path and not duplicated on rerun | `TransferEntry.CommittedPath`, `HandleExistingAsync`, `VerifyCoreAsync` | AT `RenameConflictTests` (4) | AUTOMATED TEST VERIFIED | — |
 | C11 | A run continues on the JSON manifest when SQLite cannot be opened | `TryOpenDatabase`, `ManifestStore` | AT `ATransferStillCompletesWhenTheSqliteDatabaseCannotBeOpened` | AUTOMATED TEST VERIFIED | — |
 | C10 | Source is never deleted | all backends | STATIC (no delete API on source paths) | AUTOMATED TEST VERIFIED | — |
 

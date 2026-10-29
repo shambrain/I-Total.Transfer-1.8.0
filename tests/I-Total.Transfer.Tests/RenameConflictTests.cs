@@ -90,6 +90,39 @@ public sealed class RenameConflictTests
     }
 
     [TestMethod]
+    public async Task AChangedSourceIsCopiedAgainEvenUnderTheRenamePolicy()
+    {
+        string destination = TempDestination();
+        try
+        {
+            string original = Path.Combine(destination, "DCIM", "IMG_0000.bin");
+            Directory.CreateDirectory(Path.GetDirectoryName(original)!);
+            File.WriteAllBytes(original, [1, 1, 1]);
+
+            using (var first = new MockBackend(canHashSourceBytes: true, fileCount: 1, bytesPerFile: 1024))
+            {
+                var (service, scan) = await PrepareAsync(first, destination);
+                TransferSummary summary = await service.CopyAsync(scan, destination, 1,
+                    new Progress<TransferProgress>(_ => { }), CancellationToken.None);
+                Assert.AreEqual(1, summary.Copied);
+            }
+
+            using var second = new MockBackend(canHashSourceBytes: true, fileCount: 1, bytesPerFile: 2048);
+            var (service2, scan2) = await PrepareAsync(second, destination);
+            TransferSummary changed = await service2.CopyAsync(scan2, destination, 1,
+                new Progress<TransferProgress>(_ => { }), CancellationToken.None);
+
+            Assert.AreEqual(1, changed.Copied, "a changed source must not reuse the old renamed copy");
+            Assert.IsTrue(File.Exists(Path.Combine(destination, "DCIM", "IMG_0000 (2).bin")),
+                "the new source bytes are stored under a fresh name");
+            Assert.AreEqual(2048, new FileInfo(Path.Combine(destination, "DCIM", "IMG_0000 (2).bin")).Length);
+            CollectionAssert.AreEqual(new byte[] { 1, 1, 1 }, File.ReadAllBytes(original),
+                "the original collision is still preserved");
+        }
+        finally { Directory.Delete(destination, true); }
+    }
+
+    [TestMethod]
     public async Task ARerunDoesNotAddASecondRenamedCopy()
     {
         using var backend = new MockBackend(canHashSourceBytes: true, fileCount: 1);

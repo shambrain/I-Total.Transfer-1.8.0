@@ -545,7 +545,7 @@ public sealed class TransferService
             case ConflictPolicy.RenameIncoming:
                 // If an earlier run already stored this source under a renamed path, do not add another
                 // copy on every resume: accept the recorded copy when its bytes still match.
-                if (!string.IsNullOrWhiteSpace(entry.CommittedPath))
+                if (!string.IsNullOrWhiteSpace(entry.CommittedPath) && !entry.SourceChanged)
                 {
                     string committedFull = Path.Combine(destination, entry.CommittedPath);
                     if (File.Exists(committedFull) && !string.IsNullOrWhiteSpace(entry.DestinationSha256))
