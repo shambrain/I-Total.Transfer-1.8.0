@@ -202,6 +202,13 @@ public sealed class TransferEntry
     public TransferState State { get; set; } = TransferState.Discovered;
     /// <summary>Why the item reached its state; see <see cref="OutcomeReason"/>.</summary>
     public OutcomeReason Outcome { get; set; } = OutcomeReason.None;
+    /// <summary>
+    /// The destination-relative path the bytes were actually committed to when the conflict policy
+    /// renamed the incoming file. Null means <see cref="RelativePath"/> is the committed path. Without
+    /// this, a renamed copy's digest would be recorded against the colliding name and a later
+    /// verification would compare the untouched original with the copy's hash.
+    /// </summary>
+    public string? CommittedPath { get; set; }
     public int Attempts { get; set; }
     /// <summary>SHA-256 of the raw source byte stream, populated only when the backend can read and hash the source bytes. Null for backends that cannot expose source bytes.</summary>
     public string? SourceSha256 { get; set; }

@@ -1,5 +1,12 @@
 ## 1.8.0 — 2026-10-20 — borderless chrome, honest device detection, unfinished-session recovery, Android storage
 
+- **A renamed copy is now verified where it was actually stored (2026-10-29).** With the rename conflict
+  policy, the copy landed beside the colliding file but the manifest kept the original path, so a later
+  verification compared the untouched original with the copy digest and reported a mismatch. Entries now
+  record `CommittedPath`, verification checks that file, the report says `STORED AS`, SQLite persists the
+  column through the same idempotent migration, and a resume reuses the recorded copy instead of adding
+  another one. Three engine tests pin the rename, its verification and the rerun.
+
 - **A no-op run is now labelled as one, and verification is durable (2026-10-29).** When every planned
   file was already present at an accepted grade, the summary said `HASH-VERIFIED COMPLETE`, which reads
   as if the run had written the files; it now says `ALREADY PRESENT - NO FILES NEEDED COPYING (verified

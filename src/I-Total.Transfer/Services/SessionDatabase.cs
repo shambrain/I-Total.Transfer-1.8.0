@@ -96,6 +96,7 @@ public sealed class SessionDatabase : IDisposable
         AddColumnIfMissing("Files", "SourceModifiedUtc", "TEXT NULL");
         AddColumnIfMissing("Files", "SourceChanged", "INTEGER NOT NULL DEFAULT 0");
         AddColumnIfMissing("Files", "Outcome", "TEXT NOT NULL DEFAULT 'None'");
+        AddColumnIfMissing("Files", "CommittedPath", "TEXT NULL");
         AddColumnIfMissing("Sessions", "BackendName", "TEXT NULL");
         AddColumnIfMissing("Sessions", "DeviceFamily", "TEXT NULL");
         AddColumnIfMissing("Sessions", "EnumerationStatus", "TEXT NULL");
@@ -156,17 +157,17 @@ public sealed class SessionDatabase : IDisposable
         command.CommandText = """
             INSERT INTO Files(Destination,RelativePath,ExpectedBytes,State,Attempts,Error,UpdatedUtc,
                                SizeKnown,BytesWritten,SourceSha256,StagedPayloadSha256,DestinationSha256,
-                               Verification,SourceModifiedUtc,SourceChanged,Outcome)
+                               Verification,SourceModifiedUtc,SourceChanged,Outcome,CommittedPath)
             VALUES($dest,$path,$size,$state,$attempts,$error,$updated,
                    $sizeKnown,$written,$source,$staged,$destinationHash,
-                   $verification,$modified,$changed,$outcome)
+                   $verification,$modified,$changed,$outcome,$committedPath)
             ON CONFLICT(Destination,RelativePath) DO UPDATE SET
                 ExpectedBytes=excluded.ExpectedBytes, State=excluded.State, Attempts=excluded.Attempts,
                 Error=excluded.Error, UpdatedUtc=excluded.UpdatedUtc, SizeKnown=excluded.SizeKnown,
                 BytesWritten=excluded.BytesWritten, SourceSha256=excluded.SourceSha256,
                 StagedPayloadSha256=excluded.StagedPayloadSha256, DestinationSha256=excluded.DestinationSha256,
                 Verification=excluded.Verification, SourceModifiedUtc=excluded.SourceModifiedUtc,
-                SourceChanged=excluded.SourceChanged, Outcome=excluded.Outcome;
+                SourceChanged=excluded.SourceChanged, Outcome=excluded.Outcome, CommittedPath=excluded.CommittedPath;
             """;
         SqliteParameter dest = command.Parameters.Add("$dest", SqliteType.Text);
         SqliteParameter path = command.Parameters.Add("$path", SqliteType.Text);
@@ -184,6 +185,7 @@ public sealed class SessionDatabase : IDisposable
         SqliteParameter modified = command.Parameters.Add("$modified", SqliteType.Text);
         SqliteParameter changed = command.Parameters.Add("$changed", SqliteType.Integer);
         SqliteParameter outcome = command.Parameters.Add("$outcome", SqliteType.Text);
+        SqliteParameter committedPath = command.Parameters.Add("$committedPath", SqliteType.Text);
 
         foreach (TransferEntry entry in entries)
         {
@@ -203,6 +205,7 @@ public sealed class SessionDatabase : IDisposable
             modified.Value = entry.SourceModifiedUtc is { } stamp ? stamp.ToString("O") : (object)DBNull.Value;
             changed.Value = entry.SourceChanged ? 1 : 0;
             outcome.Value = entry.Outcome.ToString();
+            committedPath.Value = (object?)entry.CommittedPath ?? DBNull.Value;
             command.ExecuteNonQuery();
         }
         transaction.Commit();
@@ -271,7 +274,7 @@ public sealed class SessionDatabase : IDisposable
         using var command = Connection.CreateCommand();
         command.CommandText = """
             SELECT RelativePath,ExpectedBytes,SizeKnown,BytesWritten,State,Attempts,Error,
-                   SourceSha256,StagedPayloadSha256,DestinationSha256,Verification,SourceModifiedUtc,SourceChanged,Outcome
+                   SourceSha256,StagedPayloadSha256,DestinationSha256,Verification,SourceModifiedUtc,SourceChanged,Outcome,CommittedPath
             FROM Files WHERE Destination=$dest ORDER BY RelativePath;
             """;
         command.Parameters.AddWithValue("$dest", destination);
@@ -292,7 +295,8 @@ public sealed class SessionDatabase : IDisposable
                 reader.GetString(10),
                 reader.IsDBNull(11) ? null : reader.GetString(11),
                 reader.GetInt64(12) != 0,
-                reader.GetString(13)));
+                reader.GetString(13),
+                reader.IsDBNull(14) ? null : reader.GetString(14)));
         }
         return rows;
     }
@@ -310,4 +314,5 @@ public sealed record FileHistoryRow(string RelativePath, long ExpectedBytes, str
 /// <summary>One persisted file row, hashes and verification included.</summary>
 public sealed record PersistedFileState(string RelativePath, long ExpectedBytes, bool SizeKnown, long BytesWritten,
     string State, int Attempts, string? Error, string? SourceSha256, string? StagedPayloadSha256,
-    string? DestinationSha256, string Verification, string? SourceModifiedUtc, bool SourceChanged, string Outcome);
+    string? DestinationSha256, string Verification, string? SourceModifiedUtc, bool SourceChanged, string Outcome,
+    string? CommittedPath);

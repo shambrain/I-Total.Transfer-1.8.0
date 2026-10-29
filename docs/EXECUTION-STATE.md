@@ -44,16 +44,16 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
   after D4/D8:        Passed! Failed: 0, Passed: 481, Skipped: 2, Total: 483, Duration: 29 s
   after D5:           Passed! Failed: 0, Passed: 482, Skipped: 2, Total: 484, Duration: 31 s
   after D6:           Passed! Failed: 0, Passed: 485, Skipped: 2, Total: 487, Duration: 31 s
-  after Gate E/F:     Passed! Failed: 0, Passed: 491, Skipped: 2, Total: 493, Duration: 31 s
+  after Gate E/F:     Passed! Failed: 0, Passed: 494, Skipped: 2, Total: 496, Duration: 31 s
 ```
 
 Artifacts at baseline (unchanged by this session so far):
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `publish/I-Total.Transfer.exe` (candidate) | `0F15740792C5555FD2B5472FA5246E5538BA48B8AB3DA90BDF5D6A7D890854D3` (112,191,302 B) |
-| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `F4F94341B4B1217750648E39B577F07084E880EB9B1B7E70FD240798F70CE0DD` |
-| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `459F8EB4FE00A7DA9C34CDCAEB3926529D6B7EE080D23DDCF6BAF68C2DE51A36` |
+| `publish/I-Total.Transfer.exe` (candidate) | `8EC5BDA6D737A23F3C071FF357676BD96B4546E06662D94424A6C3828C0CA89F` (112,195,398 B) |
+| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `18931524B4B1217750648E39B577F07084E880EB9B1B7E70FD240798F70CE0DD` |
+| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `2F0C9F41FE00A7DA9C34CDCAEB3926529D6B7EE080D23DDCF6BAF68C2DE51A36` |
 | `dist/I-Total.Transfer-1.8.0-win-x64.zip` and source ZIP | see `dist/SHA256SUMS.txt` after the final rebuild |
 
 The baseline artifacts (`8FCB2B50...` exe, `0E41DEC3...` deployment, `21742374...` portable,
@@ -66,7 +66,7 @@ been run against a phone.
 
 - Commits on `work/master-directive`: `0c13df2` (Gate A + size truth), `2917be1` (SQLite, reconciliation,
   retries, stability), and the final commit that carries Gate E/F/H and the rebuilt archives.
-- State: build 0/0, 491 passed, 2 skipped, 493 total, candidate exe `1C62B2B1...`.
+- State: build 0/0, 494 passed, 2 skipped, 496 total, candidate exe `1C62B2B1...`.
 
 ## Blockers and their evidence
 

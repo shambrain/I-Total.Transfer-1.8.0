@@ -314,6 +314,11 @@ public sealed class TransferService
                             entry.SourceSha256 = stageResult.SourceSha256;
                             entry.StagedPayloadSha256 = stagedPayloadHash;
                             entry.DestinationSha256 = destinationHash;
+                            string planFull = Path.GetFullPath(Path.Combine(destination, relative));
+                            string committedFull = Path.GetFullPath(target);
+                            entry.CommittedPath = string.Equals(planFull, committedFull, StringComparison.OrdinalIgnoreCase)
+                                ? null
+                                : Path.GetRelativePath(destination, committedFull);
                             entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, stagedPayloadHash, destinationHash, file.SizeKnown);
                             entry.PreserveTimestamp = _options.PreserveTimestamps;
                             entry.SourceChanged = false;
@@ -538,6 +543,26 @@ public sealed class TransferService
                 return new ResumeOutcome(true, ResumeKind.Skipped, target);
 
             case ConflictPolicy.RenameIncoming:
+                // If an earlier run already stored this source under a renamed path, do not add another
+                // copy on every resume: accept the recorded copy when its bytes still match.
+                if (!string.IsNullOrWhiteSpace(entry.CommittedPath))
+                {
+                    string committedFull = Path.Combine(destination, entry.CommittedPath);
+                    if (File.Exists(committedFull) && !string.IsNullOrWhiteSpace(entry.DestinationSha256))
+                    {
+                        string? committedHash = await ComputeSha256Async(committedFull, token);
+                        if (string.Equals(committedHash, entry.DestinationSha256, StringComparison.OrdinalIgnoreCase))
+                        {
+                            entry.State = TransferState.IntegrityVerified;
+                            entry.Outcome = OutcomeReason.AlreadyPresent;
+                            entry.Verification = TransferRules.ClassifyVerification(entry.SourceSha256, null, entry.DestinationSha256, file.SizeKnown);
+                            entry.Error = null;
+                            entry.UpdatedUtc = DateTimeOffset.UtcNow;
+                            _store!.MarkDirty(); TryDatabase(() => database?.UpsertFile(destination, entry), relative);
+                            return new ResumeOutcome(true, ResumeKind.Skipped, committedFull);
+                        }
+                    }
+                }
                 target = TransferRules.ResolveTargetPath(destination, relative, ConflictPolicy.RenameIncoming, File.Exists);
                 return new ResumeOutcome(false, ResumeKind.Handled, target);
 
@@ -764,8 +789,16 @@ public sealed class TransferService
             try { relative = TransferRules.ValidateRelativePath(file.Folder, file.Name); }
             catch (InvalidDataException ex) { unverifiable++; issues.Add($"INVALID PATH: {file.Folder}/{file.Name}; {ex.Message}"); continue; }
 
-            string path = Path.Combine(destination, relative);
             manifestByPath.TryGetValue(relative, out TransferEntry? entry);
+            string path = Path.Combine(destination, relative);
+            if (!string.IsNullOrWhiteSpace(entry?.CommittedPath) &&
+                !string.Equals(entry.CommittedPath, relative, StringComparison.OrdinalIgnoreCase))
+            {
+                // A renamed copy lives under a different name; verify those bytes, not the untouched
+                // file that caused the collision.
+                path = Path.Combine(destination, entry.CommittedPath);
+                issues.Add($"STORED AS: {relative} was copied as {entry.CommittedPath} by the conflict policy.");
+            }
 
             if (!File.Exists(path))
             {
