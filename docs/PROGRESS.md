@@ -151,6 +151,19 @@ smoke test only.
     `Failed` row back from the database. The free-space preflight also no longer refuses a UNC destination
     whose free space cannot be read; it logs the limitation and lets the per-file copy report a real
     disk-full error.
+### Runtime UI audit and README reconciliation
+
+- The published candidate was driven through UI Automation with no device attached: the window was found,
+  all seven pages were opened through their real navigation buttons, and **174 interactive controls were
+  enumerated with 0 missing accessible names**. The disabled controls matched their documented reasons
+  (Start/Pause/Stop with no scan; queue actions with no sessions; Buy with no purchase URL; ordering
+  buttons with nothing to order; concurrency fixed at 1). Recorded in `docs/UI-REQUIREMENTS-MATRIX.md`.
+- `README.md` was reconciled with the evidence: the suite row now reads 491/493, the startup row records the
+  5-second launch and the UIA audit, the packaging row is dated 2026-10-29 and includes the source-ZIP
+  reproducibility check, a row for the size-truth/durability/reconciliation work was added, the Windows 11
+  wording now says it has not been run here, and the Android paragraph explains that the historical
+  108 `COPIED-UNVERIFIABLE` files predate the size-truth fix (a reported 0 is now verifiable; only an
+  unreadable size stays unverifiable).
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
@@ -295,6 +308,19 @@ smoke test only.
     `Failed` row back from the database. The free-space preflight also no longer refuses a UNC destination
     whose free space cannot be read; it logs the limitation and lets the per-file copy report a real
     disk-full error.
+### Runtime UI audit and README reconciliation
+
+- The published candidate was driven through UI Automation with no device attached: the window was found,
+  all seven pages were opened through their real navigation buttons, and **174 interactive controls were
+  enumerated with 0 missing accessible names**. The disabled controls matched their documented reasons
+  (Start/Pause/Stop with no scan; queue actions with no sessions; Buy with no purchase URL; ordering
+  buttons with nothing to order; concurrency fixed at 1). Recorded in `docs/UI-REQUIREMENTS-MATRIX.md`.
+- `README.md` was reconciled with the evidence: the suite row now reads 491/493, the startup row records the
+  5-second launch and the UIA audit, the packaging row is dated 2026-10-29 and includes the source-ZIP
+  reproducibility check, a row for the size-truth/durability/reconciliation work was added, the Windows 11
+  wording now says it has not been run here, and the Android paragraph explains that the historical
+  108 `COPIED-UNVERIFIABLE` files predate the size-truth fix (a reported 0 is now verifiable; only an
+  unreadable size stays unverifiable).
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
@@ -632,6 +658,19 @@ smoke test only.
     `Failed` row back from the database. The free-space preflight also no longer refuses a UNC destination
     whose free space cannot be read; it logs the limitation and lets the per-file copy report a real
     disk-full error.
+### Runtime UI audit and README reconciliation
+
+- The published candidate was driven through UI Automation with no device attached: the window was found,
+  all seven pages were opened through their real navigation buttons, and **174 interactive controls were
+  enumerated with 0 missing accessible names**. The disabled controls matched their documented reasons
+  (Start/Pause/Stop with no scan; queue actions with no sessions; Buy with no purchase URL; ordering
+  buttons with nothing to order; concurrency fixed at 1). Recorded in `docs/UI-REQUIREMENTS-MATRIX.md`.
+- `README.md` was reconciled with the evidence: the suite row now reads 491/493, the startup row records the
+  5-second launch and the UIA audit, the packaging row is dated 2026-10-29 and includes the source-ZIP
+  reproducibility check, a row for the size-truth/durability/reconciliation work was added, the Windows 11
+  wording now says it has not been run here, and the Android paragraph explains that the historical
+  108 `COPIED-UNVERIFIABLE` files predate the size-truth fix (a reported 0 is now verifiable; only an
+  unreadable size stays unverifiable).
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.
@@ -918,6 +957,19 @@ smoke test only.
     `Failed` row back from the database. The free-space preflight also no longer refuses a UNC destination
     whose free space cannot be read; it logs the limitation and lets the per-file copy report a real
     disk-full error.
+### Runtime UI audit and README reconciliation
+
+- The published candidate was driven through UI Automation with no device attached: the window was found,
+  all seven pages were opened through their real navigation buttons, and **174 interactive controls were
+  enumerated with 0 missing accessible names**. The disabled controls matched their documented reasons
+  (Start/Pause/Stop with no scan; queue actions with no sessions; Buy with no purchase URL; ordering
+  buttons with nothing to order; concurrency fixed at 1). Recorded in `docs/UI-REQUIREMENTS-MATRIX.md`.
+- `README.md` was reconciled with the evidence: the suite row now reads 491/493, the startup row records the
+  5-second launch and the UIA audit, the packaging row is dated 2026-10-29 and includes the source-ZIP
+  reproducibility check, a row for the size-truth/durability/reconciliation work was added, the Windows 11
+  wording now says it has not been run here, and the Android paragraph explains that the historical
+  108 `COPIED-UNVERIFIABLE` files predate the size-truth fix (a reported 0 is now verifiable; only an
+  unreadable size stays unverifiable).
 ### Final verification
 
 - `dotnet build I-Total.Transfer.sln -c Release --no-incremental`: 0 warnings, 0 errors.

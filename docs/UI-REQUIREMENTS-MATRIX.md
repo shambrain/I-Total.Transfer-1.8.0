@@ -237,3 +237,26 @@ A live attached-diagnostics run on the same day produced 10 Apple checks with bo
 4. A live iPhone-ready Overview and a mid-scan Overview in the current build; both phones are attached on 2026-10-22, but no new scan/transfer was run in this UI audit.
 5. A real selected-phone-disappears-mid-scan capture and the Android cancel/resume drill; see
    `DEVICE_TEST_MATRIX.md`.
+
+## Runtime UI Automation audit — 2026-10-29 candidate
+
+Executed against `publish/I-Total.Transfer.exe` (`0F157407...`) on this machine, with no device attached.
+The app was launched, its window found through UI Automation, and each page opened by invoking its real
+navigation button.
+
+| Page | Interactive controls | Without an accessible name | Disabled (and why) |
+| --- | --- | --- | --- |
+| Overview | 18 | 0 | Start transfer, Pause, Stop — no scan has run |
+| Backup & queue | 14 | 0 | none |
+| Media library | 20 | 0 | none |
+| Wireless import | 29 | 0 | Up, Down (×2), Stop, New ticket, Approve, Refuse, Approve all, Refuse all — receiver idle, no sessions |
+| History | 12 | 0 | none |
+| Settings | 67 | 0 | Up, Down (×5), File concurrency (fixed at 1 — one phone session serialises copies), Buy a licence (no purchase URL) |
+| Diagnostics | 14 | 0 | none |
+
+Total: **174 interactive controls, 0 unnamed.** The window title read
+`I-Total Transfer - verified phone media transfer`.
+
+This is runtime evidence that the accessible-name pass reaches the real controls and that the disabled
+states match the documented reasons. It does **not** prove focus order, Narrator announcement quality, or
+that every enabled control succeeds against a device; those remain KI-24 and the hardware matrix.

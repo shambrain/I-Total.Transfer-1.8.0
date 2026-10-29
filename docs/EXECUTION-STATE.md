@@ -52,8 +52,8 @@ Artifacts at baseline (unchanged by this session so far):
 | Artifact | SHA-256 |
 | --- | --- |
 | `publish/I-Total.Transfer.exe` (candidate) | `0F15740792C5555FD2B5472FA5246E5538BA48B8AB3DA90BDF5D6A7D890854D3` (112,191,302 B) |
-| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `00E46FB8B4B1217750648E39B577F07084E880EB9B1B7E70FD240798F70CE0DD` |
-| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `9DE4D08FFE00A7DA9C34CDCAEB3926529D6B7EE080D23DDCF6BAF68C2DE51A36` |
+| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `F4F94341B4B1217750648E39B577F07084E880EB9B1B7E70FD240798F70CE0DD` |
+| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `459F8EB4FE00A7DA9C34CDCAEB3926529D6B7EE080D23DDCF6BAF68C2DE51A36` |
 | `dist/I-Total.Transfer-1.8.0-win-x64.zip` and source ZIP | see `dist/SHA256SUMS.txt` after the final rebuild |
 
 The baseline artifacts (`8FCB2B50...` exe, `0E41DEC3...` deployment, `21742374...` portable,
