@@ -1,0 +1,1 @@
+﻿sender.test.mjs: PASS (13 size vectors, path rules, formatBytes)
