@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -640,5 +641,48 @@ public sealed class WirelessReceiverTests
             Assert.ThrowsException<InvalidOperationException>(() => receiver.Start());
         }
         finally { Directory.Delete(dir, true); }
+    }
+
+    [TestMethod]
+    public async Task AClientThatDisconnectsMidUploadLeavesNoPartialOrDestination()
+    {
+        string dir = TempDir();
+        (WirelessReceiver receiver, string url)? started = null;
+        try
+        {
+            started = StartReceiver(dir, autoApprove: true);
+            using var client = new HttpClient { BaseAddress = new Uri(started.Value.url) };
+            string session = Pair(started.Value.receiver, client);
+            Uri baseUri = client.BaseAddress!;
+
+            using (var raw = new TcpClient())
+            {
+                await raw.ConnectAsync(baseUri.Host, baseUri.Port);
+                using NetworkStream stream = raw.GetStream();
+                string head = "POST /upload?path=DCIM/IMG_DROP.HEIC HTTP/1.1\r\n" +
+                              $"Host: {baseUri.Host}\r\n" +
+                              $"X-Session-Token: {session}\r\n" +
+                              "Content-Type: application/octet-stream\r\n" +
+                              "Content-Length: 1048576\r\n\r\n";
+                await stream.WriteAsync(Encoding.ASCII.GetBytes(head));
+                await stream.WriteAsync(new byte[8192]);
+                await stream.FlushAsync();
+            }
+
+            await Task.Delay(1500);
+
+            Assert.IsFalse(File.Exists(Path.Combine(dir, "DCIM", "IMG_DROP.HEIC")),
+                "an interrupted upload must never become a destination file");
+            Assert.AreEqual(0, started.Value.receiver.Received.Count);
+            string staging = Path.Combine(dir, ".i-total", "wireless");
+            if (Directory.Exists(staging))
+                Assert.AreEqual(0, Directory.GetFiles(staging, "*.partial").Length,
+                    "an interrupted upload must not leave a partial staging file");
+        }
+        finally
+        {
+            started?.receiver.Dispose();
+            Directory.Delete(dir, true);
+        }
     }
 }

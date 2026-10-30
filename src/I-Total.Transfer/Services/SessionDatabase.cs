@@ -100,6 +100,12 @@ public sealed class SessionDatabase : IDisposable
         AddColumnIfMissing("Sessions", "BackendName", "TEXT NULL");
         AddColumnIfMissing("Sessions", "DeviceFamily", "TEXT NULL");
         AddColumnIfMissing("Sessions", "EnumerationStatus", "TEXT NULL");
+        AddColumnIfMissing("Sessions", "TotalFiles", "INTEGER NOT NULL DEFAULT 0");
+        AddColumnIfMissing("Sessions", "CopiedFiles", "INTEGER NOT NULL DEFAULT 0");
+        AddColumnIfMissing("Sessions", "FailedFiles", "INTEGER NOT NULL DEFAULT 0");
+        AddColumnIfMissing("Sessions", "CopiedBytes", "INTEGER NOT NULL DEFAULT 0");
+        AddColumnIfMissing("Sessions", "WarningCount", "INTEGER NOT NULL DEFAULT 0");
+        AddColumnIfMissing("Sessions", "ReconnectCount", "INTEGER NOT NULL DEFAULT 0");
     }
 
     private void AddColumnIfMissing(string table, string column, string definition)
@@ -221,14 +227,45 @@ public sealed class SessionDatabase : IDisposable
         command.ExecuteNonQuery();
     }
 
-    public void EndSession(string sessionId, string status)
+    /// <summary>
+    /// Closes a session and records the outcome counts the report was built from. The counts are part of
+    /// the durable history: a later reader must be able to see how much a session copied without parsing
+    /// the JSON report.
+    /// </summary>
+    public void EndSession(string sessionId, string status, int totalFiles = 0, int copiedFiles = 0,
+        int failedFiles = 0, long copiedBytes = 0, int warningCount = 0, int reconnectCount = 0)
     {
         using var command = Connection.CreateCommand();
-        command.CommandText = "UPDATE Sessions SET UpdatedUtc=$now, Status=$status WHERE SessionId=$id;";
+        command.CommandText = """
+            UPDATE Sessions SET UpdatedUtc=$now, Status=$status, TotalFiles=$total, CopiedFiles=$copied,
+                FailedFiles=$failed, CopiedBytes=$bytes, WarningCount=$warnings, ReconnectCount=$reconnects
+            WHERE SessionId=$id;
+            """;
         command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$status", status);
+        command.Parameters.AddWithValue("$total", Math.Max(0, totalFiles));
+        command.Parameters.AddWithValue("$copied", Math.Max(0, copiedFiles));
+        command.Parameters.AddWithValue("$failed", Math.Max(0, failedFiles));
+        command.Parameters.AddWithValue("$bytes", Math.Max(0, copiedBytes));
+        command.Parameters.AddWithValue("$warnings", Math.Max(0, warningCount));
+        command.Parameters.AddWithValue("$reconnects", Math.Max(0, reconnectCount));
         command.Parameters.AddWithValue("$id", sessionId);
         command.ExecuteNonQuery();
+    }
+
+    /// <summary>The persisted outcome counts for one session, used by tests and history views.</summary>
+    public SessionStatsRow? QuerySessionStats(string sessionId)
+    {
+        using var command = Connection.CreateCommand();
+        command.CommandText = """
+            SELECT SessionId, Status, TotalFiles, CopiedFiles, FailedFiles, CopiedBytes, WarningCount, ReconnectCount
+            FROM Sessions WHERE SessionId=$id;
+            """;
+        command.Parameters.AddWithValue("$id", sessionId);
+        using SqliteDataReader reader = command.ExecuteReader();
+        if (!reader.Read()) return null;
+        return new SessionStatsRow(reader.GetString(0), reader.GetString(1), reader.GetInt32(2), reader.GetInt32(3),
+            reader.GetInt32(4), reader.GetInt64(5), reader.GetInt32(6), reader.GetInt32(7));
     }
 
     /// <summary>Recent sessions for the History screen.</summary>
@@ -309,6 +346,7 @@ public sealed class SessionDatabase : IDisposable
 }
 
 public sealed record SessionHistoryRow(string SessionId, string DeviceName, string Destination, string StartedUtc, string UpdatedUtc, string Status);
+public sealed record SessionStatsRow(string SessionId, string Status, int TotalFiles, int CopiedFiles, int FailedFiles, long CopiedBytes, int WarningCount, int ReconnectCount);
 public sealed record FileHistoryRow(string RelativePath, long ExpectedBytes, string State, int Attempts, string? Error);
 
 /// <summary>One persisted file row, hashes and verification included.</summary>

@@ -54,12 +54,17 @@ The receiver now serves a sender page at `/`, `/send` and the ticket URL (`/pair
   both files intact; **PASS**.
 - This is a local browser integration, not a physical iPhone/Android run; KI-12 keeps the physical sender
   row open.
+- `AClientThatDisconnectsMidUploadLeavesNoPartialOrDestination` (loopback, real socket): a sender that
+  drops mid-body leaves no destination file, no staging `.partial` and no received entry.
+- The SQLite `Sessions` row now records the outcome counts and bytes (`TotalFiles`, `CopiedFiles`,
+  `FailedFiles`, `CopiedBytes`, `WarningCount`, `ReconnectCount`) through the same idempotent migration;
+  `ASessionRecordsItsOutcomeCounts` and `AnOldSessionRowGainsCountColumnsWithZeroDefaults` pin it.
 
 ### Commands and results
 
 ```text
 dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
-dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 516 passed, 2 skipped, 518 total
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 519 passed, 2 skipped, 521 total
 node tests\sender\sender.test.mjs ...                            -> PASS (13 size vectors)
 node tests\sender\browser-e2e.mjs ...                            -> PASS (pair, upload, receipt, collision)
 ```
@@ -116,7 +121,7 @@ deleted, and no cause is asserted.
 
 ```text
 dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
-dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 516 passed, 2 skipped, 518 total
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 519 passed, 2 skipped, 521 total
                                                                    (six consecutive runs)
 ```
 

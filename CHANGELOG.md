@@ -1,5 +1,21 @@
 ## 1.8.0 — 2026-10-20 — borderless chrome, honest device detection, unfinished-session recovery, Android storage
 
+- **A real browser wireless sender is implemented (2026-10-30).** The receiver serves `/`, `/send` and the
+  ticket URL plus `/sender.js` from embedded resources. An iPhone (Safari) or Android phone (Chrome) pairs
+  with the single-use code, explicitly selects files, hashes each in 4 MiB slices with an incremental
+  pure-JS SHA-256 (Web Crypto needs a secure context), uploads with the digest, waits for the operator's
+  approval, and sees the receiver-verified receipt. Cancellation, token rotation, collision renaming
+  (` (1)`), a restrictive CSP and explicit limits are included. Evidence: 5 loopback tests, Node SHA-256
+  and path tests (13 sizes), and a Chrome end-to-end run with a 64 KiB HEIC and a renamed second copy.
+  A physical phone browser run remains pending (KI-12).
+- **Session outcome counts are durable in SQLite (2026-10-30).** `Sessions` now records total, copied and
+  failed files, copied bytes, warning count and reconnect count through the idempotent migration, so the
+  history can be read without the JSON report. `SessionDatabaseTests` covers the round-trip and an old
+  database gaining zero-default columns.
+- **A sender that drops mid-upload is proven clean (2026-10-30).** A loopback test opens a real socket,
+  sends an upload header and part of the body, then disconnects: no destination file, no staging
+  `.partial` and no received entry remain.
+
 - **Inventory scope is reported separately from enumeration status (2026-10-30).** A `Complete` scan means
   every folder the provider exposed was read, not that the phone has no more albums. `ScanScope` compares
   the fresh scan with the last complete cached listing at folder level; `ScanResult.Scope` carries

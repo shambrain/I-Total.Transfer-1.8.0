@@ -55,6 +55,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | C7 | Crash/kill recovery reconciles DB with files | `SessionRecovery`, `ManifestStore.LoadOrCreate` | AT recovery suite | AUTOMATED TEST VERIFIED | SQLite hashes (C2) |
 | C8 | Resume only when source identity and destination state reconcile | `SourceIdentityProblem`, `HandleExistingAsync` | AT | AUTOMATED TEST VERIFIED | — |
 | C9 | Unknown-size resume does not become a collision | `ClassifyExistingDestination`, digest-first rule | AT `EnumerationAccountingTests` | AUTOMATED TEST VERIFIED | — |
+| C15 | The SQLite session row persists outcome counts, bytes and warnings | `SessionDatabase.EndSession/QuerySessionStats` | AT `ASessionRecordsItsOutcomeCounts`, `AnOldSessionRowGainsCountColumnsWithZeroDefaults` | AUTOMATED TEST VERIFIED | — |
 | C14 | A mid-stream device failure aborts without committing or reporting complete, and resume re-reads | `MockBackend.MidStreamThrowPaths`, engine abort path | AT `AMidStreamDisconnectAbortsWithoutCommittingOrReportingComplete`, `AResumeAfterAMidStreamDisconnectReReadsTheItemAndCompletes` | AUTOMATED TEST VERIFIED | physical IP07/AN07 pending |
 | C13 | A corrupt SQLite file does not stop the run and its handle is released | `TryOpenDatabase` (dispose on failure), `ManifestStore` | AT `ACorruptSqliteFileDoesNotStopTheRun` | AUTOMATED TEST VERIFIED | — |
 | C12 | A renamed copy is verified at its committed path and not duplicated on rerun | `TransferEntry.CommittedPath`, `HandleExistingAsync`, `VerifyCoreAsync` | AT `RenameConflictTests` (4); LIVE Android rename `(1).mp4` with `STORED AS`, rerun `ALREADY PRESENT` | PHYSICAL DEVICE VERIFIED | — |
@@ -112,6 +113,7 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | --- | --- | --- | --- | --- | --- |
 | G1 | Authenticated receiver, single-use pairing, approvals, limits | `WirelessReceiver`, `PairingState` | AT wireless suite; LIVE loopback/LAN drill (2026-10-22) | AUTOMATED TEST VERIFIED | — |
 | G2 | Path traversal, spoofed names, oversize requests rejected | `WirelessReceiver` | AT | AUTOMATED TEST VERIFIED | — |
+| G4 | A sender disconnect mid-upload leaves no partial or destination | `WirelessReceiver.ReceiveAsync` | AT `AClientThatDisconnectsMidUploadLeavesNoPartialOrDestination` | AUTOMATED TEST VERIFIED | physical phone run pending |
 | G3 | Real iOS/Android sender end to end | `Wireless/sender.html`, `Wireless/sender.js`, `WirelessSenderPage`, receiver routes | C# loopback tests (5), Node SHA-256/path tests, Chrome browser end-to-end (local) | AUTOMATED TEST VERIFIED (local browser); PHYSICAL PHONE PENDING | run the page from Safari/Chrome on a real iPhone and Android phone; record the OS/browser and receipt |
 
 | G4 | No firewall rule, private interface binding | `PrivateNetwork`, installer | AT private-network tests; STATIC | AUTOMATED TEST VERIFIED | — |

@@ -483,7 +483,7 @@ public sealed class TransferService
         // honest limitation look like a failed run in every log reader.
         string summaryLevel = complete ? "OK" : failed == 0 && inaccessible == 0 ? "WARN" : "ERROR";
         _log.Write($"SUMMARY {status}; processed={processed}/{total}; copied={copied}; skipped={skipped}; failed={failed}; inaccessible={inaccessible}; unverifiable={unverifiable}; elapsed={timer.Elapsed:hh\\:mm\\:ss}", summaryLevel);
-        TryDatabase(() => database?.EndSession(sessionId, status), "session summary");
+        TryDatabase(() => database?.EndSession(sessionId, status, total, copied, failed, bytesCopied, scan.Warnings.Count), "session summary");
         ExportReports(destination, scan, manifest, status, weakest, reconciliation);
         return new TransferSummary(total, copied, skipped, failed, inaccessible, unverifiable, required, timer.Elapsed,
             complete, status, _store.Path)
@@ -1034,7 +1034,12 @@ public sealed class TransferService
             database.BeginSession(sessionId, scan.DeviceName, destination, "VERIFYING",
                 _device.Name, scan.Family.ToString(), scan.Status.ToString());
             database.UpsertFiles(destination, manifest.Entries);
-            database.EndSession(sessionId, complete ? "VERIFICATION COMPLETE" : "VERIFICATION INCOMPLETE");
+            database.EndSession(sessionId, complete ? "VERIFICATION COMPLETE" : "VERIFICATION INCOMPLETE",
+                manifest.Entries.Count,
+                manifest.Entries.Count(e => e.State is TransferState.IntegrityVerified or TransferState.SizeVerified),
+                manifest.Entries.Count(e => e.State == TransferState.Failed),
+                manifest.Entries.Sum(e => Math.Max(0, e.BytesWritten)),
+                scan.Warnings.Count);
         }
         catch (Exception ex)
         {

@@ -139,6 +139,62 @@ public sealed class SessionDatabaseTests
     }
 
     [TestMethod]
+    public void ASessionRecordsItsOutcomeCounts()
+    {
+        string root = TempRoot();
+        try
+        {
+            string dbPath = Path.Combine(root, ".i-total", "session.db");
+            using var database = new SessionDatabase(dbPath, new LogService(root));
+            database.Initialize();
+            database.BeginSession("s-counts", "iPhone", root, "RUNNING", "WPD", "Apple", "Complete");
+            database.EndSession("s-counts", "HASH-VERIFIED COMPLETE", totalFiles: 12, copiedFiles: 10,
+                failedFiles: 1, copiedBytes: 4096, warningCount: 2, reconnectCount: 1);
+
+            SessionStatsRow stats = database.QuerySessionStats("s-counts") ?? throw new AssertFailedException("session missing");
+            Assert.AreEqual("HASH-VERIFIED COMPLETE", stats.Status);
+            Assert.AreEqual(12, stats.TotalFiles);
+            Assert.AreEqual(10, stats.CopiedFiles);
+            Assert.AreEqual(1, stats.FailedFiles);
+            Assert.AreEqual(4096, stats.CopiedBytes);
+            Assert.AreEqual(2, stats.WarningCount);
+            Assert.AreEqual(1, stats.ReconnectCount);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [TestMethod]
+    public void AnOldSessionRowGainsCountColumnsWithZeroDefaults()
+    {
+        string root = TempRoot();
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, ".i-total"));
+            string dbPath = Path.Combine(root, ".i-total", "session.db");
+            using (var old = new SqliteConnection($"Data Source={dbPath};Pooling=False"))
+            {
+                old.Open();
+                using var create = old.CreateCommand();
+                create.CommandText = """
+                    CREATE TABLE Sessions (SessionId TEXT PRIMARY KEY, DeviceName TEXT NOT NULL, Destination TEXT NOT NULL,
+                        StartedUtc TEXT NOT NULL, UpdatedUtc TEXT NOT NULL, Status TEXT NOT NULL);
+                    INSERT INTO Sessions VALUES('legacy','iPhone',$dest,'2026-10-20T00:00:00.0000000+00:00','2026-10-20T00:00:00.0000000+00:00','RUNNING');
+                    """;
+                create.Parameters.AddWithValue("$dest", root);
+                create.ExecuteNonQuery();
+            }
+
+            using var database = new SessionDatabase(dbPath, new LogService(root));
+            database.Initialize();
+            SessionStatsRow stats = database.QuerySessionStats("legacy") ?? throw new AssertFailedException("legacy session missing");
+            Assert.AreEqual("RUNNING", stats.Status);
+            Assert.AreEqual(0, stats.TotalFiles);
+            Assert.AreEqual(0, stats.CopiedBytes);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [TestMethod]
     public void TheSessionRowRecordsTheBackendAndEnumerationStatus()
     {
         string root = TempRoot();

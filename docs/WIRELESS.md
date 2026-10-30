@@ -140,7 +140,8 @@ external resources and no referrer.
 | Page and script served, no secret in the HTML, CSP present | `WirelessSenderTests` (5 loopback tests) |
 | Opening the ticket URL does not spend the secret; JSON API clients still redeem it | `OpeningTheTicketUrlInABrowserDoesNotSpendTheSecret`, `AnApiClientStillRedeemsTheTicketWithAJsonGet` |
 | SHA-256 matches OpenSSL across 13 sizes (0 B to 1 MiB), one-shot and chunked; path rules | `tests/sender/sender.test.mjs` (Node, 13 size vectors) |
-| Real browser end to end | `tests/sender/browser-e2e.mjs` with Chrome: pairs, selects a 64 KiB file, uploads, receipt SHA-256 verified, destination bytes equal, summary counts 1 of 1 |
+| Real browser end to end | `tests/sender/browser-e2e.mjs` with Chrome: pairs, selects a 64 KiB file, uploads, receipt SHA-256 verified, destination bytes equal, summary counts 1 of 1, second send renamed ` (1)` |
+| Sender disconnect mid-upload | `AClientThatDisconnectsMidUploadLeavesNoPartialOrDestination`: no destination file, no `.partial`, no received entry |
 
 The browser test runs on the PC against the real receiver with auto-approval on; the approval gate itself
 is covered by the receiver tests. A physical iPhone or Android browser run is **not** recorded yet

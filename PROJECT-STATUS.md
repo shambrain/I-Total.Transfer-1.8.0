@@ -190,7 +190,7 @@ byte identity, and an item that cannot be re-read is reported **unverifiable**, 
 
 | Artifact | Size | SHA-256 |
 | --- | --- | --- |
-| `publish\I-Total.Transfer.exe` (self-contained, single file, win-x64) | 112,232,262 B | `E18C546AB020DE3D575DBA9D4A09C6BC79541410EB2805F22A9D4B56512A217D` |
+| `publish\I-Total.Transfer.exe` (self-contained, single file, win-x64) | 112,236,358 B | `E63C6632BB79759E9AEC444B38D416014AC2D86DFA3A17114997471C40A02602` |
 | `dist\I-Total.Transfer-1.8.0-win-x64.zip` (deployment) | see `dist\SHA256SUMS.txt` | see `dist\SHA256SUMS.txt` |
 | `dist\installer\I-Total.Transfer-1.8.0-portable-win-x64.zip` (portable package) | see `dist\installer\SHA256SUMS.txt` | see `dist\installer\SHA256SUMS.txt` |
 | `dist\installer\I-Total.Transfer-1.8.0-setup.exe` (Inno Setup, per-user, unsigned) | see `dist\installer\SHA256SUMS.txt` | see `dist\installer\SHA256SUMS.txt` |
