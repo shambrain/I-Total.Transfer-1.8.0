@@ -306,7 +306,7 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
   -> publish\I-Total.Transfer.exe, 112,236,358 bytes
-     SHA-256 E63C6632BB79759E9AEC444B38D416014AC2D86DFA3A17114997471C40A02602
+     SHA-256 0EE17A24954DE4C3AEB7996FF2264A76916E3BCAC0F0E4BABA9E0D55910646BA
 ```
 
 The source ZIP was extracted into a clean folder, published there, and produced the **same** executable
@@ -437,7 +437,7 @@ The latest user-reported run took approximately 32 seconds; the committed checkp
 
 | Artifact | SHA-256 | Recorded size |
 | --- | --- | --- |
-| `publish/I-Total.Transfer.exe` | `E63C6632BB79759E9AEC444B38D416014AC2D86DFA3A17114997471C40A02602` | 112,236,358 B |
+| `publish/I-Total.Transfer.exe` | `0EE17A24954DE4C3AEB7996FF2264A76916E3BCAC0F0E4BABA9E0D55910646BA` | 112,236,358 B |
 | `dist/I-Total.Transfer-1.8.0-win-x64.zip` | `66E3EADF300A5FB1AEA8F3C8A432076EECB119818615C227C88E4D4EE330D81A` | 54.46 MB |
 | `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `548DADD481A7095AF2BFFC86443D6A2D48AA962F7685C4259A4C3A724DC05EAB` | 44.72 MB |
 | `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `3FC0B856014411781CFCAAC8B127AA44E336C12C0DF7FE7A84A4E41F52C89260` | 35.30 MB |

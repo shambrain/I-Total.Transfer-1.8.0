@@ -72,10 +72,10 @@ These are the hashes recorded in `dist/SHA256SUMS.txt` at the `9ae20fdd` code/ar
 
 | Artifact | SHA-256 | Recorded size |
 | --- | --- | --- |
-| `publish/I-Total.Transfer.exe` | `E63C6632BB79759E9AEC444B38D416014AC2D86DFA3A17114997471C40A02602` | 112,236,358 B |
+| `publish/I-Total.Transfer.exe` | `0EE17A24954DE4C3AEB7996FF2264A76916E3BCAC0F0E4BABA9E0D55910646BA` | 112,236,358 B |
 | `dist/I-Total.Transfer-1.8.0-win-x64.zip` | `66E3EADF300A5FB1AEA8F3C8A432076EECB119818615C227C88E4D4EE330D81A` | 54.46 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `D6003378B17811E9C4B89E617C9927766D5AAC4D2FD87E166E8540AC1EE1C7AC` | 44.72 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `BF2207ABA0D4B9AFB8A1C9C2DB393692C99C6B57847994613036ECA715418507` | 35.30 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `79DBE9F19C268113C5E06C0A034F3BDCDEA7E39EC03A9A3A2937D837F389120A` | 44.73 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `49FDB51BC91A1557CD8DFEFC40C04C1654BFDFC4B8A9C336C288E2F71EF86F71` | 35.30 MB |
 | `dist/I-Total.Transfer-1.8.0-source.zip` | `B738EC4373E3893AE9700A5A1606AFE81ACA0FCE35A67B66AF23059A55D96DDE` | 15.05 MB |
 
 Recorded at checkpoint: source ZIP documentation comparison had zero mismatches; installer install/uninstall was rechecked; the executable was reproducible from the source ZIP. These are repository-reported checks and were not re-executed by this documentation-only update.

@@ -176,7 +176,7 @@ matching certificate.
 - **No background transfer.** A Shortcut runs while it runs. iOS may suspend it when the screen locks;
   the receiver will see the connection end and discard the partial file.
 - **No resume of a partial upload.** A failed POST starts again from zero.
-- **HEIC/ProRAW conversion is the sender's job.** Bytes are stored exactly as sent.
+- **HEIC/ProRAW conversion is the sender's job.** Bytes are stored exactly as sent. Some browsers, notably Safari when picking from Photos, may convert HEIC to JPEG before the page receives it; the PC stores what the browser delivers, and the receipt names the stored file.
 - **Local browser sender verified; physical sender not yet.** The protocol, pairing, approval, digest, traversal and
   rotation rules are covered by loopback tests (`WirelessReceiverTests` 21, `PairingStateTests` 13,
   `ApprovalInboxTests` 9, `PrivateNetworkTests` 21, `WirelessPageTests` 11) **and** were driven live
