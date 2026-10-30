@@ -305,8 +305,8 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> publish\I-Total.Transfer.exe, 112,236,358 bytes
-     SHA-256 0EE17A24954DE4C3AEB7996FF2264A76916E3BCAC0F0E4BABA9E0D55910646BA
+  -> publish\I-Total.Transfer.exe, 112,252,742 bytes
+     SHA-256 A733FA0836C60F6B733A0903D01BF0CC15F457D902B39B31FFD9C5700259EB7E
 ```
 
 The source ZIP was extracted into a clean folder, published there, and produced the **same** executable
@@ -437,10 +437,44 @@ The latest user-reported run took approximately 32 seconds; the committed checkp
 
 | Artifact | SHA-256 | Recorded size |
 | --- | --- | --- |
-| `publish/I-Total.Transfer.exe` | `0EE17A24954DE4C3AEB7996FF2264A76916E3BCAC0F0E4BABA9E0D55910646BA` | 112,236,358 B |
-| `dist/I-Total.Transfer-1.8.0-win-x64.zip` | `66E3EADF300A5FB1AEA8F3C8A432076EECB119818615C227C88E4D4EE330D81A` | 54.46 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `548DADD481A7095AF2BFFC86443D6A2D48AA962F7685C4259A4C3A724DC05EAB` | 44.72 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `3FC0B856014411781CFCAAC8B127AA44E336C12C0DF7FE7A84A4E41F52C89260` | 35.30 MB |
-| `dist/I-Total.Transfer-1.8.0-source.zip` | `B738EC4373E3893AE9700A5A1606AFE81ACA0FCE35A67B66AF23059A55D96DDE` | 15.05 MB |
+| `publish/I-Total.Transfer.exe` | `A733FA0836C60F6B733A0903D01BF0CC15F457D902B39B31FFD9C5700259EB7E` | 112,252,742 B |
+| `dist/I-Total.Transfer-1.8.0-win-x64.zip` | see `dist/SHA256SUMS.txt` | 54.49 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `1216A4E4B7300AAC5E6BCE4FD5ACAB0410E4918440D884A99E5EF18515E091CD` | 44.73 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `FD2230EEECB3271143EE0975D86315CC540515F8A004EA7F5446F83B951BDFEF` | 35.30 MB |
+| `dist/I-Total.Transfer-1.8.0-source.zip` | see `dist/SHA256SUMS.txt` | 15.09 MB |
 
 The checkpoint records that the source ZIP documentation comparison had zero mismatches, setup install/uninstall was rechecked, and the executable was reproducible from the source ZIP. Re-verify the hashes if any source or packaged artifact changes. The setup and executable are not Authenticode-signed with a trusted certificate; see KI-05.
+
+## 2026-10-30 — G3 sender hardening checkpoint
+
+Executed in this workspace on the synced branch after the browser sender was implemented:
+
+```text
+dotnet build I-Total.Transfer.sln -c Release --no-incremental
+  -> Build succeeded, 0 Warning(s), 0 Error(s)
+
+dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s
+  -> Passed! Failed: 0, Passed: 522, Skipped: 2, Total: 524, Duration: 42 s
+
+node tests\sender\sender.test.mjs src\I-Total.Transfer\Wireless\sender.js
+  -> PASS (13 SHA-256 sizes, path rules, hash cancellation x3, receipt fail-closed x24,
+     batch cancellation x5, summary honesty, pairing location)
+
+node tests\sender\browser-e2e.mjs <DeviceDrill.exe>
+  -> PASS phase 1: Chrome pair, 64 KiB HEIC upload, VERIFIED receipt, destination bytes equal,
+     second send renamed " (1).HEIC"
+  -> PASS phase 2: manual approval, Cancel while waiting, CANCELLED + NOT ATTEMPTED,
+     no destination file and no .partial
+```
+
+- Publish: `dotnet publish ... -o publish` -> `I-Total.Transfer.exe`,
+  SHA-256 `A733FA0836C60F6B733A0903D01BF0CC15F457D902B39B31FFD9C5700259EB7E`, 112,252,742 B.
+- Setup: `Build-Installer.ps1 -Version 1.8.0 -ExpectedSha256 <exe>` -> exit 0; silent install/uninstall
+  into a temporary folder matched the tree executable and README; uninstall removed the install directory
+  and HKCU key and kept `%APPDATA%`.
+- Archives: deployment and source hashes are in `dist/SHA256SUMS.txt`; portable `1216A4E4...`, setup `FD2230EE...`;
+  `dist/SHA256SUMS.txt` verified; source ZIP documentation comparison had 0 mismatches; rebuilding from
+  the source ZIP reproduced the same executable hash.
+- Raw sender outputs: `docs/evidence/2026-10-30/node-sender-test.txt` and
+  `docs/evidence/2026-10-30/browser-sender-e2e.txt`.
+- Physical iPhone Safari / HUAWEI Chrome sender run is still pending (KI-12).

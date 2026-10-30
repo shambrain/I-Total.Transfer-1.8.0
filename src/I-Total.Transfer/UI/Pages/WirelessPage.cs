@@ -191,7 +191,7 @@ public partial class WirelessPage : UserControl, IThemedPage
         _addressCombo.Enabled = _portBox.Enabled = _tlsCheck.Enabled = _tokenMinutesBox.Enabled = !running;
         _enableCheck.Enabled = _autoApproveCheck.Enabled = !running;
         _statusLabel.Text = running
-            ? $"Listening on {url} ({(tls ? "TLS" : "HTTP; no certificate")})."
+            ? $"Listening on {url} ({(tls ? "TLS: traffic is encrypted" : "HTTP: traffic is not encrypted; private network only")})."
             : "Receiver stopped.";
         _statusLabel.ForeColor = running ? (tls ? _theme.Ok : _theme.Warn) : _theme.Muted;
         if (!running)

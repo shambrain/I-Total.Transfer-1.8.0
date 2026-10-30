@@ -644,6 +644,60 @@ public sealed class WirelessReceiverTests
     }
 
     [TestMethod]
+    public void RequiringTlsWithoutAMatchingCertificateRefusesToStart()
+    {
+        string dir = TempDir();
+        try
+        {
+            AppSettings settings = AppSettings.Defaults();
+            // A private address that no local certificate is expected to name. The certificate check
+            // runs before the socket is opened, so the address does not need to be assigned.
+            settings.WirelessBindAddress = "10.123.123.123";
+            settings.WirelessPort = Random.Shared.Next(41000, 60000);
+            settings.WirelessRequireTls = true;
+            settings.WirelessEnabled = true;
+            using var receiver = new WirelessReceiver(dir, settings, new LogService(dir));
+
+            try
+            {
+                receiver.Start();
+                receiver.Dispose();
+                Assert.Inconclusive("This machine has a certificate naming 10.123.123.123, so the hard-require refusal cannot be exercised here.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                StringAssert.Contains(ex.Message, "Require TLS");
+                StringAssert.Contains(ex.Message, "certificate");
+                StringAssert.Contains(ex.Message, "did not start");
+                Assert.IsFalse(receiver.IsRunning, "a refused start must not leave the receiver running");
+                Assert.IsFalse(receiver.UsingTls);
+            }
+        }
+        finally { Directory.Delete(dir, true); }
+    }
+
+    [TestMethod]
+    public void SwitchingTlsOffStartsAPlainPrivateNetworkReceiverAndSaysSo()
+    {
+        string dir = TempDir();
+        (WirelessReceiver receiver, string url)? started = null;
+        try
+        {
+            started = StartReceiver(dir);
+            Assert.IsTrue(started.Value.receiver.IsRunning);
+            Assert.IsFalse(started.Value.receiver.UsingTls);
+            Assert.IsTrue(started.Value.url.StartsWith("http://", StringComparison.Ordinal));
+            StringAssert.Contains(started.Value.receiver.TlsNote, "TLS is switched off");
+            StringAssert.Contains(started.Value.receiver.TlsNote, "without encryption");
+        }
+        finally
+        {
+            started?.receiver.Dispose();
+            Directory.Delete(dir, true);
+        }
+    }
+
+    [TestMethod]
     public async Task AClientThatDisconnectsMidUploadLeavesNoPartialOrDestination()
     {
         string dir = TempDir();

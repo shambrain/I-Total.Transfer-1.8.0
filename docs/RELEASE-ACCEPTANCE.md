@@ -10,7 +10,7 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
 
 ## Candidate note (2026-10-29)
 
-A new candidate executable (`1C62B2B1...`, 112,236,358 B) was built from the master-directive work:
+A new candidate executable (`1C62B2B1...`, 112,252,742 B) was built from the master-directive work:
 zero-byte/unknown-size separation, shared enumeration accounting, SQLite integrity columns with migration,
 the reconciliation report, retry classification, stability timestamps, WPD COM cleanup and accessible
 control names. Build 0/0, suite 488 passed / 2 skipped / 490, source-ZIP rebuild byte-identical, installer
@@ -250,13 +250,20 @@ re-audited line by line for this candidate.
 ## Wireless transport
 
 **Browser sender (2026-10-30, local integration).** The receiver serves a real sender page at `/`,
-`/send` and the ticket URL. `WirelessSenderTests` (5 loopback tests) pin that the page carries no secret,
-that opening the ticket URL in a browser does not spend the single-use code, that the JSON pairing API
-still works, and that the page and script are served with a restrictive CSP. `tests/sender/sender.test.mjs`
-checks the page's SHA-256 against OpenSSL across 13 sizes and its path rules. `tests/sender/browser-e2e.mjs`
-drives Chrome against the real receiver: pair, select a 64 KiB HEIC, upload, approval (auto-approve), a
-receipt whose SHA-256 matches, and destination bytes identical to the selected file. This is a **local
-browser integration**, not a physical iPhone or Android run; the physical sender row remains open (KI-12).
+`/send` and the ticket URL. New tickets carry the single-use secret in the fragment
+(`/pair#token=...`); `WirelessSenderTests` (6 loopback tests) pin that the secret is absent from the
+request target and asset responses, that opening the ticket URL does not spend it, that the JSON pairing
+API still accepts the query form, and that the page and script are served with a restrictive CSP.
+`tests/sender/sender.test.mjs` checks the page's SHA-256 against OpenSSL across 13 sizes, the path rules,
+hash cancellation before and between 4 MiB slices, 24 receipt cases that must fail closed or verify, and
+five batch-cancellation sequences whose summary must say `CANCELLED` and never read as complete.
+`tests/sender/browser-e2e.mjs` drives Chrome against the real receiver in two phases: the auto-approve
+happy path (pair, 64 KiB HEIC, `VERIFIED` receipt, destination bytes identical, second send renamed
+` (1)`), and a manual-approval cancellation (cancel while the first file waits; `CANCELLED` +
+`NOT ATTEMPTED`, no destination or `.partial` file). `Require TLS` is a hard requirement: the receiver
+refuses to start without a matching certificate (`RequiringTlsWithoutAMatchingCertificateRefusesToStart`),
+and clearing it is the only way to run private-network HTTP. This is a **local browser integration**, not
+a physical iPhone or Android run; the physical sender row remains open (KI-12).
 
 
 - [x] **The pairing secret is short-lived, single-use and is not itself a write credential.** ✅

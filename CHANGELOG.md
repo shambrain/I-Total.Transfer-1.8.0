@@ -1,5 +1,21 @@
 ## 1.8.0 — 2026-10-20 — borderless chrome, honest device detection, unfinished-session recovery, Android storage
 
+- **Wireless sender hardening (2026-10-30).** `hashFile` is cancellation-aware (checked before every
+  4 MiB slice and after each read) and hashing progress is shown separately from upload progress.
+  `sendBatch` reports `VERIFIED`, `FAILED`, `RECEIPT INVALID`, `CANCELLED` and `UNATTEMPTED` separately;
+  a cancelled batch always says "The batch was CANCELLED" with its counts and never reads as complete.
+- **Receipts fail closed (2026-10-30).** A `200` is not success. `VERIFIED` requires a 64-hex SHA-256
+  equal to the selected bytes, a numeric byte count equal to the selected size, a safe relative path and
+  a valid JSON object. Anything else is `RECEIPT INVALID`, with an explicit "may or may not have
+  committed" warning.
+- **The pairing secret moves to the URL fragment (2026-10-30).** New tickets are `/pair#token=...`; the
+  browser reads the fragment locally, removes it from history, and the secret never appears in the
+  request target or asset requests. The POST pairing exchange and the JSON `?token=` API are preserved.
+  The fragment is not encryption.
+- **`Require TLS` now refuses to start without a matching certificate (2026-10-30).** There is no silent
+  HTTP fallback. The error names the bind address and both remedies, and clearing the setting is the only
+  way to run the token-authenticated private-network transport without encryption. The UI, log and
+  `/health` distinguish private-interface binding, pairing authentication, operator approval and TLS.
 - **A real browser wireless sender is implemented (2026-10-30).** The receiver serves `/`, `/send` and the
   ticket URL plus `/sender.js` from embedded resources. An iPhone (Safari) or Android phone (Chrome) pairs
   with the single-use code, explicitly selects files, hashes each in 4 MiB slices with an incremental

@@ -12,6 +12,75 @@ start from here without re-reading the whole conversation.
 > hashes quoted in this log before this note identify the pre-publication history; the file contents, tests
 > and evidence are unchanged. The release executable is unaffected.
 
+## 2026-10-30 - G3 hardening: cancellation, fail-closed receipts, fragment ticket, TLS semantics
+
+### Starting point
+
+Branch `work/master-directive` at `055185a` (clean). The remote fetch failed with `Empty reply from server`
+during this session, so the remote tip after `055185a` is unconfirmed; no destructive Git operation was
+attempted. Build and the full suite were re-run locally before editing.
+
+### Cancellation during hashing and uploads
+
+- `hashFile(file, signal, onProgress)` checks the signal before every 4 MiB slice and again after each
+  asynchronous read, so cancellation stops immediately instead of after the remaining slices. Progress is
+  reported per slice and separately from upload progress; the page now has distinct hashing and upload bars.
+- `sendBatch` accounts for every selected file as `VERIFIED`, `FAILED`, `RECEIPT INVALID`, `CANCELLED` or
+  `UNATTEMPTED`. Cancellation before hashing, between hash slices, during a multi-file batch, during an
+  upload, and after one success but before the next starts all stop the batch. `summarizeBatch` says
+  "The batch was CANCELLED" with sent/failed/cancelled/not-attempted counts and never reads as complete.
+- Uploads use `XMLHttpRequest` so the page can show real upload progress and abort the request; the
+  existing AbortController signal still drives it.
+
+### Fail-closed receipts
+
+`verifyReceipt` no longer trusts a `200`. `VERIFIED` requires all of: a JSON object; a 64-character
+hexadecimal SHA-256 exactly equal to the digest computed from the selected bytes; a numeric integer byte
+count exactly equal to the selected size; and a non-empty syntactically safe relative path (no absolute
+path, drive letter, traversal, reserved name, invalid character or trailing dot/space). Anything else is
+`RECEIPT INVALID`, and the UI says the PC may or may not have committed the file.
+
+### Pairing secret in the fragment
+
+New tickets are `http://<addr>:<port>/pair#token=<secret>`. The page reads `location.hash` (with a
+`?token=` fallback for an older ticket), removes the fragment with `history.replaceState`, and still uses
+the POST-based pairing exchange. The JSON API keeps accepting `GET /pair?token=...`. A loopback test pins
+that the secret is in the fragment, absent from the path/query, absent from the served page and the asset
+response, and that opening the ticket URL does not spend it. The docs state explicitly that the fragment
+keeps the secret out of request targets; it is not encryption.
+
+### `Require TLS` is now a hard requirement
+
+`WirelessReceiver.Start()` refuses to start when `Require TLS` is on and no certificate in
+`CurrentUser\My` has a private key, is valid and names the bind address. The exception names the address
+and both remedies (install a matching certificate or clear the setting). There is no silent HTTP
+fallback. The Settings caption reads "Require TLS (refuses to start without a matching certificate)", the
+running status distinguishes "TLS: traffic is encrypted" from "HTTP: traffic is not encrypted; private
+network only", and `WIRELESS.md` separates private-interface restriction, pairing authentication, operator
+approval and TLS encryption.
+
+### Tests and evidence
+
+```text
+dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 522 passed, 2 skipped, 524 total
+node tests\sender\sender.test.mjs src\I-Total.Transfer\Wireless\sender.js -> PASS
+node tests\sender\browser-e2e.mjs <DeviceDrill.exe>             -> PASS (happy path + cancellation)
+```
+
+- `WirelessSenderTests` now has 6 tests, including `TheTicketSecretTravelsInTheFragmentAndNeverInARequestTarget`.
+- `WirelessReceiverTests` gained `RequiringTlsWithoutAMatchingCertificateRefusesToStart` (refusal before
+  binding, actionable message) and `SwitchingTlsOffStartsAPlainPrivateNetworkReceiverAndSaysSo`.
+- Node tests cover hash cancellation before hashing and between slices, 24 invalid/valid receipt cases,
+  five batch-cancellation sequences, summary honesty, and fragment-vs-query secret reading.
+- The Chrome E2E has two phases: the existing auto-approve happy path with collision rename, and a new
+  manual-approval cancellation that presses Cancel while the first file waits, asserts `CANCELLED` +
+  `NOT ATTEMPTED`, and confirms no destination or `.partial` file.
+- Raw outputs are in `docs/evidence/2026-10-30/` (`node-sender-test.txt`, `browser-sender-e2e.txt`).
+
+A physical iPhone Safari / HUAWEI Chrome run is still pending (KI-12); nothing here claims it.
+
+---
 ## 2026-10-30 - repository sync and Gate G3 browser sender
 
 ### Synced baseline

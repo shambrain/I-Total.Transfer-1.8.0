@@ -128,8 +128,9 @@ public sealed class WirelessSenderTests
             PairingTicket ticket = started.Value.receiver.CreatePairingTicket();
             using var client = new HttpClient { BaseAddress = new Uri(started.Value.url) };
 
-            // A browser navigation carries Accept: text/html. It must get the page, not redeem the secret.
-            var page = await GetAsync(client, $"pair?token={Uri.EscapeDataString(ticket.Secret)}", "text/html,application/xhtml+xml");
+            // A browser never sends the fragment. Opening the ticket URL is therefore a plain GET of
+            // /pair, which must return the page without redeeming the secret.
+            var page = await GetAsync(client, "pair", "text/html,application/xhtml+xml");
             Assert.AreEqual(HttpStatusCode.OK, page.Status);
             Assert.AreEqual("text/html", page.ContentType);
             Assert.IsFalse(started.Value.receiver.TicketWasUsed, "merely opening the ticket URL must not spend the secret");
@@ -139,6 +140,47 @@ public sealed class WirelessSenderTests
             using HttpResponseMessage paired = await client.SendAsync(pair);
             Assert.AreEqual(HttpStatusCode.OK, paired.StatusCode);
             Assert.IsTrue(started.Value.receiver.TicketWasUsed);
+        }
+        finally
+        {
+            started?.receiver.Dispose();
+            Directory.Delete(destination, true);
+        }
+    }
+
+    [TestMethod]
+    public async Task TheTicketSecretTravelsInTheFragmentAndNeverInARequestTarget()
+    {
+        string destination = TempDir();
+        (WirelessReceiver receiver, string url)? started = null;
+        try
+        {
+            started = StartReceiver(destination);
+            PairingTicket ticket = started.Value.receiver.CreatePairingTicket();
+            using var client = new HttpClient { BaseAddress = new Uri(started.Value.url) };
+
+            var uri = new Uri(ticket.Url);
+            Assert.AreEqual("#token=" + ticket.Secret, uri.Fragment, "the ticket must carry the secret in the fragment");
+            Assert.AreEqual("", uri.Query, "the ticket must not put the secret in the query string");
+            Assert.IsFalse(uri.AbsolutePath.Contains(ticket.Secret, StringComparison.Ordinal),
+                "the request path must not contain the secret");
+            Assert.IsFalse(ticket.Qr.Modules.Length == 0);
+            Assert.AreEqual(ticket.Url, ticket.Qr.Text, "the QR must encode the same fragment URL");
+
+            // The actual request target the browser sends: path only, no query, no fragment.
+            string target = uri.AbsolutePath;
+            Assert.IsFalse(target.Contains(ticket.Secret, StringComparison.Ordinal));
+
+            var page = await GetAsync(client, target, "text/html");
+            Assert.AreEqual(HttpStatusCode.OK, page.Status);
+            Assert.IsFalse(page.Body.Contains(ticket.Secret, StringComparison.Ordinal),
+                "the served page must not echo the pairing secret");
+
+            var script = await GetAsync(client, "/sender.js");
+            Assert.AreEqual(HttpStatusCode.OK, script.Status);
+            Assert.IsFalse(script.Body.Contains(ticket.Secret, StringComparison.Ordinal),
+                "an asset request must not carry the pairing secret");
+            Assert.IsFalse(started.Value.receiver.TicketWasUsed);
         }
         finally
         {

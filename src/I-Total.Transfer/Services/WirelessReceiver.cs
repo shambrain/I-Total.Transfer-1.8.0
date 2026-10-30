@@ -177,7 +177,10 @@ public sealed class WirelessReceiver : IDisposable
 
         TimeSpan lifetime = TimeSpan.FromMinutes(_tokenMinutes);
         string secret = _pairing.CreateSecret(DateTimeOffset.UtcNow, lifetime);
-        string url = $"{BaseUrl}pair?token={secret}";
+        // The secret travels in the fragment, which a browser never sends in the request target. The
+        // page reads it locally and immediately removes it from the address bar. The JSON API still
+        // accepts the query form (?token=) on /pair; new tickets never use it.
+        string url = $"{BaseUrl}pair#token={secret}";
         var ticket = new PairingTicket(secret, DateTimeOffset.UtcNow.Add(lifetime), url, QrCode.Encode(url));
         lock (_sync) _ticket = ticket;
 
@@ -205,7 +208,18 @@ public sealed class WirelessReceiver : IDisposable
         // bind available to the non-elevated user the installer is designed for.
         IPAddress address = IPAddress.Parse(_bindAddress);
         X509Certificate2? certificate = _requireTls ? FindServerCertificate(_bindAddress) : null;
-        bool useTls = _requireTls && certificate is not null;
+        // "Require TLS" is a hard requirement, not a preference. Silently downgrading to HTTP would
+        // make the setting lie about the transport, so the receiver refuses to start instead.
+        if (_requireTls && certificate is null)
+        {
+            _log.Write("Wireless was not started: TLS is required but no usable certificate names the bind address.", "ERROR");
+            throw new InvalidOperationException(
+                $"Require TLS is switched on, but no certificate in CurrentUser\\My has a private key, is " +
+                $"currently valid and names {_bindAddress}. Install a matching certificate, or clear " +
+                "\"Require TLS\" on the Wireless page to run the token-authenticated session over the " +
+                "private network without encryption. The receiver did not start.");
+        }
+        bool useTls = certificate is not null;
         var listener = new TcpListener(address, _port);
         listener.Start();
 
@@ -214,13 +228,7 @@ public sealed class WirelessReceiver : IDisposable
         UsingTls = useTls;
         TlsNote = useTls
             ? "TLS is active with the certificate found in CurrentUser\\My."
-            : _requireTls
-                ? "No certificate in CurrentUser\\My names this address, so the token-authenticated session runs over the private network without TLS."
-                : "TLS is switched off in Settings.";
-        if (_requireTls && !useTls)
-        {
-            _log.Write("Wireless TLS was requested but no matching certificate exists in CurrentUser\\My; running the token-authenticated session over the private network only.", "WARN");
-        }
+            : "TLS is switched off in Settings; the token-authenticated session runs over the private network without encryption.";
 
         _cts = new CancellationTokenSource();
         IsRunning = true;
@@ -228,7 +236,7 @@ public sealed class WirelessReceiver : IDisposable
         BaseUrl = $"{(UsingTls ? "https" : "http")}://{_bindAddress}:{_port}/";
         _ = Task.Run(() => AcceptLoopAsync(listener, _cts.Token));
         _log.Write($"Wireless receiver listening on {BaseUrl} (TLS={UsingTls}).");
-        Raise("start", $"Listening on {BaseUrl}{(UsingTls ? "" : " (private-network HTTP; no TLS certificate bound)")}", true);
+        Raise("start", $"Listening on {BaseUrl}{(UsingTls ? "" : " (private-network HTTP; TLS is switched off, so traffic is not encrypted)")}", true);
         return BaseUrl;
     }
 

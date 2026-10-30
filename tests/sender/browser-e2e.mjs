@@ -1,17 +1,20 @@
 /*
  * Local browser end-to-end test for the wireless sender.
  *
- * It starts the real receiver through tools/DeviceDrill (`wireless --auto-approve`), opens the ticket URL
- * in a real Chromium-based browser with Playwright, pairs, selects a file, sends it, and checks both the
- * page receipt and the bytes on disk. This is a local browser integration test, not a physical iPhone or
- * Android run.
+ * It starts the real receiver through tools/DeviceDrill, opens the ticket URL in a real
+ * Chromium-based browser with Playwright, and drives the page. Two phases:
+ *
+ *   1. happy path (auto-approve): pair, select a 64 KiB HEIC, upload, verify the receipt, check the
+ *      destination bytes, send again and confirm the collision rename;
+ *   2. cancellation (manual approval): pair, select two files, start the batch, cancel while the first
+ *      file waits for approval, and confirm the page reports CANCELLED with the second file NOT
+ *      ATTEMPTED and no destination file.
+ *
+ * This is a local browser integration test, not a physical iPhone or Android run.
  *
  * Usage:
  *   npm --prefix tests/sender install
  *   node tests/sender/browser-e2e.mjs <DeviceDrill.exe> [chrome-or-edge.exe]
- *
- * The browser defaults to Chrome, then Edge. Auto-approval is used so the test does not need a human at
- * the approval inbox; the approval gate itself is covered by the C# receiver tests.
  */
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -42,14 +45,7 @@ function findBrowser() {
 }
 
 const work = fs.mkdtempSync(path.join(os.tmpdir(), "itotal-sender-e2e-"));
-const destination = path.join(work, "destination");
-const report = path.join(work, "pairing.json");
-const filePath = path.join(work, "IMG_E2E_0001.HEIC");
-const bytes = Buffer.alloc(64 * 1024 + 17);
-for (let i = 0; i < bytes.length; i++) bytes[i] = (i * 31 + 7) % 251;
-fs.writeFileSync(filePath, bytes);
-
-function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function waitForFile(file, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
@@ -60,68 +56,154 @@ async function waitForFile(file, timeoutMs) {
   throw new Error("Timed out waiting for " + file);
 }
 
-const child = spawn(drill, ["wireless", "--dest", destination, "--auto-approve", "--report", report, "--timeout", "90"], {
-  stdio: ["ignore", "pipe", "inherit"]
-});
-let childOutput = "";
-child.stdout.on("data", (chunk) => { childOutput += chunk.toString(); });
-
-let browser;
-try {
+async function startReceiver(phase, extraArgs, timeoutSeconds) {
+  const destination = path.join(work, phase, "destination");
+  const report = path.join(work, phase, "pairing.json");
+  fs.mkdirSync(destination, { recursive: true });
+  const child = spawn(drill, [
+    "wireless", "--dest", destination, "--report", report,
+    "--timeout", String(timeoutSeconds), ...extraArgs
+  ], { stdio: ["ignore", "pipe", "inherit"] });
+  let output = "";
+  child.stdout.on("data", (chunk) => { output += chunk.toString(); });
   await waitForFile(report, 20000);
   const pairing = JSON.parse(fs.readFileSync(report, "utf8"));
   assert.ok(pairing.TicketUrl && pairing.Secret, "pairing report is missing the ticket URL or secret");
-  console.log("Receiver:", pairing.Url, "auto-approve:", pairing.AutoApprove);
+  return { child, destination, pairing, output: () => output };
+}
 
-  browser = await chromium.launch({ executablePath: browserPath, headless: true });
-  const page = await browser.newPage();
-  page.on("console", (message) => console.log("page:", message.type(), message.text()));
+function makeFile(name, size) {
+  const filePath = path.join(work, name);
+  const bytes = Buffer.alloc(size);
+  for (let i = 0; i < bytes.length; i++) bytes[i] = (i * 31 + 7) % 251;
+  fs.writeFileSync(filePath, bytes);
+  return { filePath, bytes };
+}
 
+async function pairPage(page, pairing) {
   await page.goto(pairing.TicketUrl, { waitUntil: "domcontentloaded" });
   assert.equal(await page.title(), "I-Total Transfer - send files");
-  // The page reads the single-use secret from the ticket URL and removes it from the address bar.
+  // The page reads the single-use secret from the fragment and removes it from the address bar.
   assert.ok(!page.url().includes("token="), "the pairing token must be removed from the address bar");
-
   await page.click("#pairButton");
   await page.waitForSelector("#sendSection:not([hidden])", { timeout: 15000 });
-  console.log("Paired:", (await page.textContent("#pairStatus")).trim());
+}
 
-  await page.setInputFiles("#files", filePath);
-  await page.waitForFunction(() => {
-    const button = document.querySelector("#sendButton");
-    return button && !button.disabled;
-  }, null, { timeout: 10000 });
+async function waitForResultText(page, text, timeout = 60000) {
+  await page.waitForFunction((needle) => {
+    const items = Array.from(document.querySelectorAll("#results li"));
+    return items.some((item) => (item.textContent || "").includes(needle));
+  }, text, { timeout });
+}
 
-  await page.click("#sendButton");
-  await page.waitForFunction(() => document.querySelector("#results li.ok"), null, { timeout: 60000 });
+let browser;
+try {
+  browser = await chromium.launch({ executablePath: browserPath, headless: true });
 
-  const receipt = (await page.textContent("#results li.ok")).trim();
-  const summary = (await page.textContent("#summary")).trim();
-  console.log("Receipt:", receipt);
-  console.log("Summary:", summary);
+  // ---------------------------------------------------------------- happy path + collision
+  {
+    const { child, destination, pairing, output } = await startReceiver("happy", ["--auto-approve"], 90);
+    const page = await browser.newPage();
+    page.on("console", (message) => console.log("page:", message.type(), message.text()));
+    try {
+      console.log("Receiver:", pairing.Url, "auto-approve:", pairing.AutoApprove);
+      await pairPage(page, pairing);
+      console.log("Paired:", (await page.textContent("#pairStatus")).trim());
 
-  const stored = path.join(destination, "DCIM", "IMG_E2E_0001.HEIC");
-  assert.ok(fs.existsSync(stored), "the receiver did not store the file at DCIM/IMG_E2E_0001.HEIC");
-  assert.deepEqual(fs.readFileSync(stored), bytes, "stored bytes differ from the selected file");
-  assert.ok(receipt.includes("SHA-256 verified"), "the page receipt does not claim SHA-256 verification");
-  assert.ok(summary.includes("Only the files you selected were sent"), "the summary must not imply a library transfer");
-  assert.ok(summary.includes("Sent 1 of 1"), "the summary must count the selected file");
+      const { filePath, bytes } = makeFile("IMG_E2E_0001.HEIC", 64 * 1024 + 17);
+      await page.setInputFiles("#files", filePath);
+      await page.waitForFunction(() => {
+        const button = document.querySelector("#sendButton");
+        return button && !button.disabled;
+      }, null, { timeout: 10000 });
 
-  // A second send of the same name must be stored beside the first, never overwrite it.
-  await page.click("#sendButton");
-  await page.waitForFunction(() => document.querySelector("#results li.ok"), null, { timeout: 60000 });
-  const secondReceipt = (await page.textContent("#results li.ok")).trim();
-  const renamed = path.join(destination, "DCIM", "IMG_E2E_0001 (1).HEIC");
-  assert.ok(secondReceipt.includes("(1).HEIC"), "the second copy must be renamed: " + secondReceipt);
-  assert.ok(fs.existsSync(renamed), "the renamed copy is missing");
-  assert.deepEqual(fs.readFileSync(renamed), bytes, "the renamed copy differs from the selected file");
-  assert.deepEqual(fs.readFileSync(stored), bytes, "the first copy was overwritten");
-  console.log("Collision:", secondReceipt);
-  console.log("PASS browser sender: paired, uploaded, receipt verified, collision renamed, bytes match");
+      await page.click("#sendButton");
+      await page.waitForFunction(() => document.querySelector("#results li.ok"), null, { timeout: 60000 });
+
+      const receipt = (await page.textContent("#results li.ok")).trim();
+      const summary = (await page.textContent("#summary")).trim();
+      console.log("Receipt:", receipt);
+      console.log("Summary:", summary);
+
+      const stored = path.join(destination, "DCIM", "IMG_E2E_0001.HEIC");
+      assert.ok(fs.existsSync(stored), "the receiver did not store the file at DCIM/IMG_E2E_0001.HEIC");
+      assert.deepEqual(fs.readFileSync(stored), bytes, "stored bytes differ from the selected file");
+      assert.ok(receipt.includes("VERIFIED"), "the receipt state must be VERIFIED");
+      assert.ok(receipt.includes("SHA-256 and byte count matched"), "the receipt must state what was verified");
+      assert.ok(summary.includes("Only the files you selected were sent"), "the summary must not imply a library transfer");
+      assert.ok(summary.includes("Sent 1 of 1"), "the summary must count the selected file");
+
+      // A second send of the same name must be stored beside the first, never overwrite it.
+      await page.click("#sendButton");
+      await page.waitForFunction(() => document.querySelector("#results li.ok"), null, { timeout: 60000 });
+      const secondReceipt = (await page.textContent("#results li.ok")).trim();
+      const renamed = path.join(destination, "DCIM", "IMG_E2E_0001 (1).HEIC");
+      assert.ok(secondReceipt.includes("(1).HEIC"), "the second copy must be renamed: " + secondReceipt);
+      assert.ok(fs.existsSync(renamed), "the renamed copy is missing");
+      assert.deepEqual(fs.readFileSync(renamed), bytes, "the renamed copy differs from the selected file");
+      assert.deepEqual(fs.readFileSync(stored), bytes, "the first copy was overwritten");
+      console.log("Collision:", secondReceipt);
+      console.log("PASS browser sender: paired, uploaded, VERIFIED receipt, collision renamed, bytes match");
+    } finally {
+      if (!child.killed) child.kill();
+      await delay(300);
+      if (output()) console.log(output().trim().split(/\r?\n/).slice(-8).join("\n"));
+      await page.close();
+    }
+  }
+
+  // ---------------------------------------------------------------- cancellation with manual approval
+  {
+    // No --auto-approve: the first upload waits for the operator, which gives the test a stable
+    // window in which to press Cancel.
+    const { child, destination, pairing, output } = await startReceiver("cancel", [], 30);
+    const page = await browser.newPage();
+    try {
+      console.log("Cancel receiver:", pairing.Url, "auto-approve:", pairing.AutoApprove);
+      await pairPage(page, pairing);
+
+      const first = makeFile("IMG_CANCEL_0001.MOV", 8 * 1024 * 1024);
+      const second = makeFile("IMG_CANCEL_0002.HEIC", 32 * 1024);
+      await page.setInputFiles("#files", [first.filePath, second.filePath]);
+      await page.waitForFunction(() => {
+        const button = document.querySelector("#sendButton");
+        return button && !button.disabled;
+      }, null, { timeout: 10000 });
+
+      await page.click("#sendButton");
+      // Wait until the first file has been hashed and is waiting for approval on the PC.
+      await waitForResultText(page, "waiting for approval", 30000);
+      assert.equal(await page.$eval("#hashProgress", (el) => el.value), 100,
+        "hashing progress must reach 100% before the upload starts");
+
+      await page.click("#cancelButton");
+      await waitForResultText(page, "CANCELLED", 30000);
+      await waitForResultText(page, "NOT ATTEMPTED", 30000);
+
+      const summary = (await page.textContent("#summary")).trim();
+      console.log("Cancellation summary:", summary);
+      assert.ok(summary.includes("CANCELLED"), "the summary must say the batch was cancelled");
+      assert.ok(summary.includes("not attempted"), "the summary must count unattempted files");
+      assert.ok(!/complete/i.test(summary), "a cancelled batch must never read as complete");
+
+      assert.ok(!fs.existsSync(path.join(destination, "DCIM", "IMG_CANCEL_0001.MOV")),
+        "a cancelled upload must not leave a destination file");
+      assert.ok(!fs.existsSync(path.join(destination, "DCIM", "IMG_CANCEL_0002.HEIC")),
+        "an unattempted file must not be written");
+      const staging = path.join(destination, ".i-total", "wireless");
+      if (fs.existsSync(staging)) {
+        assert.equal(fs.readdirSync(staging).filter((name) => name.endsWith(".partial")).length, 0,
+          "a cancelled upload must not leave a partial staging file");
+      }
+      console.log("PASS browser sender cancellation: CANCELLED + NOT ATTEMPTED, no destination file");
+    } finally {
+      if (!child.killed) child.kill();
+      await delay(300);
+      if (output()) console.log(output().trim().split(/\r?\n/).slice(-8).join("\n"));
+      await page.close();
+    }
+  }
 } finally {
   if (browser) await browser.close().catch(() => {});
-  if (!child.killed) child.kill();
-  await delay(300);
-  if (childOutput) console.log(childOutput.trim().split(/\r?\n/).slice(-12).join("\n"));
   fs.rmSync(work, { recursive: true, force: true });
 }

@@ -102,16 +102,32 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
   screenshot. Windows 11 has not been run.
 - **To close:** run the standard visual drill on a Windows 11 machine.
 
-### KI-12 - Browser sender implemented; no physical iPhone/Android run yet
+### KI-12 - Browser sender implemented and hardened; no physical iPhone/Android run yet
 
-- **Impact:** the receiver now serves a real browser sender (`/`, `/send`, ticket URL) with explicit file
-  selection, pairing, per-file SHA-256, approval, receipts, cancellation and rotation. It is verified by
-  loopback tests, Node digest/path tests and a Chrome end-to-end run on this PC. A real iPhone Safari or
-  Android Chrome run has not been recorded, so the physical sender row stays open.
+- **Impact:** the receiver serves a real browser sender (`/`, `/send`, `/pair#token=...`) with explicit
+  file selection, pairing, cancellation-aware per-file SHA-256, approval, fail-closed receipts,
+  cancellation accounting, rotation and collision-safe storage. It is verified by loopback tests, Node
+  digest/path/receipt/cancellation tests and a Chrome end-to-end run on this PC (happy path and manual
+  cancellation). A real iPhone Safari or Android Chrome run has not been recorded, so the physical sender
+  row stays open.
 - **Mitigation:** the page states its limits (no library enumeration, foreground only, no partial-upload
-  resume, no cloud-only originals). The sender is not claimed as an app-store companion.
+  resume, no cloud-only originals, Safari may transcode HEIC). The sender is not claimed as an app-store
+  companion, and local browser evidence is labelled as such.
 - **To close:** open the ticket URL on a physical iPhone and on an Android phone, send a HEIC and a MOV,
-  approve on the PC, and record the OS/browser, receipts and destination hashes.
+  approve each on the PC, compare the receipt and destination SHA-256, record whether Safari converted the
+  HEIC, and record the OS/browser versions.
+
+### KI-30 - `Require TLS` defaults on, so the first start needs a certificate or an explicit opt-out
+
+- **Impact:** with the default settings, `Start` now refuses to run when no certificate in
+  `CurrentUser\My` has a private key, is valid and names the bind address. This is intentional (no silent
+  HTTP fallback), but an operator who previously relied on the automatic fallback must now either install
+  a matching certificate or clear the checkbox.
+- **Mitigation:** the exception and the Wireless page name the bind address and both remedies; the
+  checkbox caption says it refuses to start; the activity log records the refusal. Clearing the setting
+  makes the unencrypted private-network transport explicit in the status line, `TlsNote` and `/health`.
+- **To close:** no code change. This is a documented product decision; revisit only if the release
+  decides HTTP-on-by-default is acceptable.
 
 ### KI-13 - Wireless trial metering is per sender session, in memory
 

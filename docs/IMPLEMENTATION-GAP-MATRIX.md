@@ -113,10 +113,12 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | --- | --- | --- | --- | --- | --- |
 | G1 | Authenticated receiver, single-use pairing, approvals, limits | `WirelessReceiver`, `PairingState` | AT wireless suite; LIVE loopback/LAN drill (2026-10-22) | AUTOMATED TEST VERIFIED | — |
 | G2 | Path traversal, spoofed names, oversize requests rejected | `WirelessReceiver` | AT | AUTOMATED TEST VERIFIED | — |
-| G4 | A sender disconnect mid-upload leaves no partial or destination | `WirelessReceiver.ReceiveAsync` | AT `AClientThatDisconnectsMidUploadLeavesNoPartialOrDestination` | AUTOMATED TEST VERIFIED | physical phone run pending |
-| G3 | Real iOS/Android sender end to end | `Wireless/sender.html`, `Wireless/sender.js`, `WirelessSenderPage`, receiver routes | C# loopback tests (5), Node SHA-256/path tests, Chrome browser end-to-end (local) | AUTOMATED TEST VERIFIED (local browser); PHYSICAL PHONE PENDING | run the page from Safari/Chrome on a real iPhone and Android phone; record the OS/browser and receipt |
-
+| G3 | Real iOS/Android sender end to end | `Wireless/sender.html`, `Wireless/sender.js`, `WirelessSenderPage`, receiver routes | C# loopback tests (6), Node SHA-256/path/receipt/cancellation tests, Chrome browser end-to-end with cancellation (local) | AUTOMATED TEST VERIFIED (local browser); PHYSICAL PHONE PENDING | run the page from Safari/Chrome on a real iPhone and Android phone with a HEIC and a MOV; record OS/browser, receipt and destination SHA-256, and whether Safari converted the HEIC |
 | G4 | No firewall rule, private interface binding | `PrivateNetwork`, installer | AT private-network tests; STATIC | AUTOMATED TEST VERIFIED | — |
+| G5 | A sender disconnect mid-upload leaves no partial or destination | `WirelessReceiver.ReceiveAsync` | AT `AClientThatDisconnectsMidUploadLeavesNoPartialOrDestination` | AUTOMATED TEST VERIFIED | physical phone run pending |
+| G6 | Receipt verification fails closed | `Wireless/sender.js` `verifyReceipt` | AT Node receipt cases (missing/empty/malformed/wrong digest, missing/wrong bytes, missing/unsafe path, collision-renamed path); Chrome E2E shows `VERIFIED` | AUTOMATED TEST VERIFIED | — |
+| G7 | Cancellation during hashing and uploads is explicit and accounted for | `Wireless/sender.js` `hashFile`/`sendBatch`/`summarizeBatch` | AT Node hash cancellation (before/between slices) and batch cancellation (before, during upload, after one success, multi-file); Chrome E2E manual-approval cancellation leaves no destination file | AUTOMATED TEST VERIFIED (local browser); PHYSICAL PHONE PENDING | repeat cancellation on a physical phone (backgrounding is not the same as pressing Cancel) |
+| G8 | `Require TLS` means TLS or no start; HTTP is an explicit operator decision | `WirelessReceiver.Start`, `WirelessPage`, `AppSettings` | AT `RequiringTlsWithoutAMatchingCertificateRefusesToStart`, `SwitchingTlsOffStartsAPlainPrivateNetworkReceiverAndSaysSo`, page caption test | AUTOMATED TEST VERIFIED | — |
 
 ## Gate H — performance, compatibility, release
 

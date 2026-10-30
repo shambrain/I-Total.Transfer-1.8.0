@@ -26,6 +26,8 @@ transport proves.
 | Method | Path | Credential | Purpose |
 | --- | --- | --- | --- |
 | `GET` | `/health` | none | Liveness and whether TLS is active. Never returns a secret. |
+| `GET` | `/`, `/send`, `/pair` | none (HTML) | Serves the embedded browser sender. New tickets are `/pair#token=<secret>`; the fragment is never sent to the server. |
+| `GET` | `/sender.js` | none | The sender script, served under the page's restrictive CSP. |
 | `POST` | `/pair` | `X-Pairing-Secret: <secret>` | Redeems the single-use secret. Returns a session token **once**. |
 | `POST` | `/rotate` | `X-Session-Token` | Retires the presented token and returns a new one. |
 | `POST` | `/upload?path=DCIM/IMG_0001.HEIC` | `X-Session-Token` | Offers one file. Waits for the operator's decision. |
@@ -106,10 +108,16 @@ filesystem; a bare filename is placed under `DCIM`.
 
 ## Browser sender (implemented)
 
-The receiver serves a real sender page at `/`, `/send`, and the ticket URL (`/pair?token=...`). Scanning
-the QR opens the page in Safari or Chrome; the single-use code is read from the URL, removed from the
-address bar with `history.replaceState`, and only redeemed when the operator presses **Pair with this PC**.
-Merely opening the URL does not spend it (a loopback test pins that).
+The receiver serves a real sender page at `/`, `/send`, and the ticket URL. New tickets are
+`/pair#token=<secret>`: the secret is in the **fragment**, which a browser never includes in the request
+target, so it is absent from the server's request line and from every later asset request. The page reads
+it locally from `location.hash`, removes it from the address bar and history with `history.replaceState`,
+and only redeems it when the operator presses **Pair with this PC**. Merely opening the URL does not spend
+it (a loopback test pins that). An older `/pair?token=...` ticket is still read as a fallback, and the JSON
+API still accepts `GET /pair?token=...`; new tickets never use the query string.
+
+The fragment is **not encryption**. It keeps the secret out of request logs and history; TLS is a separate
+setting (see below).
 
 What the page does:
 
@@ -117,15 +125,24 @@ What the page does:
   plus a destination folder field (default `DCIM`). Nothing is enumerated or sent implicitly.
 - **Pairing and sessions.** The session token lives in memory only; it is never written to storage. Rotate
   replaces it, expiry is shown, and a `401` stops the batch and asks for a new pairing code.
-- **Incremental SHA-256.** Web Crypto is only available in a secure context, and the receiver may run over
-  token-authenticated HTTP on a private network, so the page carries its own incremental SHA-256. Files are
-  hashed in 4 MiB slices (bounded memory), the digest is sent as `X-Content-Sha256`, and the receiver
-  verifies it again while streaming.
-- **Approval and receipts.** Each file waits for the operator's decision on the PC; a `200` shows the
-  stored path, byte count and the receiver's SHA-256, and the page refuses to count a receipt whose digest
-  disagrees with its own. A `403`, `413`, `422`, `507` or `401` is shown per file.
-- **Cancellation.** Abort cancels the in-flight upload; the receiver discards the partial file. A failed
-  POST is restarted from zero on retry - there is no partial-upload resume.
+- **Incremental SHA-256, cancellation-aware.** Web Crypto is only available in a secure context, and the
+  receiver may run over token-authenticated HTTP on a private network, so the page carries its own
+  incremental SHA-256. Files are hashed in 4 MiB slices; the abort signal is checked before every slice and
+  again after each asynchronous read, so cancelling during hashing stops immediately. Hashing progress and
+  upload progress are shown separately. The digest is sent as `X-Content-Sha256` and the receiver verifies
+  it again while streaming.
+- **Fail-closed receipts.** A `200` alone is never treated as success. `VERIFIED` requires a 64-character
+  hexadecimal SHA-256 exactly equal to the digest computed from the selected bytes, a numeric receipt byte
+  count exactly equal to the selected file size, a non-empty syntactically safe relative destination path,
+  and a JSON object. Anything else is `RECEIPT INVALID`, which says the PC may or may not have committed
+  the file and must be checked before retrying. Other outcomes are `FAILED` (`403`, `413`, `422`, `507`,
+  network error) and `CANCELLED`.
+- **Cancellation accounting.** The page reports sent (`VERIFIED`), failed, cancelled and not-attempted
+  files separately. Cancellation before hashing, between hash slices, during a multi-file batch, during an
+  upload, or after one success but before the next file starts never produces a success summary: the
+  summary explicitly says "The batch was CANCELLED" with the counts. An upload cancelled in flight is
+  reported as delivery unconfirmed; the receiver discards the partial staging file. A failed POST is
+  restarted from zero on retry - there is no partial-upload resume.
 - **No whole-library claim.** The summary says "Only the files you selected were sent; this is not a
   whole-library transfer." The page cannot list the phone's library and cannot fetch cloud-only originals.
 
@@ -137,38 +154,56 @@ external resources and no referrer.
 
 | Check | Evidence |
 | --- | --- |
-| Page and script served, no secret in the HTML, CSP present | `WirelessSenderTests` (5 loopback tests) |
-| Opening the ticket URL does not spend the secret; JSON API clients still redeem it | `OpeningTheTicketUrlInABrowserDoesNotSpendTheSecret`, `AnApiClientStillRedeemsTheTicketWithAJsonGet` |
-| SHA-256 matches OpenSSL across 13 sizes (0 B to 1 MiB), one-shot and chunked; path rules | `tests/sender/sender.test.mjs` (Node, 13 size vectors) |
-| Real browser end to end | `tests/sender/browser-e2e.mjs` with Chrome: pairs, selects a 64 KiB file, uploads, receipt SHA-256 verified, destination bytes equal, summary counts 1 of 1, second send renamed ` (1)` |
+| Page and script served, no secret in the HTML, CSP present | `WirelessSenderTests` (6 loopback tests) |
+| The ticket secret is in the fragment and absent from the request target and asset responses | `TheTicketSecretTravelsInTheFragmentAndNeverInARequestTarget`; opening the ticket URL does not spend it (`OpeningTheTicketUrlInABrowserDoesNotSpendTheSecret`) |
+| JSON API clients still redeem `GET /pair?token=` | `AnApiClientStillRedeemsTheTicketWithAJsonGet` |
+| SHA-256 matches OpenSSL across 13 sizes (0 B to 1 MiB), one-shot and chunked; path rules; hash cancellation before and between slices | `tests/sender/sender.test.mjs` |
+| Receipt fails closed for missing/empty/malformed/wrong digest, missing/wrong byte count, missing/unsafe path, and accepts a collision-renamed path | `tests/sender/sender.test.mjs` (`verifyReceipt` cases) |
+| Batch cancellation before hashing, between hash slices, during an upload, after one success, and during a multi-file batch; summary never reads as complete | `tests/sender/sender.test.mjs` (`sendBatch`/`summarizeBatch` cases) |
+| Real browser end to end | `tests/sender/browser-e2e.mjs` with Chrome: pairs, selects a 64 KiB HEIC, uploads, `VERIFIED` receipt, destination bytes equal, second send renamed ` (1)` |
+| Real browser cancellation with manual approval | `tests/sender/browser-e2e.mjs`: cancel while the first file waits for approval; page reports `CANCELLED` + `NOT ATTEMPTED`, no destination file, no `.partial` |
 | Sender disconnect mid-upload | `AClientThatDisconnectsMidUploadLeavesNoPartialOrDestination`: no destination file, no `.partial`, no received entry |
 
-The browser test runs on the PC against the real receiver with auto-approval on; the approval gate itself
-is covered by the receiver tests. A physical iPhone or Android browser run is **not** recorded yet
-(KI-12); this is a local browser integration, not a phone test.
+The browser test runs on the PC against the real receiver; the happy path uses auto-approval, and the
+cancellation phase uses manual approval. The approval gate itself is also covered by the receiver tests. A
+physical iPhone or Android browser run is **not** recorded yet (KI-12); this is a local browser
+integration, not a phone test.
 
 ```powershell
 npm --prefix tests\sender install
 node tests\sender\sender.test.mjs src\I-Total.Transfer\Wireless\sender.js
 node tests\sender\browser-e2e.mjs tools\DeviceDrill\bin\Release\net10.0-windows\DeviceDrill.exe
 ```
-## TLS
+## TLS and the four separate protections
 
-`WirelessRequireTls` asks for `https://`. The receiver searches `CurrentUser\My` for a certificate
-that has a private key, is currently valid, and whose subject or subject alternative names include the
-address being served. If one is found, accepted sockets are wrapped in `SslStream` and the ticket,
-status line and `/health` all say TLS is active.
+`Require TLS` is a **hard requirement**, not a preference. When it is on, the receiver searches
+`CurrentUser\My` for a certificate that has a private key, is currently valid, and whose subject or
+subject alternative names include the address being served. If one is found, accepted sockets are
+wrapped in `SslStream` and the ticket, status line and `/health` all say TLS is active.
 
-If no matching certificate exists, the receiver **does not silently claim** TLS. It falls back to the
-token-authenticated session over the private interface, sets `UsingTls = false`, shortens the status
-line to `(HTTP; no certificate)`, writes the full reason to the activity log, and answers `/health`
-with `{"status":"ok","tls":false}`. No `netsh` reservation, administrator prompt or self-signed
-certificate is involved.
+If no matching certificate exists, the receiver **refuses to start**. `Start()` throws before any socket
+is opened, with a message naming the bind address and the two remedies: install a matching certificate, or
+clear `Require TLS` to run the token-authenticated session over the private network without encryption.
+The Settings caption says the same thing ("refuses to start without a matching certificate"), and the
+Wireless page shows the failure and logs it. There is no silent HTTP fallback.
 
-**What this does and does not protect.** On a private network the session is authenticated (an
-unpaired client cannot upload, and an unapproved file is not written), but the payload is not
-encrypted in transit when TLS is not active. Treat the Wi-Fi network as trusted, or install a
-matching certificate.
+Clearing `Require TLS` is an explicit operator decision. The status line then says
+`HTTP: traffic is not encrypted; private network only`, `TlsNote` says TLS is switched off, the activity
+log records it, and `/health` answers `{"status":"ok","tls":false}`. No `netsh` reservation,
+administrator prompt or self-signed certificate is involved.
+
+**Four separate protections, never conflated:**
+
+| Protection | What it does | What it does not do |
+| --- | --- | --- |
+| Private-interface restriction | The receiver binds only to a private IPv4 address; wildcard, public and carrier-grade addresses are refused. | It does not encrypt traffic, and it does not stop another host on the same LAN from reaching the port. |
+| Pairing authentication | A short-lived, single-use secret mints one session token; the secret cannot upload. | It does not encrypt the payload, and it is not operator approval. |
+| Operator approval | An upload becomes an offer; nothing is written until the operator accepts (unless automatic approval is explicitly on). | It does not encrypt traffic and it does not prove the sender is the person at the PC. |
+| TLS encryption | When a matching certificate is installed and `Require TLS` is on, the whole HTTP exchange is encrypted. | It does not decide which files are sent, and it does not replace pairing or approval. |
+
+On a private network without TLS the session is authenticated (an unpaired client cannot upload, and an
+unapproved file is not written), but the payload is not encrypted in transit. Treat the Wi-Fi network as
+trusted, or install a matching certificate.
 
 ## Limits
 
@@ -177,21 +212,26 @@ matching certificate.
   the receiver will see the connection end and discard the partial file.
 - **No resume of a partial upload.** A failed POST starts again from zero.
 - **HEIC/ProRAW conversion is the sender's job.** Bytes are stored exactly as sent. Some browsers, notably Safari when picking from Photos, may convert HEIC to JPEG before the page receives it; the PC stores what the browser delivers, and the receipt names the stored file.
-- **Local browser sender verified; physical sender not yet.** The protocol, pairing, approval, digest, traversal and
-  rotation rules are covered by loopback tests (`WirelessReceiverTests` 21, `PairingStateTests` 13,
-  `ApprovalInboxTests` 9, `PrivateNetworkTests` 21, `WirelessPageTests` 11) **and** were driven live
-  against the published executable with a real HTTP client: `401` for no credential and for the secret
-  used as a session, single-use redemption, a 1 MiB upload pending with nothing on disk until Approve,
-  `403` on refusal with the refusal sticking, `400` on traversal, `422` and no staging file on a digest
-  mismatch, and rename-under-collision. A real iPhone Shortcut has still not been run against it, so
-  the sender leg is recorded as an open item in `docs/RELEASE-ACCEPTANCE.md`.
+- **Local browser sender verified; physical sender not yet.** The protocol, pairing, approval, digest,
+  traversal, cancellation and rotation rules are covered by loopback tests (`WirelessReceiverTests` 23,
+  including TLS refusal and disconnect cleanup; `PairingStateTests` 13; `ApprovalInboxTests` 9;
+  `PrivateNetworkTests` 21; `WirelessPageTests` 11; `WirelessSenderTests` 6), by the Node tests and by
+  the Chrome end-to-end run. They were also driven live against the published executable with a real HTTP
+  client: `401` for no credential and for the secret used as a session, single-use redemption, a 1 MiB
+  upload pending with nothing on disk until Approve, `403` on refusal with the refusal sticking, `400` on
+  traversal, `422` and no staging file on a digest mismatch, and rename-under-collision. A physical
+  iPhone/Android browser run has still not been done, so the physical sender row stays open (KI-12).
 
-## Live non-elevated LAN check (2026-10-22)
+## Historical live non-elevated LAN check (2026-10-22)
 
-The current published build (SHA-256 `C953BC08...`) was started through its own Wireless page by the
-non-elevated user `DRRAMPAGE-PC\shambrain` with `Require TLS` on and no matching certificate. It bound
-`192.168.8.91:47821` successfully, created a ticket with an `http://` URL, displayed
-`Listening on http://192.168.8.91:47821/ (HTTP; no certificate).`, and `/health` answered
-`{"status":"ok","tls":false}`. The previous build, which used `HttpListener`, failed the same action
-with `Access is denied.` This is the regression covered by
-`WirelessReceiverTests.APrivateLanAddressBindsWithoutAUrlAcl`.
+This records a build from before the TLS semantics were tightened. That build was started through its own
+Wireless page by the non-elevated user `DRRAMPAGE-PC\shambrain` with `Require TLS` on and no matching
+certificate. It bound `192.168.8.91:47821` and silently fell back to `http://`, displaying
+`Listening on http://192.168.8.91:47821/ (HTTP; no certificate).`, with `/health` answering
+`{"status":"ok","tls":false}`. The previous `HttpListener` build had failed the same action with
+`Access is denied.`
+
+**That fallback no longer exists.** On the current candidate, `Require TLS` with no matching certificate
+refuses to start with an actionable message (`RequiringTlsWithoutAMatchingCertificateRefusesToStart`), and
+clearing the setting is the only way to run private-network HTTP. The non-elevated bind itself is still
+covered by `WirelessReceiverTests.APrivateLanAddressBindsWithoutAUrlAcl`.

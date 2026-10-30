@@ -61,7 +61,10 @@
     <label for="files">Files (photos, videos, sidecars)</label>
     <input id="files" type="file" multiple accept="image/*,video/*,.heic,.heif,.mov,.jpg,.jpeg,.png,.aae,.dng,.tif,.tiff">
     <ul id="fileList" aria-live="polite"></ul>
-    <progress id="progress" max="100" value="0" aria-label="Upload progress"></progress>
+    <label for="hashProgress" id="hashLabel">Hashing: not started</label>
+    <progress id="hashProgress" max="100" value="0" aria-label="Hashing progress"></progress>
+    <label for="uploadProgress" id="uploadLabel">Upload: not started</label>
+    <progress id="uploadProgress" max="100" value="0" aria-label="Upload progress"></progress>
     <div class="row">
       <button id="sendButton" class="primary" type="button">Send selected files</button>
       <button id="cancelButton" type="button" disabled>Cancel</button>

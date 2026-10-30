@@ -56,7 +56,7 @@ public sealed class WirelessPageTests : WinFormsTestBase
     public void ATicketShowsTheUrlAndAScannableQrImage()
     {
         using var page = new WirelessPage();
-        string url = "http://192.168.1.24:47821/pair?token=" + PairingState.NewToken();
+        string url = "http://192.168.1.24:47821/pair#token=" + PairingState.NewToken();
         var ticket = new PairingTicket(
             PairingState.NewToken(), DateTimeOffset.UtcNow.AddMinutes(5), url, QrCode.Encode(url));
 
@@ -74,7 +74,7 @@ public sealed class WirelessPageTests : WinFormsTestBase
     public void ClearingTheTicketHidesTheQr()
     {
         using var page = new WirelessPage();
-        string url = "http://192.168.1.24:47821/pair?token=" + PairingState.NewToken();
+        string url = "http://192.168.1.24:47821/pair#token=" + PairingState.NewToken();
         page.SetTicket(new PairingTicket(PairingState.NewToken(), DateTimeOffset.UtcNow.AddMinutes(5), url, QrCode.Encode(url)));
 
         page.SetTicket(null);
@@ -89,7 +89,7 @@ public sealed class WirelessPageTests : WinFormsTestBase
     public void ARedeemedTicketWithdrawsTheUrlAndTheCode()
     {
         using var page = new WirelessPage();
-        string url = "http://192.168.1.24:47821/pair?token=" + PairingState.NewToken();
+        string url = "http://192.168.1.24:47821/pair#token=" + PairingState.NewToken();
         page.SetTicket(new PairingTicket(PairingState.NewToken(), DateTimeOffset.UtcNow.AddMinutes(5), url, QrCode.Encode(url)));
 
         page.MarkTicketSpent();
@@ -178,7 +178,7 @@ public sealed class WirelessPageTests : WinFormsTestBase
     public void StoppingClearsTheTicketAndTheApprovalList()
     {
         using var page = new WirelessPage();
-        string url = "http://192.168.1.24:47821/pair?token=" + PairingState.NewToken();
+        string url = "http://192.168.1.24:47821/pair#token=" + PairingState.NewToken();
         page.SetTicket(new PairingTicket(PairingState.NewToken(), DateTimeOffset.UtcNow.AddMinutes(5), url, QrCode.Encode(url)));
         page.SetPending([Offer("DCIM/IMG_1.HEIC")]);
 

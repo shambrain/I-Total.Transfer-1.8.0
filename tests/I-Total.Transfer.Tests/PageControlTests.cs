@@ -216,8 +216,9 @@ public sealed class PageControlTests : WinFormsTestBase
         Assert.AreEqual(1, start);
         Assert.AreEqual(1, stop);
         Assert.AreEqual(1, pair);
-        // The fallback caption must not imply that a certificate exists when none was found.
-        StringAssert.Contains(Find<Label>(page, "_statusLabel").Text, "no certificate");
+        // The HTTP caption must say the traffic is not encrypted, not imply that a certificate exists.
+        StringAssert.Contains(Find<Label>(page, "_statusLabel").Text, "not encrypted");
+        StringAssert.Contains(Find<FluentCheckBox>(page, "_tlsCheck").Text, "refuses to start");
         StringAssert.Contains(Find<FluentCheckBox>(page, "_tlsCheck").Text, "matching certificate");
     }
 

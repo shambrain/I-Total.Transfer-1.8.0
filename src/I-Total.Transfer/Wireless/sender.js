@@ -8,6 +8,9 @@
  * context, and the receiver may legitimately run over token-authenticated HTTP on a private network,
  * so the page carries its own incremental SHA-256. The same implementation is exercised by Node tests
  * in tests/sender/sender.test.mjs.
+ *
+ * The batch core (sendBatch/verifyReceipt/hashFile) is transport-injectable so the Node tests can
+ * drive cancellation and malformed receipts deterministically without a browser or a network.
  */
 
 const K = new Uint32Array([
@@ -169,6 +172,61 @@ function normalizePath(folder, name) {
   return base + "/" + fileName;
 }
 
+/**
+ * Validates a destination path echoed by the receiver. The receiver reports Windows separators, so
+ * both separators are accepted; absolute paths, drive letters, traversal, reserved names and names
+ * Windows cannot store are not.
+ */
+function isSafeReceiptPath(path) {
+  if (typeof path !== "string") return false;
+  if (path.length === 0 || path.trim() !== path) return false;
+  if (/^[\\/]/.test(path)) return false;
+  if (/^[A-Za-z]:/.test(path)) return false;
+  const segments = path.split(/[\\/]/);
+  if (segments.length === 0) return false;
+  for (const segment of segments) {
+    if (!segment || segment === "." || segment === "..") return false;
+    if (INVALID.test(segment) || /[. ]$/.test(segment)) return false;
+    if (RESERVED.test(segment)) return false;
+  }
+  return true;
+}
+
+const SHA256_HEX = /^[0-9a-f]{64}$/;
+
+/**
+ * Fail-closed receipt check. A 200 alone never counts as success: the receipt must carry a
+ * 64-character hexadecimal SHA-256 equal to the digest computed from the selected bytes, a numeric
+ * byte count equal to the selected size, and a safe relative destination path.
+ */
+function verifyReceipt(body, expectedDigest, expectedBytes) {
+  const invalid = (reason) => ({ state: "RECEIPT INVALID", reason });
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
+    return invalid("The PC response was not a receipt object.");
+  }
+  if (typeof body.sha256 !== "string") return invalid("The receipt has no SHA-256 digest.");
+  const digest = body.sha256.trim().toLowerCase();
+  if (digest.length === 0) return invalid("The receipt digest is empty.");
+  if (!SHA256_HEX.test(digest)) {
+    return invalid("The receipt digest is not a 64-character hexadecimal SHA-256.");
+  }
+  const expected = typeof expectedDigest === "string" ? expectedDigest.trim().toLowerCase() : "";
+  if (!SHA256_HEX.test(expected)) return invalid("The locally calculated SHA-256 is not valid.");
+  if (digest !== expected) return invalid("The receipt digest does not match the bytes that were sent.");
+  if (typeof body.bytes !== "number" || !Number.isFinite(body.bytes) ||
+      !Number.isInteger(body.bytes) || body.bytes < 0) {
+    return invalid("The receipt has no numeric byte count.");
+  }
+  if (body.bytes !== expectedBytes) {
+    return invalid("The receipt reports " + body.bytes + " bytes but the selected file is " +
+      expectedBytes + " bytes.");
+  }
+  if (!isSafeReceiptPath(body.path)) {
+    return invalid("The receipt destination path is missing or unsafe.");
+  }
+  return { state: "VERIFIED", reason: "" };
+}
+
 function formatBytes(value) {
   const n = Number(value) || 0;
   if (n >= 1024 * 1024 * 1024) return (n / (1024 * 1024 * 1024)).toFixed(2) + " GB";
@@ -177,14 +235,280 @@ function formatBytes(value) {
   return n + " B";
 }
 
-async function hashFile(file) {
+function abortError() {
+  if (typeof DOMException === "function") {
+    try { return new DOMException("The operation was aborted.", "AbortError"); } catch { /* fall through */ }
+  }
+  const error = new Error("The operation was aborted.");
+  error.name = "AbortError";
+  return error;
+}
+
+function isAbortError(error) {
+  return !!error && (error.name === "AbortError" || error.code === 20);
+}
+
+function throwIfAborted(signal) {
+  if (signal && signal.aborted) throw abortError();
+}
+
+const HASH_CHUNK = 4 * 1024 * 1024;
+
+/**
+ * Incremental SHA-256 over the selected file in 4 MiB slices. The signal is checked before every
+ * slice and again after each asynchronous read, so cancellation stops immediately instead of after
+ * the remaining slices have been read. Hashing progress is reported separately from upload progress.
+ */
+async function hashFile(file, signal, onProgress) {
+  throwIfAborted(signal);
   const sha = new Sha256();
-  const chunk = 4 * 1024 * 1024;
-  for (let offset = 0; offset < file.size; offset += chunk) {
-    const slice = file.slice(offset, Math.min(offset + chunk, file.size));
-    sha.update(new Uint8Array(await slice.arrayBuffer()));
+  const size = Math.max(0, Number(file.size) || 0);
+  if (size === 0) {
+    if (onProgress) onProgress(1, 0, 0);
+    return sha.hex();
+  }
+  let offset = 0;
+  while (offset < size) {
+    throwIfAborted(signal);
+    const end = Math.min(offset + HASH_CHUNK, size);
+    const buffer = await file.slice(offset, end).arrayBuffer();
+    throwIfAborted(signal);
+    sha.update(new Uint8Array(buffer));
+    offset = end;
+    if (onProgress) onProgress(offset / size, offset, size);
   }
   return sha.hex();
+}
+
+/**
+ * Real upload with genuine upload-progress events. XMLHttpRequest is used instead of fetch because
+ * fetch does not expose request-body progress and is not resumable anyway; the signal aborts it.
+ */
+function uploadWithXhr({ file, path, digest, session, signal, onProgress }) {
+  return new Promise((resolve, reject) => {
+    if (signal && signal.aborted) { reject(abortError()); return; }
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/upload?path=" + encodeURIComponent(path), true);
+    xhr.setRequestHeader("X-Session-Token", session);
+    xhr.setRequestHeader("X-Content-Sha256", digest);
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
+    xhr.responseType = "text";
+    const onAbort = () => xhr.abort();
+    if (signal) signal.addEventListener("abort", onAbort, { once: true });
+    const cleanup = () => { if (signal) signal.removeEventListener("abort", onAbort); };
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && event.total > 0 && onProgress) {
+        onProgress(Math.min(1, event.loaded / event.total));
+      }
+    };
+    xhr.onload = () => {
+      cleanup();
+      let body = null;
+      try { body = JSON.parse(xhr.responseText); } catch { body = null; }
+      resolve({ status: xhr.status, body });
+    };
+    xhr.onerror = () => { cleanup(); reject(new Error("network error")); };
+    xhr.ontimeout = () => { cleanup(); reject(new Error("the request timed out")); };
+    xhr.onabort = () => { cleanup(); reject(abortError()); };
+    xhr.send(file);
+  });
+}
+
+function defaultUpload(options) {
+  return uploadWithXhr(options);
+}
+
+/**
+ * Sends the selected files in order and accounts for every one of them.
+ *
+ * Cancellation is deterministic and never reported as success:
+ * - cancelled before a file starts hashing: that file and all later ones are UNATTEMPTED;
+ * - cancelled between hash slices: the current file is CANCELLED and the rest are UNATTEMPTED;
+ * - cancelled during an upload: the current file is CANCELLED with an unconfirmed delivery and the
+ *   rest are UNATTEMPTED.
+ *
+ * A failed file does not stop the batch; an expired session does (the rest are UNATTEMPTED).
+ */
+async function sendBatch(options) {
+  const files = Array.from(options.files || []);
+  const folder = options.folder;
+  const session = options.session;
+  const signal = options.signal;
+  const hash = options.hashFile || hashFile;
+  const upload = options.upload || defaultUpload;
+  const onEvent = options.onEvent || (() => {});
+  const onProgress = options.onProgress || (() => {});
+  const total = files.length;
+
+  const result = {
+    total, sent: 0, failed: 0, cancelled: 0, unattempted: 0, bytes: 0,
+    cancelledBatch: false, sessionExpired: false, items: []
+  };
+
+  const record = (index, file, state, detail) => {
+    const entry = { index, name: file ? file.name : "", state, ...detail };
+    result.items.push(entry);
+    onEvent(entry);
+  };
+
+  let index = 0;
+  for (; index < total; index++) {
+    const file = files[index];
+    if (signal && signal.aborted) { result.cancelledBatch = true; break; }
+
+    let path;
+    try {
+      path = normalizePath(folder, file.name);
+    } catch (error) {
+      result.failed++;
+      record(index, file, "FAILED", { message: error.message });
+      continue;
+    }
+
+    record(index, file, "HASHING", { path });
+    let digest;
+    try {
+      digest = await hash(file, signal, (fraction) => {
+        onProgress({ phase: "hash", index, file, fraction });
+      });
+    } catch (error) {
+      if (isAbortError(error) || (signal && signal.aborted)) {
+        result.cancelled++;
+        result.cancelledBatch = true;
+        record(index, file, "CANCELLED", {
+          path, message: "Cancelled while hashing. Nothing was sent for this file."
+        });
+        index++;
+        break;
+      }
+      result.failed++;
+      record(index, file, "FAILED", {
+        path, message: "The file could not be read for hashing: " + error.message
+      });
+      continue;
+    }
+
+    if (signal && signal.aborted) {
+      result.cancelled++;
+      result.cancelledBatch = true;
+      record(index, file, "CANCELLED", {
+        path, message: "Cancelled after hashing. Nothing was sent for this file."
+      });
+      index++;
+      break;
+    }
+
+    record(index, file, "UPLOADING", { path, digest });
+    let response;
+    try {
+      response = await upload({
+        file, path, digest, session, signal,
+        onProgress: (fraction) => onProgress({ phase: "upload", index, file, fraction })
+      });
+    } catch (error) {
+      if (isAbortError(error) || (signal && signal.aborted)) {
+        result.cancelled++;
+        result.cancelledBatch = true;
+        record(index, file, "CANCELLED", {
+          path,
+          message: "Cancelled during upload. Delivery is unconfirmed: check the PC destination before retrying."
+        });
+        index++;
+        break;
+      }
+      result.failed++;
+      record(index, file, "FAILED", {
+        path,
+        message: "The upload did not complete: " + error.message +
+          " Delivery is unconfirmed: check the PC destination before retrying."
+      });
+      continue;
+    }
+
+    if (response.status === 200) {
+      const verdict = verifyReceipt(response.body, digest, file.size);
+      if (verdict.state === "VERIFIED") {
+        result.sent++;
+        result.bytes += Number(file.size) || 0;
+        record(index, file, "VERIFIED", {
+          path: response.body.path, bytes: response.body.bytes, digest
+        });
+      } else {
+        result.failed++;
+        record(index, file, "RECEIPT INVALID", {
+          path: response.body && typeof response.body.path === "string" ? response.body.path : path,
+          message: verdict.reason +
+            " The PC may or may not have committed the file: check the destination before retrying."
+        });
+      }
+    } else if (response.status === 401) {
+      result.failed++;
+      result.sessionExpired = true;
+      record(index, file, "FAILED", {
+        path, message: "The session expired. Pair with the PC again."
+      });
+      index++;
+      break;
+    } else if (response.status === 403) {
+      result.failed++;
+      record(index, file, "FAILED", {
+        path, message: "Refused on the PC. The file was not accepted."
+      });
+    } else {
+      result.failed++;
+      const detail = response.body && (response.body.error || response.body.detail);
+      record(index, file, "FAILED", {
+        path,
+        message: "Not delivered (" + response.status + (detail ? " " + detail : "") + ")."
+      });
+    }
+  }
+
+  if (result.cancelledBatch || result.sessionExpired) {
+    for (let rest = index; rest < total; rest++) {
+      result.unattempted++;
+      record(rest, files[rest], "UNATTEMPTED", {
+        message: result.cancelledBatch ? "Not attempted because the batch was cancelled." : "Not attempted because the session expired."
+      });
+    }
+  }
+
+  return result;
+}
+
+/**
+ * The batch summary. A cancelled batch always says so and never reads as a completed transfer.
+ */
+function summarizeBatch(result) {
+  const lines = [];
+  lines.push("Sent " + result.sent + " of " + result.total + " selected file(s), " + formatBytes(result.bytes) + ".");
+  let kind = result.failed > 0 || result.cancelledBatch || result.sessionExpired ? "warn" : "ok";
+  if (result.cancelledBatch) {
+    lines.push("The batch was CANCELLED: " + result.sent + " sent, " + result.failed + " failed, " +
+      result.cancelled + " cancelled, " + result.unattempted + " not attempted.");
+  } else if (result.sessionExpired) {
+    lines.push("The session expired: " + result.sent + " sent, " + result.failed + " failed, " +
+      result.unattempted + " not attempted.");
+  } else if (result.failed > 0) {
+    lines.push(result.failed + " file(s) were not delivered or could not be verified.");
+  }
+  lines.push("Only the files you selected were sent; this is not a whole-library transfer.");
+  return { text: lines.join(" "), kind };
+}
+
+function readPairingSecret(locationLike) {
+  const hash = locationLike && typeof locationLike.hash === "string" ? locationLike.hash : "";
+  const search = locationLike && typeof locationLike.search === "string" ? locationLike.search : "";
+  let secret = "";
+  if (hash.length > 1) {
+    const params = new URLSearchParams(hash.slice(1));
+    secret = params.get("token") || "";
+  }
+  // The query form is kept only so an older ticket still works; new tickets use the fragment.
+  if (!secret && search.length > 1) {
+    secret = new URLSearchParams(search).get("token") || "";
+  }
+  return secret;
 }
 
 function initSender() {
@@ -200,15 +524,19 @@ function initSender() {
   const sendButton = byId("sendButton");
   const cancelButton = byId("cancelButton");
   const rotateButton = byId("rotateButton");
-  const progress = byId("progress");
+  const hashProgress = byId("hashProgress");
+  const uploadProgress = byId("uploadProgress");
+  const hashLabel = byId("hashLabel");
+  const uploadLabel = byId("uploadLabel");
   const summary = byId("summary");
   const results = byId("results");
 
   const state = { session: null, expiresUtc: null, files: [], controller: null, sending: false };
 
-  // The ticket URL carries the single-use secret. Keep it out of the address bar after reading it, so a
-  // screenshot or a shared history entry does not hand the code to somebody else.
-  const token = new URLSearchParams(location.search).get("token");
+  // The ticket URL carries the single-use secret in the fragment, which a browser never sends to the
+  // server. Read it locally and remove it from the address bar and history immediately. This is not
+  // encryption: TLS remains a separate setting.
+  const token = readPairingSecret(location);
   if (token) {
     secretInput.value = token;
     history.replaceState(null, "", location.pathname);
@@ -224,9 +552,10 @@ function initSender() {
     summary.className = kind || "";
   }
 
-  function addResult(text) {
+  function addResult(text, kind) {
     const item = document.createElement("li");
     item.textContent = text;
+    item.className = kind || "";
     results.appendChild(item);
     return item;
   }
@@ -290,7 +619,10 @@ function initSender() {
     sendButton.disabled = blocked || state.files.length === 0 || !state.session || state.sending;
     summary.textContent = "";
     results.replaceChildren();
-    progress.value = 0;
+    hashProgress.value = 0;
+    uploadProgress.value = 0;
+    hashLabel.textContent = "Hashing: not started";
+    uploadLabel.textContent = "Upload: not started";
   }
 
   async function rotate() {
@@ -315,86 +647,101 @@ function initSender() {
     }
   }
 
+  function itemText(entry) {
+    const name = entry.name || "file";
+    switch (entry.state) {
+      case "HASHING": return name + " - hashing on this device...";
+      case "UPLOADING": return name + " - waiting for approval and upload on the PC...";
+      case "VERIFIED":
+        return name + " - VERIFIED as " + entry.path + " (" + formatBytes(entry.bytes) +
+          ", SHA-256 and byte count matched)";
+      case "RECEIPT INVALID":
+        return name + " - RECEIPT INVALID: " + entry.message;
+      case "FAILED": return name + " - FAILED: " + entry.message;
+      case "CANCELLED": return name + " - CANCELLED: " + entry.message;
+      case "UNATTEMPTED": return name + " - NOT ATTEMPTED: " + entry.message;
+      default: return name + " - " + entry.state;
+    }
+  }
+
+  function itemClass(entry) {
+    if (entry.state === "VERIFIED") return "ok";
+    if (entry.state === "CANCELLED" || entry.state === "UNATTEMPTED") return "warn";
+    return "error";
+  }
+
   async function send() {
     if (!state.session || state.sending || state.files.length === 0) return;
     state.sending = true;
     state.controller = new AbortController();
     sendButton.disabled = true;
     cancelButton.disabled = false;
-    progress.value = 0;
     results.replaceChildren();
+    hashProgress.value = 0;
+    uploadProgress.value = 0;
+    hashLabel.textContent = "Hashing: not started";
+    uploadLabel.textContent = "Upload: not started";
 
     const total = state.files.length;
-    let done = 0, sent = 0, failed = 0, bytes = 0;
+    const rows = new Map();
+    const setRow = (index, entry) => {
+      let item = rows.get(index);
+      if (!item) { item = addResult("", ""); rows.set(index, item); }
+      item.textContent = itemText(entry);
+      item.className = itemClass(entry);
+    };
+
     setSummary("Sending " + total + " selected file(s)...");
 
-    for (const file of state.files) {
-      if (state.controller.signal.aborted) break;
-      let item;
-      try {
-        const path = normalizePath(folderInput.value, file.name);
-        item = addResult(file.name + " - hashing...");
-        const digest = await hashFile(file);
-        if (state.controller.signal.aborted) break;
-        item.textContent = file.name + " - waiting for approval on the PC...";
-        const response = await fetch("/upload?path=" + encodeURIComponent(path), {
-          method: "POST",
-          headers: {
-            "X-Session-Token": state.session,
-            "X-Content-Sha256": digest,
-            "Content-Type": "application/octet-stream"
-          },
-          body: file,
-          signal: state.controller.signal,
-          credentials: "omit"
-        });
-        const body = await response.json().catch(() => ({}));
-        if (response.status === 200) {
-          if (body.sha256 && String(body.sha256).toLowerCase() !== digest) {
-            item.className = "error";
-            item.textContent = file.name + " - RECEIPT HASH MISMATCH (not counted as sent)";
-            failed++;
-          } else {
-            item.className = "ok";
-            item.textContent = file.name + " - sent as " + body.path + " (" + formatBytes(body.bytes) + ", SHA-256 verified on the PC)";
-            sent++;
-            bytes += Number(body.bytes) || 0;
+    let result;
+    try {
+      result = await sendBatch({
+        files: state.files,
+        folder: folderInput.value,
+        session: state.session,
+        signal: state.controller.signal,
+        onEvent: (entry) => {
+          setRow(entry.index, entry);
+          if (entry.state === "HASHING") {
+            hashLabel.textContent = "Hashing " + entry.name + " (file " + (entry.index + 1) + " of " + total + ")";
           }
-        } else if (response.status === 401) {
-          item.className = "error";
-          item.textContent = file.name + " - the session expired; pair again.";
-          failed++;
-          state.session = null;
-          break;
-        } else if (response.status === 403) {
-          item.className = "error";
-          item.textContent = file.name + " - refused on the PC.";
-          failed++;
-        } else {
-          item.className = "error";
-          item.textContent = file.name + " - not delivered (" + response.status + " " + (body.error || "") + ")";
-          failed++;
+          if (entry.state === "UPLOADING") {
+            hashProgress.value = 100;
+            hashLabel.textContent = "Hashed " + entry.name;
+            uploadLabel.textContent = "Uploading " + entry.name + " (file " + (entry.index + 1) + " of " + total + ")";
+          }
+          if (entry.state === "VERIFIED" || entry.state === "RECEIPT INVALID" ||
+              entry.state === "FAILED" || entry.state === "CANCELLED" || entry.state === "UNATTEMPTED") {
+            uploadProgress.value = entry.state === "VERIFIED" ? 100 : 0;
+          }
+        },
+        onProgress: (event) => {
+          if (event.phase === "hash") {
+            hashProgress.value = Math.round(100 * event.fraction);
+            hashLabel.textContent = "Hashing " + event.file.name + ": " + Math.round(100 * event.fraction) + "%";
+          } else {
+            uploadProgress.value = Math.round(100 * event.fraction);
+            uploadLabel.textContent = "Uploading " + event.file.name + ": " + Math.round(100 * event.fraction) + "%";
+          }
         }
-      } catch (error) {
-        if (error.name === "AbortError") {
-          if (item) item.textContent = file.name + " - cancelled.";
-          failed++;
-          break;
-        }
-        if (item) { item.className = "error"; item.textContent = file.name + " - failed: " + error.message; }
-        failed++;
-      }
-      done++;
-      progress.value = Math.round((100 * done) / total);
+      });
+    } catch (error) {
+      setSummary("The batch stopped unexpectedly: " + error.message, "error");
+      state.sending = false;
+      state.controller = null;
+      sendButton.disabled = !state.session;
+      cancelButton.disabled = true;
+      return;
     }
 
+    if (result.sessionExpired) state.session = null;
     state.sending = false;
     state.controller = null;
     sendButton.disabled = !state.session;
     cancelButton.disabled = true;
-    const tail = failed > 0 ? " " + failed + " not delivered." : "";
-    setSummary("Sent " + sent + " of " + total + " selected file(s), " + formatBytes(bytes) + "." + tail +
-      " Only the files you selected were sent; this is not a whole-library transfer.", failed > 0 ? "warn" : "ok");
+    if (result.cancelledBatch) uploadLabel.textContent = "Upload: cancelled";
+    const summaryText = summarizeBatch(result);
+    setSummary(summaryText.text, summaryText.kind);
   }
 
   pairButton.addEventListener("click", pair);
@@ -403,10 +750,17 @@ function initSender() {
   folderInput.addEventListener("input", renderFiles);
   sendButton.addEventListener("click", send);
   rotateButton.addEventListener("click", rotate);
-  cancelButton.addEventListener("click", () => { if (state.controller) state.controller.abort(); });
+  cancelButton.addEventListener("click", () => {
+    if (!state.controller) return;
+    state.controller.abort();
+    setSummary("Cancelling the batch...", "warn");
+  });
 }
 
-const senderApi = { Sha256, sha256Hex, normalizePath, formatBytes, hashFile };
+const senderApi = {
+  Sha256, sha256Hex, normalizePath, isSafeReceiptPath, verifyReceipt, formatBytes,
+  hashFile, uploadWithXhr, sendBatch, summarizeBatch, readPairingSecret, isAbortError
+};
 if (typeof globalThis !== "undefined") globalThis.IITotalSender = senderApi;
 if (typeof document !== "undefined") {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initSender);

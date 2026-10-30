@@ -220,7 +220,7 @@ partial class WirelessPage
         _tlsCheck.Name = "_tlsCheck";
         _tlsCheck.Size = new Size(351, 19);
         _tlsCheck.TabIndex = 7;
-        _tlsCheck.Text = "Require TLS (private-network HTTP if no matching certificate)";
+        _tlsCheck.Text = "Require TLS (refuses to start without a matching certificate)";
         //
         // _autoApproveCheck
         //

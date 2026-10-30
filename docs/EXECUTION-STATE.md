@@ -17,17 +17,19 @@ Updated: 2026-10-30. Read this file first when resuming. This checkpoint records
 | --- | --- |
 | Repository | `shambrain/I-Total.Transfer-1.8.0` (GitHub repository) |
 | Working branch | `work/master-directive` |
-| Last product-source/build/artifact checkpoint reported | `9ae20fdd1f9522d9349b5662cd27aa08d45eda87` — `Cover the scope field in the session report and refresh the archives` |
-| Session commits | `7cf220f` (synced remote documentation head), `e6440e0` (browser sender, G3), `6fa29e4` (session outcome counts, sender disconnect test), `9375a51` (honest HEIC-transcoding note, final artifacts). |
+| Last product-source/build/artifact checkpoint | `055185ae40a69a87baf968b019d2315533fd47f4` — `Commit the browser-sender evidence and refresh the archives`; the G3 hardening described below is the current uncommitted work until its checkpoint commit lands. |
+| Session commits | `7cf220f` (synced remote documentation head), `e6440e0` (browser sender, G3), `6fa29e4` (session outcome counts, sender disconnect test), `9375a51` (honest HEIC-transcoding note), `500967b` (synced checkpoint), `055185a` (sender evidence and archives). |
 | Local workspace recorded in the prior checkpoint | `C:\Users\Administrator\Documents\GitHub\I-Total.Transfer-v1.5.0-source` — confirm it still points to this repository before running commands. |
-| Local working-tree status | Clean at `9375a51`; the branch was fast-forwarded from `9ae20fd` to `7cf220f` before code changes. Build and the full suite were run locally in this session. |
+| Local working-tree status | Clean at `055185a` before this hardening phase. `git fetch origin` failed with `Empty reply from server`; the remote tip after `055185a` is unconfirmed. No reset, clean or force-push was attempted. |
 
 ## Latest product validation recorded at the code checkpoint
 
-- Build: `dotnet build I-Total.Transfer.sln -c Release --no-incremental` — recorded as 0 warnings, 0 errors.
-- Tests: `dotnet test tests\\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s` — final local run after this session: **519 passed, 0 failed, 2 skipped, 521 total** (about 37-41 seconds).
-- Licensing flake (KI-26): two full-suite occurrences are recorded, on 2026-10-29 and 2026-10-30. After the later occurrence, the user reports 20 isolated passes and six consecutive full-suite passes. The repository KI-26 and README were updated to reflect the final 511-pass / 513-total run count. If it recurs, capture the complete assertion output and sequence file; do not conceal it.
-- The test/build numbers above are checkpoint evidence, not a claim that tests were rerun during the current GitHub-only documentation update. Re-run locally after syncing, and report new results separately.
+- Build: `dotnet build I-Total.Transfer.sln -c Release --no-incremental` — **0 warnings, 0 errors**.
+- Tests: `dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s` — **522 passed, 0 failed, 2 skipped, 524 total** (about 42 seconds), after the G3 hardening.
+- Node: `node tests\sender\sender.test.mjs src\I-Total.Transfer\Wireless\sender.js` — **PASS** (13 SHA-256 sizes, path rules, hash cancellation before/between slices, 24 receipt cases, five batch-cancellation sequences, summary honesty, fragment/query secret reading).
+- Browser: `node tests\sender\browser-e2e.mjs <DeviceDrill.exe>` — **PASS** (auto-approve happy path with `VERIFIED` receipt and collision rename; manual-approval cancellation with `CANCELLED` + `NOT ATTEMPTED`, no destination or `.partial` file).
+- Licensing flake (KI-26): no recurrence in this hardening run. If it recurs, capture the complete assertion output and sequence file; do not conceal it.
+- The test/build numbers above are checkpoint evidence for this workspace, not a claim that a later GitHub-only documentation update reran them. Re-run locally after syncing, and report new results separately.
 
 ## KI-29 — inventory scope is separate from enumeration completeness
 
@@ -68,17 +70,17 @@ Updated: 2026-10-30. Read this file first when resuming. This checkpoint records
 
 ## Candidate and artifact hashes at the last package checkpoint
 
-These are the hashes recorded in `dist/SHA256SUMS.txt` at the `9ae20fdd` code/artifact checkpoint. The follow-up commits described above are documentation-only. Verify files locally before distributing; any rebuild requires fresh hashes.
+These are the hashes recorded in `dist/SHA256SUMS.txt` at the G3-hardening artifact checkpoint. Verify files locally before distributing; any rebuild requires fresh hashes.
 
 | Artifact | SHA-256 | Recorded size |
 | --- | --- | --- |
-| `publish/I-Total.Transfer.exe` | `0EE17A24954DE4C3AEB7996FF2264A76916E3BCAC0F0E4BABA9E0D55910646BA` | 112,236,358 B |
-| `dist/I-Total.Transfer-1.8.0-win-x64.zip` | `66E3EADF300A5FB1AEA8F3C8A432076EECB119818615C227C88E4D4EE330D81A` | 54.46 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `79DBE9F19C268113C5E06C0A034F3BDCDEA7E39EC03A9A3A2937D837F389120A` | 44.73 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `49FDB51BC91A1557CD8DFEFC40C04C1654BFDFC4B8A9C336C288E2F71EF86F71` | 35.30 MB |
-| `dist/I-Total.Transfer-1.8.0-source.zip` | `B738EC4373E3893AE9700A5A1606AFE81ACA0FCE35A67B66AF23059A55D96DDE` | 15.05 MB |
+| `publish/I-Total.Transfer.exe` | `A733FA0836C60F6B733A0903D01BF0CC15F457D902B39B31FFD9C5700259EB7E` | 112,252,742 B |
+| `dist/I-Total.Transfer-1.8.0-win-x64.zip` | see `dist/SHA256SUMS.txt` (repacked after this file) | 54.49 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `1216A4E4B7300AAC5E6BCE4FD5ACAB0410E4918440D884A99E5EF18515E091CD` | 44.73 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `FD2230EEECB3271143EE0975D86315CC540515F8A004EA7F5446F83B951BDFEF` | 35.30 MB |
+| `dist/I-Total.Transfer-1.8.0-source.zip` | see `dist/SHA256SUMS.txt` (repacked after this file) | 15.09 MB |
 
-Recorded at checkpoint: source ZIP documentation comparison had zero mismatches; installer install/uninstall was rechecked; the executable was reproducible from the source ZIP. These are repository-reported checks and were not re-executed by this documentation-only update.
+Recorded at this checkpoint: installer silent install/uninstall was rechecked (executable and README hashes match the tree; uninstall removed the install directory and HKCU key while keeping `%APPDATA%`); the executable was reproduced byte-identically from the source ZIP. The two ZIPs that contain this file are repacked after it is written, so their own hashes cannot be stored inside themselves; `dist/SHA256SUMS.txt` is authoritative for them.
 
 ## Other outstanding requirements — do not silently declare the whole directive complete
 
@@ -86,11 +88,15 @@ Recorded at checkpoint: source ZIP documentation comparison had zero mismatches;
 - Windows 11 visual/device validation is not recorded; latest host evidence is Windows 10 22H2.
 - Visual Studio Designer open/save/reopen round-trip is not recorded because Visual Studio was unavailable in the recorded host. Static Designer coverage is not a substitute for this check.
 - Trusted Authenticode signing is blocked on a trusted signing certificate. Production licence key/issuing service and purchase URL are not configured. Live Steamworks ownership integration is blocked on eligibility, SDK and partner access; current signed-entitlement behavior is not a live Steam ownership call.
-- Gate G3: the receiver now serves a **real browser sender** (`/`, `/send`, ticket URL, `/sender.js`) with
-  explicit file selection, pairing, per-file incremental SHA-256, approval, receipts, cancellation,
-  rotation and collision-safe storage. Verified by 5 loopback C# tests, Node digest/path tests and a Chrome
-  end-to-end run on this PC (pair, 64 KiB HEIC, receipt hash, collision rename, bytes equal). A physical
-  iPhone/Android browser run is still pending (KI-12); do not call the physical sender complete.
+- Gate G3: the receiver serves a **real browser sender** (`/`, `/send`, `/pair#token=...`, `/sender.js`) with
+  explicit file selection, pairing, cancellation-aware incremental SHA-256, approval, fail-closed
+  receipts, cancellation accounting, rotation and collision-safe storage. Verified by 6 loopback C# tests,
+  Node digest/path/receipt/cancellation tests and a Chrome end-to-end run on this PC (happy path and
+  manual-approval cancellation). A physical iPhone/Android browser run is still pending (KI-12); do not
+  call the physical sender complete.
+- Gate G3 hardening decisions: `Require TLS` is a hard requirement (refusal, not a silent HTTP fallback);
+  the ticket secret is in the URL fragment and the page removes it from history; a receipt is `VERIFIED`
+  only when digest, byte count, path and structure all match; cancellation never reads as success.
 - Other recorded open items include cross-device disappearance hardware drill, iPhone lock/trust revocation, Narrator/NVDA audit, broader Android/iOS models, and the WPD two-process contention/possible single-instance decision. Re-open `docs/IMPLEMENTATION-GAP-MATRIX.md`, `docs/KNOWN_ISSUES.md`, and `docs/DEVICE_TEST_MATRIX.md`; continue every safe, unblocked requirement rather than assuming the two manual drills are the only remaining requirements.
 
 ## Exact resume procedure
@@ -105,8 +111,9 @@ Recorded at checkpoint: source ZIP documentation comparison had zero mismatches;
 
 ## Single next concrete action
 
-Open the pairing ticket URL from the current candidate in Safari on the physical iPhone and in Chrome on
-the HUAWEI, send a HEIC and a MOV, approve on the PC, and record the OS/browser, receipts and destination
-hashes (KI-12). Then revalidate AN06 on the current candidate (the 2026-10-24 PTP pass is historical) and
-perform a genuine mid-file cable pull (IP07/AN07) with the marker procedure. All three need an operator;
-the browser sender itself is implemented and locally verified.
+Run the physical sender drill with the current candidate: open the ticket URL in Safari on the iPhone and
+Chrome on the HUAWEI, send one HEIC/photo and one original MOV, approve each on the PC, compare the receipt
+and destination SHA-256, and record the OS/browser versions and whether Safari converted the HEIC (KI-12).
+Then revalidate AN06 on the current candidate (the 2026-10-24 PTP pass is historical) and perform a genuine
+mid-file cable pull (IP07/AN07) with the marker procedure. These need an operator; the sender hardening
+itself is implemented and locally verified.

@@ -1,4 +1,4 @@
-﻿using ITotalTransfer.Core;
+using ITotalTransfer.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ITotalTransfer.Tests;
@@ -18,7 +18,7 @@ public sealed class QrCodeTests
 {
     /// <summary>A realistic pairing URL: private address, port, and a 32-character token.</summary>
     private static string PairingUrl(int tokenLength = 32) =>
-        "http://192.168.1.24:47821/pair?token=" + new string('a', tokenLength);
+        "http://192.168.1.24:47821/pair#token=" + new string('a', tokenLength);
 
     [TestMethod]
     public void APairingUrlRoundTripsThroughAnIndependentDecoder()
@@ -70,7 +70,7 @@ public sealed class QrCodeTests
     public void TheEncodedTextIsTheExactPairingUrlWithItsToken()
     {
         string token = PairingState.NewToken();
-        string url = $"http://10.0.0.7:47821/pair?token={token}";
+        string url = $"http://10.0.0.7:47821/pair#token={token}";
 
         QrCode.Symbol symbol = QrCode.Encode(url);
         string decoded = QrDecoder.Decode(symbol);

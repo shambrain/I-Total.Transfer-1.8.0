@@ -1,1 +1,1 @@
-﻿sender.test.mjs: PASS (13 size vectors, path rules, formatBytes)
+﻿sender.test.mjs: PASS (13 SHA-256 sizes, path rules, hash cancellation x3, receipt fail-closed x24, batch cancellation x5, summary honesty, pairing location)
