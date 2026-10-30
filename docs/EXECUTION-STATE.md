@@ -72,10 +72,10 @@ These are the hashes recorded in `dist/SHA256SUMS.txt` at the `9ae20fdd` code/ar
 
 | Artifact | SHA-256 | Recorded size |
 | --- | --- | --- |
-| `publish/I-Total.Transfer.exe` | `BAB606840BE38C11CAC8F7C2D6F63BE1389B73ACAF3BCFAFF56BBDCCDD9B6C1A` | 112,207,686 B |
+| `publish/I-Total.Transfer.exe` | `E18C546AB020DE3D575DBA9D4A09C6BC79541410EB2805F22A9D4B56512A217D` | 112,232,262 B |
 | `dist/I-Total.Transfer-1.8.0-win-x64.zip` | `66E3EADF300A5FB1AEA8F3C8A432076EECB119818615C227C88E4D4EE330D81A` | 54.46 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `548DADD481A7095AF2BFFC86443D6A2D48AA962F7685C4259A4C3A724DC05EAB` | 44.72 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `3FC0B856014411781CFCAAC8B127AA44E336C12C0DF7FE7A84A4E41F52C89260` | 35.30 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `95C682260512B5B331E94332AC2233F02000AC76D0C796F7A14A810E3431C700` | 44.72 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `35EB7C61525DB5BDD568307E8C2FA8F21A414D7372825E99F6D04E3ADCFCF0F8` | 35.30 MB |
 | `dist/I-Total.Transfer-1.8.0-source.zip` | `B738EC4373E3893AE9700A5A1606AFE81ACA0FCE35A67B66AF23059A55D96DDE` | 15.05 MB |
 
 Recorded at checkpoint: source ZIP documentation comparison had zero mismatches; installer install/uninstall was rechecked; the executable was reproducible from the source ZIP. These are repository-reported checks and were not re-executed by this documentation-only update.
@@ -86,7 +86,11 @@ Recorded at checkpoint: source ZIP documentation comparison had zero mismatches;
 - Windows 11 visual/device validation is not recorded; latest host evidence is Windows 10 22H2.
 - Visual Studio Designer open/save/reopen round-trip is not recorded because Visual Studio was unavailable in the recorded host. Static Designer coverage is not a substitute for this check.
 - Trusted Authenticode signing is blocked on a trusted signing certificate. Production licence key/issuing service and purchase URL are not configured. Live Steamworks ownership integration is blocked on eligibility, SDK and partner access; current signed-entitlement behavior is not a live Steam ownership call.
-- `docs/DEVICE-COMPATIBILITY-MATRIX.md` records no real iOS wireless sender/end-to-end source enumeration; receiver-side scripted tests do not equal an actual sender app. Reconcile this against the master directive and do not call wireless end-to-end complete without that implementation and evidence.
+- Gate G3: the receiver now serves a **real browser sender** (`/`, `/send`, ticket URL, `/sender.js`) with
+  explicit file selection, pairing, per-file incremental SHA-256, approval, receipts, cancellation,
+  rotation and collision-safe storage. Verified by 5 loopback C# tests, Node digest/path tests and a Chrome
+  end-to-end run on this PC (pair, 64 KiB HEIC, receipt hash, collision rename, bytes equal). A physical
+  iPhone/Android browser run is still pending (KI-12); do not call the physical sender complete.
 - Other recorded open items include cross-device disappearance hardware drill, iPhone lock/trust revocation, Narrator/NVDA audit, broader Android/iOS models, and the WPD two-process contention/possible single-instance decision. Re-open `docs/IMPLEMENTATION-GAP-MATRIX.md`, `docs/KNOWN_ISSUES.md`, and `docs/DEVICE_TEST_MATRIX.md`; continue every safe, unblocked requirement rather than assuming the two manual drills are the only remaining requirements.
 
 ## Exact resume procedure

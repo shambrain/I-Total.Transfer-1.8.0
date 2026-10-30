@@ -104,6 +104,53 @@ Shortcuts can perform the whole flow without a companion app:
 `path` must be a relative path. The receiver accepts forward slashes and converts them for the
 filesystem; a bare filename is placed under `DCIM`.
 
+## Browser sender (implemented)
+
+The receiver serves a real sender page at `/`, `/send`, and the ticket URL (`/pair?token=...`). Scanning
+the QR opens the page in Safari or Chrome; the single-use code is read from the URL, removed from the
+address bar with `history.replaceState`, and only redeemed when the operator presses **Pair with this PC**.
+Merely opening the URL does not spend it (a loopback test pins that).
+
+What the page does:
+
+- **Explicit selection.** A multi-file picker (HEIC/HEIF, JPEG, PNG, MOV and other videos, AAE, DNG, TIFF)
+  plus a destination folder field (default `DCIM`). Nothing is enumerated or sent implicitly.
+- **Pairing and sessions.** The session token lives in memory only; it is never written to storage. Rotate
+  replaces it, expiry is shown, and a `401` stops the batch and asks for a new pairing code.
+- **Incremental SHA-256.** Web Crypto is only available in a secure context, and the receiver may run over
+  token-authenticated HTTP on a private network, so the page carries its own incremental SHA-256. Files are
+  hashed in 4 MiB slices (bounded memory), the digest is sent as `X-Content-Sha256`, and the receiver
+  verifies it again while streaming.
+- **Approval and receipts.** Each file waits for the operator's decision on the PC; a `200` shows the
+  stored path, byte count and the receiver's SHA-256, and the page refuses to count a receipt whose digest
+  disagrees with its own. A `403`, `413`, `422`, `507` or `401` is shown per file.
+- **Cancellation.** Abort cancels the in-flight upload; the receiver discards the partial file. A failed
+  POST is restarted from zero on retry - there is no partial-upload resume.
+- **No whole-library claim.** The summary says "Only the files you selected were sent; this is not a
+  whole-library transfer." The page cannot list the phone's library and cannot fetch cloud-only originals.
+
+The page is embedded in the executable (`Wireless/sender.html`, `Wireless/sender.js`) and served with a
+restrictive CSP (`default-src 'none'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'`), no
+external resources and no referrer.
+
+### Evidence for the browser sender
+
+| Check | Evidence |
+| --- | --- |
+| Page and script served, no secret in the HTML, CSP present | `WirelessSenderTests` (5 loopback tests) |
+| Opening the ticket URL does not spend the secret; JSON API clients still redeem it | `OpeningTheTicketUrlInABrowserDoesNotSpendTheSecret`, `AnApiClientStillRedeemsTheTicketWithAJsonGet` |
+| SHA-256 matches OpenSSL across 13 sizes (0 B to 1 MiB), one-shot and chunked; path rules | `tests/sender/sender.test.mjs` (Node, 13 size vectors) |
+| Real browser end to end | `tests/sender/browser-e2e.mjs` with Chrome: pairs, selects a 64 KiB file, uploads, receipt SHA-256 verified, destination bytes equal, summary counts 1 of 1 |
+
+The browser test runs on the PC against the real receiver with auto-approval on; the approval gate itself
+is covered by the receiver tests. A physical iPhone or Android browser run is **not** recorded yet
+(KI-12); this is a local browser integration, not a phone test.
+
+```powershell
+npm --prefix tests\sender install
+node tests\sender\sender.test.mjs src\I-Total.Transfer\Wireless\sender.js
+node tests\sender\browser-e2e.mjs tools\DeviceDrill\bin\Release\net10.0-windows\DeviceDrill.exe
+```
 ## TLS
 
 `WirelessRequireTls` asks for `https://`. The receiver searches `CurrentUser\My` for a certificate
@@ -129,7 +176,7 @@ matching certificate.
   the receiver will see the connection end and discard the partial file.
 - **No resume of a partial upload.** A failed POST starts again from zero.
 - **HEIC/ProRAW conversion is the sender's job.** Bytes are stored exactly as sent.
-- **Not verified against a physical sender.** The protocol, pairing, approval, digest, traversal and
+- **Local browser sender verified; physical sender not yet.** The protocol, pairing, approval, digest, traversal and
   rotation rules are covered by loopback tests (`WirelessReceiverTests` 21, `PairingStateTests` 13,
   `ApprovalInboxTests` 9, `PrivateNetworkTests` 21, `WirelessPageTests` 11) **and** were driven live
   against the published executable with a real HTTP client: `401` for no credential and for the secret

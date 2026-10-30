@@ -37,6 +37,7 @@ public static class Program
                 "probe" => Probe(preference, options),
                 "scan" => await ScanAsync(preference, options),
                 "copy" => await CopyAsync(preference, options),
+                "wireless" => Wireless(options),
                 _ => Unknown(command)
             };
         }
@@ -310,6 +311,67 @@ public static class Program
             Verification = verification
         });
         return cancelled ? 5 : 0;
+    }
+
+    /// <summary>
+    /// Starts the real wireless receiver, prints its URL and single-use pairing secret, and waits for the
+    /// first received file (or a timeout). Used by the local browser sender test in tests/sender.
+    /// </summary>
+    private static int Wireless(Dictionary<string, string> options)
+    {
+        string destination = options.GetValueOrDefault("dest", "");
+        if (string.IsNullOrWhiteSpace(destination)) { Console.Error.WriteLine("--dest is required"); return 64; }
+        destination = Path.GetFullPath(destination);
+        Directory.CreateDirectory(destination);
+
+        AppSettings settings = AppSettings.Defaults();
+        settings.WirelessBindAddress = "127.0.0.1";
+        settings.WirelessEnabled = true;
+        settings.WirelessRequireTls = false;
+        settings.WirelessAutoApprove = options.ContainsKey("auto-approve");
+        settings.PairingTokenMinutes = 5;
+
+        int timeoutSeconds = int.TryParse(options.GetValueOrDefault("timeout", "120"), out int parsed) ? parsed : 120;
+        WirelessReceiver? receiver = null;
+        Exception? last = null;
+        string url = "";
+        for (int attempt = 0; attempt < 8 && receiver is null; attempt++)
+        {
+            settings.WirelessPort = Random.Shared.Next(41000, 60000);
+            var candidate = new WirelessReceiver(destination, settings, new LogService(destination));
+            try { url = candidate.Start(); receiver = candidate; }
+            catch (System.Net.Sockets.SocketException ex) { last = ex; candidate.Dispose(); }
+        }
+        if (receiver is null) { Console.Error.WriteLine("Could not bind: " + last?.Message); return 2; }
+
+        using (receiver)
+        {
+        PairingTicket ticket = receiver.CreatePairingTicket();
+        var payload = new
+        {
+            Action = "wireless",
+            Url = url,
+            TicketUrl = ticket.Url,
+            Secret = ticket.Secret,
+            Destination = destination,
+            AutoApprove = settings.WirelessAutoApprove,
+            ExpiresUtc = ticket.ExpiresUtc
+        };
+        WriteJson(options, payload);
+
+        DateTime deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+        while (DateTime.UtcNow < deadline && receiver.Received.Count == 0)
+            Thread.Sleep(200);
+
+        Console.WriteLine(JsonSerializer.Serialize(new
+        {
+            Action = "wireless-result",
+            Received = receiver.Received,
+            Count = receiver.Received.Count,
+            TimedOut = receiver.Received.Count == 0
+        }, new JsonSerializerOptions { WriteIndented = true }));
+        return receiver.Received.Count > 0 ? 0 : 3;
+        }
     }
 
     private static ScanResult Select(ScanResult scan, Dictionary<string, string> options, int max)

@@ -10,7 +10,7 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
 
 ## Candidate note (2026-10-29)
 
-A new candidate executable (`1C62B2B1...`, 112,207,686 B) was built from the master-directive work:
+A new candidate executable (`1C62B2B1...`, 112,232,262 B) was built from the master-directive work:
 zero-byte/unknown-size separation, shared enumeration accounting, SQLite integrity columns with migration,
 the reconciliation report, retry classification, stability timestamps, WPD COM cleanup and accessible
 control names. Build 0/0, suite 488 passed / 2 skipped / 490, source-ZIP rebuild byte-identical, installer
@@ -248,6 +248,16 @@ re-audited line by line for this candidate.
   phone exposed*, and the diagnostics page says so instead of implying the filesystem was read.
 
 ## Wireless transport
+
+**Browser sender (2026-10-30, local integration).** The receiver serves a real sender page at `/`,
+`/send` and the ticket URL. `WirelessSenderTests` (5 loopback tests) pin that the page carries no secret,
+that opening the ticket URL in a browser does not spend the single-use code, that the JSON pairing API
+still works, and that the page and script are served with a restrictive CSP. `tests/sender/sender.test.mjs`
+checks the page's SHA-256 against OpenSSL across 13 sizes and its path rules. `tests/sender/browser-e2e.mjs`
+drives Chrome against the real receiver: pair, select a 64 KiB HEIC, upload, approval (auto-approve), a
+receipt whose SHA-256 matches, and destination bytes identical to the selected file. This is a **local
+browser integration**, not a physical iPhone or Android run; the physical sender row remains open (KI-12).
+
 
 - [x] **The pairing secret is short-lived, single-use and is not itself a write credential.** ✅
   `PairingStateTests` (13) and `WirelessReceiverTests` (21, real loopback and private-LAN `TcpListener`): the displayed secret

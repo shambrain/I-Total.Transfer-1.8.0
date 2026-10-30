@@ -112,7 +112,8 @@ phase (D1–D3): 472 passed / 2 skipped / 474.
 | --- | --- | --- | --- | --- | --- |
 | G1 | Authenticated receiver, single-use pairing, approvals, limits | `WirelessReceiver`, `PairingState` | AT wireless suite; LIVE loopback/LAN drill (2026-10-22) | AUTOMATED TEST VERIFIED | — |
 | G2 | Path traversal, spoofed names, oversize requests rejected | `WirelessReceiver` | AT | AUTOMATED TEST VERIFIED | — |
-| G3 | Real iOS/Android sender end to end | not in repository | none | NOT STARTED | needs a sender application; receiver-only is not wireless transfer |
+| G3 | Real iOS/Android sender end to end | `Wireless/sender.html`, `Wireless/sender.js`, `WirelessSenderPage`, receiver routes | C# loopback tests (5), Node SHA-256/path tests, Chrome browser end-to-end (local) | AUTOMATED TEST VERIFIED (local browser); PHYSICAL PHONE PENDING | run the page from Safari/Chrome on a real iPhone and Android phone; record the OS/browser and receipt |
+
 | G4 | No firewall rule, private interface binding | `PrivateNetwork`, installer | AT private-network tests; STATIC | AUTOMATED TEST VERIFIED | — |
 
 ## Gate H — performance, compatibility, release

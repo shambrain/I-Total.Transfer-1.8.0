@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Security;
@@ -497,6 +497,28 @@ public sealed class WirelessReceiver : IDisposable
         try
         {
             string path = request.Path;
+
+            // The browser sender. It carries no secret of its own: the single-use pairing code is either
+            // typed in or arrives in the ticket URL, and pairing is a deliberate button press.
+            if (request.Method == "GET" && path.Equals("/favicon.ico", StringComparison.OrdinalIgnoreCase))
+            {
+                await WriteNoContentAsync(request).ConfigureAwait(false);
+                return;
+            }
+            if (request.Method == "GET" && path.Equals("/sender.js", StringComparison.OrdinalIgnoreCase))
+            {
+                await WriteAssetAsync(request, "application/javascript; charset=utf-8", WirelessSenderPage.JavaScript).ConfigureAwait(false);
+                return;
+            }
+            if (request.Method == "GET" &&
+                (path.Equals("/", StringComparison.OrdinalIgnoreCase) ||
+                 path.Equals("/send", StringComparison.OrdinalIgnoreCase) ||
+                 (path.Equals("/pair", StringComparison.OrdinalIgnoreCase) && WantsHtml(request))))
+            {
+                await WriteAssetAsync(request, "text/html; charset=utf-8", WirelessSenderPage.Html).ConfigureAwait(false);
+                return;
+            }
+
             if (path.Equals("/health", StringComparison.OrdinalIgnoreCase))
             {
                 await WriteJsonAsync(request, 200, new { status = "ok", tls = UsingTls }).ConfigureAwait(false);
@@ -862,6 +884,43 @@ public sealed class WirelessReceiver : IDisposable
         }
         catch (OperationCanceledException) { }
         catch (IOException) { }
+    }
+
+    /// <summary>True when a browser navigation asked for HTML rather than an API response.</summary>
+    private static bool WantsHtml(WirelessRequest request) =>
+        request.Header("Accept")?.Contains("text/html", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>A browser asks for /favicon.ico unprompted; answer without a credential or a 401.</summary>
+    private static async Task WriteNoContentAsync(WirelessRequest request)
+    {
+        if (request.ResponseStarted) return;
+        request.ResponseStarted = true;
+        const string head = "HTTP/1.1 204 No Content\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n";
+        await request.Body.WriteAsync(Encoding.ASCII.GetBytes(head)).ConfigureAwait(false);
+        await request.Body.FlushAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Serves the embedded sender page and script with a restrictive policy: no external resources, no
+    /// framing, no referrer, and only same-origin connections (the upload and pairing calls).
+    /// </summary>
+    private static async Task WriteAssetAsync(WirelessRequest request, string contentType, string content)
+    {
+        if (request.ResponseStarted) return;
+        request.ResponseStarted = true;
+        byte[] bytes = Encoding.UTF8.GetBytes(content);
+        string head = "HTTP/1.1 200 OK\r\n" +
+                      $"Content-Type: {contentType}\r\n" +
+                      $"Content-Length: {bytes.Length}\r\n" +
+                      "Cache-Control: no-store\r\n" +
+                      "X-Content-Type-Options: nosniff\r\n" +
+                      "Referrer-Policy: no-referrer\r\n" +
+                      "Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; " +
+                      "connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'\r\n" +
+                      "Connection: close\r\n\r\n";
+        await request.Body.WriteAsync(Encoding.ASCII.GetBytes(head)).ConfigureAwait(false);
+        await request.Body.WriteAsync(bytes).ConfigureAwait(false);
+        await request.Body.FlushAsync().ConfigureAwait(false);
     }
 
     private static async Task WriteJsonAsync(WirelessRequest request, int status, object payload)

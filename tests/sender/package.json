@@ -1,0 +1,13 @@
+{
+  "name": "i-total-sender-tests",
+  "private": true,
+  "type": "module",
+  "description": "Local browser end-to-end test for the I-Total Transfer wireless sender page.",
+  "scripts": {
+    "unit": "node sender.test.mjs ../../src/I-Total.Transfer/Wireless/sender.js",
+    "browser": "node browser-e2e.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.64.1"
+  }
+}

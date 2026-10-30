@@ -12,6 +12,64 @@ start from here without re-reading the whole conversation.
 > hashes quoted in this log before this note identify the pre-publication history; the file contents, tests
 > and evidence are unchanged. The release executable is unaffected.
 
+## 2026-10-30 - repository sync and Gate G3 browser sender
+
+### Synced baseline
+
+The local branch was nine documentation commits behind `origin/work/master-directive`; the local tree was
+clean, so it was fast-forwarded (no local work was overwritten) to `7cf220f`. Before changing code:
+`dotnet build` 0 warnings / 0 errors and `dotnet test` **511 passed, 2 skipped, 513 total**.
+
+### Gate G3 implemented: a real browser sender
+
+The receiver now serves a sender page at `/`, `/send` and the ticket URL (`/pair?token=...`), plus
+`/sender.js`, from embedded resources (`Wireless/sender.html`, `Wireless/sender.js`).
+
+- **Explicit selection**: a multi-file picker (HEIC/HEIF, JPEG, PNG, MOV/video, AAE, DNG, TIFF) and a
+  destination folder (default `DCIM`). Nothing is enumerated.
+- **Pairing**: the single-use code arrives in the ticket URL, is removed from the address bar with
+  `history.replaceState`, and is only redeemed when the operator presses **Pair**. Opening the URL does not
+  spend it.
+- **Sessions**: the token is kept in memory only, can be rotated, and expiry is shown; a `401` stops the
+  batch.
+- **Integrity**: the page computes an incremental SHA-256 in 4 MiB slices (pure JS, because Web Crypto
+  needs a secure context and the receiver may run over token-authenticated HTTP), sends it as
+  `X-Content-Sha256`, and the receiver verifies it while streaming. The page refuses to count a receipt
+  whose digest disagrees with its own.
+- **Approval and receipts**: each file waits for the operator's decision; the page shows the stored path,
+  bytes and verified hash. Refusal, size, digest and space errors are shown per file.
+- **Cancellation and collisions**: AbortController cancels the in-flight upload; a repeated name is stored
+  beside the first (` (1)`), never overwritten.
+- **Honest limits on the page**: no library enumeration, no cloud-only originals, foreground only, no
+  partial-upload resume, and the summary says only the selected files were sent.
+
+### Evidence
+
+- `WirelessSenderTests` (5 loopback tests): page served without a secret, CSP present, script served,
+  opening the ticket URL does not spend the secret, JSON API pairing still works, `/send` alias.
+- `tests/sender/sender.test.mjs`: SHA-256 against OpenSSL for 13 sizes (0 B to 1 MiB), one-shot and
+  chunked, plus path rules; **PASS**.
+- `tests/sender/browser-e2e.mjs` with Chrome against the real receiver: pair, select a 64 KiB HEIC,
+  upload, receipt SHA-256 verified, destination bytes equal, a second send renamed to ` (1).HEIC` with
+  both files intact; **PASS**.
+- This is a local browser integration, not a physical iPhone/Android run; KI-12 keeps the physical sender
+  row open.
+
+### Commands and results
+
+```text
+dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 516 passed, 2 skipped, 518 total
+node tests\sender\sender.test.mjs ...                            -> PASS (13 size vectors)
+node tests\sender\browser-e2e.mjs ...                            -> PASS (pair, upload, receipt, collision)
+```
+
+### Next
+
+Republish and repackage the candidate with the sender (new hashes), then run the ticket URL from Safari on
+a physical iPhone and Chrome on the Android phone, recording OS/browser, receipts and destination hashes.
+
+---
 ## 2026-10-30 - inventory scope, mid-stream fault injection and evidence reconciliation
 
 ### Verified starting point
@@ -58,7 +116,7 @@ deleted, and no cause is asserted.
 
 ```text
 dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
-dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 511 passed, 2 skipped, 513 total
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 516 passed, 2 skipped, 518 total
                                                                    (six consecutive runs)
 ```
 

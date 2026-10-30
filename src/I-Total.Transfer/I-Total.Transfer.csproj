@@ -87,6 +87,9 @@
     <!-- The application icon is embedded so the header badge and window icon load from the
          single-file executable without relying on a companion file next to it. -->
     <EmbeddedResource Include="app.ico" LogicalName="ITotalTransfer.app.ico" />
+    <!-- The wireless sender page is embedded so a single-file publish serves it without companion files. -->
+    <EmbeddedResource Include="Wireless\sender.html" LogicalName="ITotalTransfer.Wireless.sender.html" />
+    <EmbeddedResource Include="Wireless\sender.js" LogicalName="ITotalTransfer.Wireless.sender.js" />
     <EmbeddedResource Include="app.png" LogicalName="ITotalTransfer.app.png" />
   </ItemGroup>
 

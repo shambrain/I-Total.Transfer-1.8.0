@@ -102,11 +102,16 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
   screenshot. Windows 11 has not been run.
 - **To close:** run the standard visual drill on a Windows 11 machine.
 
-### KI-12 - No physical iOS wireless sender
+### KI-12 - Browser sender implemented; no physical iPhone/Android run yet
 
-- **Impact:** the receiver and its approval gate are live-verified from scripted clients; the browser sender
-  leg on a real iPhone has never run, so release acceptance keeps that row open.
-- **To close:** physical iPhone drill; do not claim seamless iOS background access at any point.
+- **Impact:** the receiver now serves a real browser sender (`/`, `/send`, ticket URL) with explicit file
+  selection, pairing, per-file SHA-256, approval, receipts, cancellation and rotation. It is verified by
+  loopback tests, Node digest/path tests and a Chrome end-to-end run on this PC. A real iPhone Safari or
+  Android Chrome run has not been recorded, so the physical sender row stays open.
+- **Mitigation:** the page states its limits (no library enumeration, foreground only, no partial-upload
+  resume, no cloud-only originals). The sender is not claimed as an app-store companion.
+- **To close:** open the ticket URL on a physical iPhone and on an Android phone, send a HEIC and a MOV,
+  approve on the PC, and record the OS/browser, receipts and destination hashes.
 
 ### KI-13 - Wireless trial metering is per sender session, in memory
 

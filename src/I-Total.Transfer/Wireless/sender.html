@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>I-Total Transfer - send files</title>
+<style>
+  :root {
+    --bg: #040a1e; --surface: #0e1a33; --alt: #16233f; --border: #24334e;
+    --text: #eaf1ff; --muted: #afbedc; --accent: #0b55f1; --ok: #3ddc97; --warn: #fcc146; --error: #ff6b85;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 "Segoe UI", system-ui, -apple-system, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 20px 16px 48px; }
+  h1 { font-size: 24px; margin: 8px 0 2px; }
+  .sub { color: var(--muted); margin: 0 0 18px; }
+  section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 0 0 16px; }
+  label { display: block; color: var(--muted); font-size: 13px; margin: 10px 0 4px; }
+  input[type="text"], input[type="file"] { width: 100%; padding: 11px 12px; border-radius: 8px; border: 1px solid #35496d; background: var(--alt); color: var(--text); font-size: 15px; }
+  input[type="file"] { padding: 8px; }
+  button { margin-top: 12px; padding: 12px 16px; border-radius: 8px; border: 1px solid #35496d; background: var(--alt); color: var(--text); font-size: 15px; font-weight: 600; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: .55; }
+  #pairStatus, #summary { margin: 10px 0 0; color: var(--muted); }
+  #pairStatus.error, .error { color: var(--error); }
+  #pairStatus.ok { color: var(--ok); }
+  ul { list-style: none; margin: 10px 0 0; padding: 0; }
+  li { padding: 9px 0; border-top: 1px solid var(--border); font-size: 14px; word-break: break-word; }
+  li:first-child { border-top: 0; }
+  .meta { color: var(--muted); font-size: 12px; }
+  progress { width: 100%; height: 10px; margin-top: 12px; accent-color: var(--accent); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row button { flex: 1 1 150px; }
+  .note { color: var(--muted); font-size: 12.5px; margin: 14px 0 0; }
+  .ok { color: var(--ok); } .warn { color: var(--warn); }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f3f4f7; --surface: #fff; --alt: #f6f7fa; --border: #d6dae3; --text: #14161b; --muted: #59606e; }
+    input[type="text"], input[type="file"] { border-color: #bcc3d1; }
+  }
+</style>
+</head>
+<body>
+<main id="sender">
+  <h1>I-Total Transfer</h1>
+  <p class="sub">Send selected photos and videos to the PC running I-Total Transfer. Only the files you choose are sent.</p>
+
+  <section aria-labelledby="pairHeading">
+    <h2 id="pairHeading" style="font-size:17px;margin:0">1. Pair with the PC</h2>
+    <label for="secret">Pairing code shown on the PC</label>
+    <input id="secret" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste the pairing code">
+    <button id="pairButton" class="primary" type="button">Pair with this PC</button>
+    <p id="pairStatus" role="status"></p>
+  </section>
+
+  <section id="sendSection" aria-labelledby="sendHeading" hidden>
+    <h2 id="sendHeading" style="font-size:17px;margin:0">2. Choose and send</h2>
+    <p id="sessionInfo" class="meta"></p>
+    <label for="folder">Folder on the PC</label>
+    <input id="folder" type="text" value="DCIM" autocomplete="off" spellcheck="false">
+    <label for="files">Files (photos, videos, sidecars)</label>
+    <input id="files" type="file" multiple accept="image/*,video/*,.heic,.heif,.mov,.jpg,.jpeg,.png,.aae,.dng,.tif,.tiff">
+    <ul id="fileList" aria-live="polite"></ul>
+    <progress id="progress" max="100" value="0" aria-label="Upload progress"></progress>
+    <div class="row">
+      <button id="sendButton" class="primary" type="button">Send selected files</button>
+      <button id="cancelButton" type="button" disabled>Cancel</button>
+      <button id="rotateButton" type="button">New session token</button>
+    </div>
+    <p id="summary" role="status"></p>
+    <ul id="results" aria-live="polite"></ul>
+    <p class="note">
+      Each file is hashed on this device and checked again on the PC. An existing file is kept and the
+      incoming one is renamed, never overwritten. This page cannot list your photo library: iCloud-only
+      originals that are not on the phone cannot be sent. Keep this page in the foreground; iOS may suspend
+      it if you switch apps, and a suspended upload is discarded rather than kept as a partial file.
+    </p>
+  </section>
+</main>
+<script src="/sender.js"></script>
+</body>
+</html>
