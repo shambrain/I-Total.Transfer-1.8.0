@@ -264,19 +264,25 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 - **To close:** if it recurs, capture the full MSTest failure (assert name, expected/actual) and the
   sequence file; do not mark the suite green until the cause is known.
 
-### KI-27 - Two app instances can contend for the WPD provider
+### KI-27 - Two app instances can contend for the WPD provider (single-instance guard added)
 
 - **Observation (2026-10-29):** the iPhone cold scan and an Android copy were run in two separate
   processes at the same time. The WPD provider returned "Insufficient memory to continue the execution of
   the program" and "The requested resource is in use" (0x800700AA); the iPhone scan aborted safely with
   `DeviceStoppedAnsweringException` and wrote no report. Re-run alone, the same scan completed
   (57,731 files / 181.52 GiB).
-- **Impact:** the application reads one device at a time by design, but nothing stops a user from
-  launching a second copy of the app; the two then share the provider and one may abort. The abort is
-  safe and visible (no false completion), but confusing.
-- **Mitigation:** the failure is reported as "the phone stopped answering"; completed files are preserved.
-- **To close:** decide whether to add a single-instance guard (a named mutex plus "bring the existing
-  window forward") and test it with two launches.
+- **Impact:** the application reads one device at a time by design, but nothing stopped a user from
+  launching a second copy; the two then shared the provider and one could abort. The abort was safe and
+  visible (no false completion), but confusing.
+- **Mitigation (code, 2026-10-30):** `SingleInstanceGuard` takes a `Local\I-Total.Transfer.SingleInstance`
+  mutex for the signed-in session. `Program.Main` holds it for the process lifetime; a second launch
+  brings the existing window forward (`ShowWindowAsync`/`SetForegroundWindow`) and exits with an
+  explanation instead of starting a competing copy. An abandoned mutex from a crashed instance is
+  acquired normally. `SingleInstanceGuardTests` (6) cover exclusion across threads, release, distinct
+  names, the session-local default name, blank-name fallback and double dispose.
+- **Still pending:** a physical two-launch drill on the published executable (start one copy, launch a
+  second, confirm the first window comes forward and the second exits) has not been recorded. The
+  automated tests prove the mutex contract, not the window activation.
 
 ### KI-28 - A locked iPhone disappears from WPD; the app may select the other attached phone
 

@@ -25,7 +25,7 @@ Updated: 2026-10-30. Read this file first when resuming. This checkpoint records
 ## Latest product validation recorded at the code checkpoint
 
 - Build: `dotnet build I-Total.Transfer.sln -c Release --no-incremental` — **0 warnings, 0 errors**.
-- Tests: `dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s` — **522 passed, 0 failed, 2 skipped, 524 total** (about 42 seconds), after the G3 hardening.
+- Tests: `dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s` — **528 passed, 0 failed, 2 skipped, 530 total** (about 39 seconds), including the six new `SingleInstanceGuardTests`, after the G3 hardening.
 - Node: `node tests\sender\sender.test.mjs src\I-Total.Transfer\Wireless\sender.js` — **PASS** (13 SHA-256 sizes, path rules, hash cancellation before/between slices, 24 receipt cases, five batch-cancellation sequences, summary honesty, fragment/query secret reading).
 - Browser: `node tests\sender\browser-e2e.mjs <DeviceDrill.exe>` — **PASS** (auto-approve happy path with `VERIFIED` receipt and collision rename; manual-approval cancellation with `CANCELLED` + `NOT ATTEMPTED`, no destination or `.partial` file).
 - Licensing flake (KI-26): no recurrence in this hardening run. If it recurs, capture the complete assertion output and sequence file; do not conceal it.
@@ -74,10 +74,10 @@ These are the hashes recorded in `dist/SHA256SUMS.txt` at the G3-hardening artif
 
 | Artifact | SHA-256 | Recorded size |
 | --- | --- | --- |
-| `publish/I-Total.Transfer.exe` | `A733FA0836C60F6B733A0903D01BF0CC15F457D902B39B31FFD9C5700259EB7E` | 112,252,742 B |
+| `publish/I-Total.Transfer.exe` | `C9C163C1AB922685D3B8FCF81E82EA3D4AD454424F0535BF48F22D8E1EE2ADB1` | 112,252,742 B |
 | `dist/I-Total.Transfer-1.8.0-win-x64.zip` | see `dist/SHA256SUMS.txt` (repacked after this file) | 54.49 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `1216A4E4B7300AAC5E6BCE4FD5ACAB0410E4918440D884A99E5EF18515E091CD` | 44.73 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `FD2230EEECB3271143EE0975D86315CC540515F8A004EA7F5446F83B951BDFEF` | 35.30 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `7F2F6D0CDA2ACB3D16E327AF66FF377967B001CB3D38D6C0D1D73212B7F562D5` | 44.73 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `821B3281681284E3210E0A6562B59099AE4672E7C9135033D39A9E34CEA2DDD4` | 35.31 MB |
 | `dist/I-Total.Transfer-1.8.0-source.zip` | see `dist/SHA256SUMS.txt` (repacked after this file) | 15.09 MB |
 
 Recorded at this checkpoint: installer silent install/uninstall was rechecked (executable and README hashes match the tree; uninstall removed the install directory and HKCU key while keeping `%APPDATA%`); the executable was reproduced byte-identically from the source ZIP. The two ZIPs that contain this file are repacked after it is written, so their own hashes cannot be stored inside themselves; `dist/SHA256SUMS.txt` is authoritative for them.
@@ -94,7 +94,7 @@ Recorded at this checkpoint: installer silent install/uninstall was rechecked (e
   Node digest/path/receipt/cancellation tests and a Chrome end-to-end run on this PC (happy path and
   manual-approval cancellation). A physical iPhone/Android browser run is still pending (KI-12); do not
   call the physical sender complete.
-- Gate G3 hardening decisions: `Require TLS` is a hard requirement (refusal, not a silent HTTP fallback);
+- KI-27 single-instance guard: `SingleInstanceGuard` (`Local\` mutex) is held by `Program.Main`; a second launch activates the existing window and exits. Six automated tests; physical two-launch drill pending.\n- Gate G3 hardening decisions: `Require TLS` is a hard requirement (refusal, not a silent HTTP fallback);
   the ticket secret is in the URL fragment and the page removes it from history; a receipt is `VERIFIED`
   only when digest, byte count, path and structure all match; cancellation never reads as success.
 - Other recorded open items include cross-device disappearance hardware drill, iPhone lock/trust revocation, Narrator/NVDA audit, broader Android/iOS models, and the WPD two-process contention/possible single-instance decision. Re-open `docs/IMPLEMENTATION-GAP-MATRIX.md`, `docs/KNOWN_ISSUES.md`, and `docs/DEVICE_TEST_MATRIX.md`; continue every safe, unblocked requirement rather than assuming the two manual drills are the only remaining requirements.

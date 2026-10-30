@@ -63,7 +63,7 @@ approval and TLS encryption.
 
 ```text
 dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
-dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 522 passed, 2 skipped, 524 total
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 528 passed, 2 skipped, 530 total
 node tests\sender\sender.test.mjs src\I-Total.Transfer\Wireless\sender.js -> PASS
 node tests\sender\browser-e2e.mjs <DeviceDrill.exe>             -> PASS (happy path + cancellation)
 ```
@@ -79,6 +79,18 @@ node tests\sender\browser-e2e.mjs <DeviceDrill.exe>             -> PASS (happy p
 - Raw outputs are in `docs/evidence/2026-10-30/` (`node-sender-test.txt`, `browser-sender-e2e.txt`).
 
 A physical iPhone Safari / HUAWEI Chrome run is still pending (KI-12); nothing here claims it.
+
+### Continuing unblocked work: single-instance guard (KI-27)
+
+Two copies of the app shared the WPD provider on 2026-10-29 and one aborted with 0x800700AA. Added
+`Services/SingleInstanceGuard.cs`: a `Local\I-Total.Transfer.SingleInstance` mutex held for the process
+lifetime. `Program.Main` now checks it before creating any window; a second launch calls
+`ActivateExistingWindow()` (`ShowWindowAsync` + `SetForegroundWindow`) and exits with an explanation
+instead of contending for the phone. A crashed instance's abandoned mutex is acquired normally.
+`SingleInstanceGuardTests` (6) pin exclusion across threads (a Windows mutex is recursive on the owning
+thread, so the competing guard runs on another thread), release on dispose, distinct names, the
+session-local default name, blank-name fallback and double dispose. The physical two-launch/window-
+activation drill remains pending and is recorded as such in KI-27.
 
 ---
 ## 2026-10-30 - repository sync and Gate G3 browser sender

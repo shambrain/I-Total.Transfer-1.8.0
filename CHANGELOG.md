@@ -1,5 +1,6 @@
 ## 1.8.0 — 2026-10-20 — borderless chrome, honest device detection, unfinished-session recovery, Android storage
 
+- **One app instance per Windows session (2026-10-30).** A `Local\` named mutex stops a second copy from sharing the WPD provider and making the first abort (KI-27). The second launch brings the existing window forward and exits with an explanation. `SingleInstanceGuardTests` covers exclusion, release, names and disposal; the physical two-launch drill is still pending.
 - **Wireless sender hardening (2026-10-30).** `hashFile` is cancellation-aware (checked before every
   4 MiB slice and after each read) and hashing progress is shown separately from upload progress.
   `sendBatch` reports `VERIFIED`, `FAILED`, `RECEIPT INVALID`, `CANCELLED` and `UNATTEMPTED` separately;
