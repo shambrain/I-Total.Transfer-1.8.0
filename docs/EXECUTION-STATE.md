@@ -20,7 +20,8 @@ Updated: 2026-10-30. Read this file first when resuming. This checkpoint records
 | Last product-source/build/artifact checkpoint | `733b7b1658fd35f8c707857c2bac1916b8c10d51` — `Validate TLS identities exactly, cancel pending approvals on disconnect, lock batch controls`; this execution-state update follows that commit. |
 | Session commits | `7cf220f`, `e6440e0`, `6fa29e4`, `9375a51`, `500967b`, `055185a`, `09ca77d` (G3 hardening), `655a6dd` (single-instance guard), `19f80d4` (checkpoint/artifacts), `733b7b1` (exact TLS, pending-approval cancellation, batch controls). |
 | Local workspace recorded in the prior checkpoint | `C:\Users\Administrator\Documents\GitHub\I-Total.Transfer-v1.5.0-source` — confirm it still points to this repository before running commands. |
-| Local working-tree status | Clean at `733b7b1`; the only change after it is this execution-state/artifact refresh. No reset, clean or force-push was attempted. |
+| Branch tip before this state refresh | `bdf4341859ce62b80f5fcbefa10bcdc70af08802` — `Record the 2026-10-31 exact-TLS checkpoint and refresh the release artifacts` |
+| Local working-tree status | Clean at `bdf4341`; this state refresh is the only change after it. No reset, clean or force-push was attempted. |
 
 ## Latest product validation recorded at the code checkpoint
 
