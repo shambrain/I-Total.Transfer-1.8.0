@@ -18,14 +18,14 @@ Updated: 2026-10-30. Read this file first when resuming. This checkpoint records
 | Repository | `shambrain/I-Total.Transfer-1.8.0` (GitHub repository) |
 | Working branch | `work/master-directive` |
 | Last product-source/build/artifact checkpoint reported | `9ae20fdd1f9522d9349b5662cd27aa08d45eda87` — `Cover the scope field in the session report and refresh the archives` |
-| Documentation follow-up after that checkpoint | `032c993177f44f9f779ece5922c26f0f85faf762` updates the README test count; `383b0dc0043c05c7f5838d44a79709f517ef9c64` reconciles KI-26's final suite count; `5119935fac2dbb4e376855aecfec7b3431221444` and `ce4e428e74eb609e6a565153b00473e7e8e2a5c6` distinguish the historical AN06 PTP pass from current-candidate revalidation in both device matrices; `80ed219bbdce650545bf3325e169e1dd773ef070` corrects B15's scope-test count; `2f4c38a77bab5eb760cb12bf014afdaaef6c0188` appends the latest recorded build/test/artifact checkpoint to `docs/BUILD-VALIDATION.md`. The execution-state itself is updated through documentation-only commits. |
+| Session commits | `7cf220f` (synced remote documentation head), `e6440e0` (browser sender, G3), `6fa29e4` (session outcome counts, sender disconnect test), `9375a51` (honest HEIC-transcoding note, final artifacts). |
 | Local workspace recorded in the prior checkpoint | `C:\Users\Administrator\Documents\GitHub\I-Total.Transfer-v1.5.0-source` — confirm it still points to this repository before running commands. |
-| Local working-tree status | The user/OpenCode report says the tree was clean at `9ae20fd` before the documentation follow-ups. This assistant session accessed the GitHub repository through file/commit APIs, not the local Windows filesystem; therefore it did not independently run `git status`, build, or tests. Fetch the updated branch in the Windows workspace and verify status before editing further. |
+| Local working-tree status | Clean at `9375a51`; the branch was fast-forwarded from `9ae20fd` to `7cf220f` before code changes. Build and the full suite were run locally in this session. |
 
 ## Latest product validation recorded at the code checkpoint
 
 - Build: `dotnet build I-Total.Transfer.sln -c Release --no-incremental` — recorded as 0 warnings, 0 errors.
-- Tests: `dotnet test tests\\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s` — final reported run: **511 passed, 0 failed, 2 skipped, 513 total** (about 32 seconds in the latest user report; the committed run record reports 31 seconds).
+- Tests: `dotnet test tests\\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s` — final local run after this session: **519 passed, 0 failed, 2 skipped, 521 total** (about 37-41 seconds).
 - Licensing flake (KI-26): two full-suite occurrences are recorded, on 2026-10-29 and 2026-10-30. After the later occurrence, the user reports 20 isolated passes and six consecutive full-suite passes. The repository KI-26 and README were updated to reflect the final 511-pass / 513-total run count. If it recurs, capture the complete assertion output and sequence file; do not conceal it.
 - The test/build numbers above are checkpoint evidence, not a claim that tests were rerun during the current GitHub-only documentation update. Re-run locally after syncing, and report new results separately.
 
@@ -105,4 +105,8 @@ Recorded at checkpoint: source ZIP documentation comparison had zero mismatches;
 
 ## Single next concrete action
 
-Sync the current `work/master-directive` branch in the recorded Windows workspace and verify that the README and KI-26 documentation follow-ups are present; then run `git status`, the Release build, and the full test suite and record the actual raw results. Only after that baseline is confirmed proceed with remaining safe unblocked gaps. Physical AN06 candidate revalidation and genuine mid-file IP07/AN07 remain pending operator actions.
+Open the pairing ticket URL from the current candidate in Safari on the physical iPhone and in Chrome on
+the HUAWEI, send a HEIC and a MOV, approve on the PC, and record the OS/browser, receipts and destination
+hashes (KI-12). Then revalidate AN06 on the current candidate (the 2026-10-24 PTP pass is historical) and
+perform a genuine mid-file cable pull (IP07/AN07) with the marker procedure. All three need an operator;
+the browser sender itself is implemented and locally verified.
