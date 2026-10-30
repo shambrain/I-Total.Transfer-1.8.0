@@ -306,7 +306,7 @@ native iOS Shortcut or companion app is a separate capability; it is not shipped
   an existing file is renamed rather than overwritten and the receipt records the name actually used; two
   in-flight uploads of the same path are told so (`409`) instead of racing for the same free name.
 - [ ] **Wireless from a real iOS/Android browser sender.** **PENDING.**
-  Both handsets are attached, but no native iOS Shortcut/companion sender exists in this environment. The
+  The physical handsets are not exercised by this local run, and no native iOS Shortcut/companion sender exists in this environment. The
   browser sender is implemented and locally tested (Chrome against the real receiver, plus Node digest,
   receipt, cancellation and TLS-identity tests). It has **not** been run from a physical iPhone Safari or
   Android Chrome, so physical compatibility is not claimed; a native iOS Shortcut or companion app is a
