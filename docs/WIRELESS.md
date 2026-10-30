@@ -1,8 +1,8 @@
 # Wireless transport
 
 The receiver is a real HTTP(S) endpoint on one private interface. It is **not** a way to enumerate an
-iPhone: iOS exposes no LAN API for the Photos library, so an explicit sender - a Shortcut or a
-companion app - must select the assets and send them. What follows is the complete contract that
+iPhone: iOS exposes no LAN API for the Photos library, so an explicit sender - a user-created Shortcut or a
+companion app, neither shipped here - must select the assets and send them. What follows is the complete contract that
 sender has to implement, the security model it operates under, and the exact limits of what this
 transport proves.
 
@@ -89,7 +89,11 @@ X-Session-Token: ...
 
 The old token stops working immediately. Rotate before a long batch rather than widening the lifetime.
 
-## Sender recipe (iOS Shortcut)
+## Sender recipe (user-created iOS Shortcut)
+
+This is a **manual workflow the user builds in Apple Shortcuts**, not a native Shortcut or companion app
+shipped with I-Total Transfer. It is documented so the HTTP contract is usable without the browser sender;
+it is not claimed as a product component, and it has not been run on a physical iPhone in this workspace.
 
 Shortcuts can perform the whole flow without a companion app:
 
@@ -97,14 +101,21 @@ Shortcuts can perform the whole flow without a companion app:
    `X-Pairing-Secret`. Read `session` from the JSON response.
 2. **Select Photos** (or *Get Latest Photos* with a count).
 3. **Repeat with Each** - for every photo:
-   - *Get Contents of URL*, method `POST`, URL `http://<address>:<port>/upload?path=DCIM/<filename>`,
-     header `X-Session-Token: <session>`, request body *File*.
+   - *Get Contents of URL*, method `POST`, URL `<ticket-scheme>://<address>:<port>/upload?path=DCIM/<filename>`,
+     header `X-Session-Token: <session>`, request body *File*. Use the **same scheme and address as the
+     ticket URL**; do not assume `http://`.
    - Check the status code. `200` means the operator approved it; anything else means it was not
      delivered.
 4. Optionally **Get Contents of URL** to `/rotate` between batches.
 
 `path` must be a relative path. The receiver accepts forward slashes and converts them for the
 filesystem; a bare filename is placed under `DCIM`.
+
+The scheme is not optional: with `Require TLS` on (the default), the ticket is `https://` and the receiver
+refuses to start unless a certificate with an exact SAN match for the bind address is installed **and the
+phone trusts that certificate or its issuing CA**. An `http://` upload works only when the operator has
+explicitly cleared `Require TLS`; the receiver then says the traffic is not encrypted. A Shortcut cannot
+make the phone trust a self-signed certificate by itself.
 
 ## Browser sender (implemented)
 
@@ -171,7 +182,7 @@ external resources and no referrer.
 | Real browser end to end | `tests/sender/browser-e2e.mjs` with Chrome: pairs, selects a 64 KiB HEIC, uploads, `VERIFIED` receipt, destination bytes equal, second send renamed ` (1)` |
 | Real browser cancellation with manual approval | `tests/sender/browser-e2e.mjs`: cancel while the first file waits for approval; page reports `CANCELLED` + `NOT ATTEMPTED`, no destination file, no `.partial`; the picker/folder/pairing/rotation controls are disabled during the batch, a forced change/rotate does not alter it, and every control is restored afterwards |
 | Pending-approval disconnect | `AClientThatDisconnectsWhileWaitingForApprovalCancelsTheOffer`: a real socket closes while the offer is pending; `Inbox.Pending` and `WaitingUploads` drop to zero, the offer is `Cancelled`, a late approval is refused, no destination/`.partial`/received item remains, and the same path can be offered and approved again |
-| Exact TLS certificate selection | `ServerCertificateValidatorTests` (14): exact IPv4/IPv6/DNS SAN, similar addresses/names, wildcard one-label rule, clientAuth-only EKU, missing EKU, key usage, expired/not-yet-valid, no private key, no SAN, and a default TLS client rejecting an untrusted self-signed certificate until it is trusted |
+| Exact TLS certificate selection | `ServerCertificateValidatorTests` (14): exact IPv4/IPv6/DNS SAN, similar addresses/names, wildcard one-label rule, clientAuth-only EKU, missing EKU, key usage, expired/not-yet-valid, no private key, no SAN, and normal chain validation rejecting a leaf from an untrusted root then accepting it with the generated root in a custom trust store (no permissive callback) |
 | Single-instance guard | `SingleInstanceGuardTests` (6): exclusion across threads, release on dispose, distinct names, session-local default name, blank-name fallback, double dispose |
 | Sender disconnect mid-upload | `AClientThatDisconnectsMidUploadLeavesNoPartialOrDestination`: no destination file, no `.partial`, no received entry |
 
@@ -210,10 +221,11 @@ subject or the formatted SAN text:
   when a SAN exists, and guessing from the subject is how substring bugs get shipped.
 
 **Selection is only the server side.** The receiver cannot decide whether Safari or Chrome trusts the
-chain. A self-signed certificate that passes the selection checks is still rejected by the phone until
-that certificate or its issuing CA is trusted on the device. A local TLS handshake test pins exactly
-this: a default client rejects the self-signed certificate and accepts the same certificate only with an
-explicit trust decision.
+chain. A leaf certificate that passes the selection checks is still rejected by the phone until its
+issuing CA (or the certificate itself) is trusted on the device. A local TLS handshake test pins the
+chain distinction: a default client rejects a leaf whose root it does not trust, and the same leaf passes
+normal chain validation when the generated root is placed in a custom trust store. That is a .NET
+`SslStream` client, not Safari or Android Chrome; it proves chain validation, not a phone's trust store.
 
 ### What must be installed on the phones
 
@@ -262,9 +274,10 @@ trusted, or install a matching certificate.
 - **No resume of a partial upload.** A failed POST starts again from zero.
 - **HEIC/ProRAW conversion is the sender's job.** Bytes are stored exactly as sent. Some browsers, notably Safari when picking from Photos, may convert HEIC to JPEG before the page receives it; the PC stores what the browser delivers, and the receipt names the stored file.
 - **Local browser sender verified; physical sender not yet.** The protocol, pairing, approval, digest,
-  traversal, cancellation and rotation rules are covered by loopback tests (`WirelessReceiverTests` 23,
-  including TLS refusal and disconnect cleanup; `PairingStateTests` 13; `ApprovalInboxTests` 9;
-  `PrivateNetworkTests` 21; `WirelessPageTests` 11; `WirelessSenderTests` 6), by the Node tests and by
+  traversal, cancellation and rotation rules are covered by loopback tests (`WirelessReceiverTests` 25,
+  including TLS refusal and disconnect cleanup; `PairingStateTests` 13; `ApprovalInboxTests` 13;
+  `PrivateNetworkTests` 21; `WirelessPageTests` 11; `WirelessSenderTests` 6; `ServerCertificateValidatorTests`
+  14; `SingleInstanceGuardTests` 6), by the Node tests and by
   the Chrome end-to-end run. They were also driven live against the published executable with a real HTTP
   client: `401` for no credential and for the secret used as a session, single-use redemption, a 1 MiB
   upload pending with nothing on disk until Approve, `403` on refusal with the refusal sticking, `400` on

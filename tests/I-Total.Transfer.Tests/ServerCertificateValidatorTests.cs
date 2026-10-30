@@ -203,22 +203,35 @@ public sealed class ServerCertificateValidatorTests
     }
 
     [TestMethod]
-    public async Task ADefaultClientRejectsASelfSignedServerCertificateUntilItIsTrusted()
+    public async Task ADefaultClientRejectsACertificateFromAnUntrustedRootAndAcceptsItWithCustomRootTrust()
     {
-        using X509Certificate2 certificate = Make(dns: ["localhost"], ips: ["127.0.0.1"]);
+        (X509Certificate2 root, X509Certificate2 leaf) = MakeChain(dns: ["localhost"], ips: ["127.0.0.1"]);
+        using (root)
+        using (leaf)
+        {
+            Assert.IsFalse(await HandshakeAsync(leaf, chainPolicy: null),
+                "a default client must reject a server certificate whose root it does not trust");
 
-        Assert.IsFalse(await HandshakeAsync(certificate, trustAny: false),
-            "a default client must reject a self-signed certificate it does not trust");
-        Assert.IsTrue(await HandshakeAsync(certificate, trustAny: true),
-            "the same certificate must work once the client trusts it");
+            var policy = new X509ChainPolicy
+            {
+                TrustMode = X509ChainTrustMode.CustomRootTrust,
+                RevocationMode = X509RevocationMode.NoCheck,
+                VerificationFlags = X509VerificationFlags.NoFlag
+            };
+            policy.CustomTrustStore.Add(root);
+            Assert.IsTrue(await HandshakeAsync(leaf, policy),
+                "the same certificate must pass normal chain validation when its root is trusted");
+        }
     }
 
     /// <summary>
-    /// Runs one real TLS handshake. The client uses the platform chain policy by default, which is the
-    /// same trust decision a browser makes; the permissive callback is the "certificate installed on the
-    /// phone" case. This is a local .NET client, not Safari or Chrome.
+    /// Runs one real TLS handshake. The client uses the platform chain policy by default; the second
+    /// call supplies an explicit <see cref="X509ChainPolicy"/> with the test root in
+    /// <see cref="X509ChainPolicy.CustomTrustStore"/>, so normal chain building, validity, EKU and
+    /// hostname checks still run. This is a local .NET client, not Safari, Chrome or an Android phone:
+    /// it proves the chain-trust distinction, not any device's trust store.
     /// </summary>
-    private static async Task<bool> HandshakeAsync(X509Certificate2 certificate, bool trustAny)
+    private static async Task<bool> HandshakeAsync(X509Certificate2 certificate, X509ChainPolicy? chainPolicy)
     {
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
@@ -240,16 +253,17 @@ public sealed class ServerCertificateValidatorTests
         {
             using var client = new TcpClient();
             await client.ConnectAsync(IPAddress.Loopback, port);
-            using var ssl = trustAny
-                ? new SslStream(client.GetStream(), leaveInnerStreamOpen: false,
-                    (_, _, _, _) => true)
-                : new SslStream(client.GetStream(), leaveInnerStreamOpen: false);
+            using var ssl = new SslStream(client.GetStream(), leaveInnerStreamOpen: false);
             try
             {
-                await ssl.AuthenticateAsClientAsync("localhost");
+                var options = new SslClientAuthenticationOptions
+                {
+                    TargetHost = "localhost",
+                    CertificateChainPolicy = chainPolicy
+                };
+                await ssl.AuthenticateAsClientAsync(options);
                 return true;
             }
-            catch (Exception ex) when (trustAny) { throw new AssertFailedException("trusted handshake failed: " + ex); }
             catch (AuthenticationException) { return false; }
             catch (IOException) { return false; } // the server aborted after the client rejected the chain
         }
@@ -257,8 +271,47 @@ public sealed class ServerCertificateValidatorTests
         {
             listener.Stop();
             await server;
-            if (trustAny && serverError is not null)
+            if (chainPolicy is not null && serverError is not null)
                 throw new AssertFailedException("server handshake failed: " + serverError);
         }
+    }
+
+    /// <summary>
+    /// Creates a private test root and a server leaf signed by it. The leaf carries its private key for
+    /// Schannel; disposing the certificates removes the temporary key material.
+    /// </summary>
+    private static (X509Certificate2 Root, X509Certificate2 Leaf) MakeChain(string[] dns, string[] ips)
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        using var rootKey = RSA.Create(2048);
+        var rootRequest = new CertificateRequest(
+            "CN=I-Total Test Root " + Guid.NewGuid().ToString("N"), rootKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        rootRequest.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
+        rootRequest.CertificateExtensions.Add(new X509KeyUsageExtension(
+            X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, true));
+        rootRequest.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(rootRequest.PublicKey, false));
+        using X509Certificate2 rootWithKey = rootRequest.CreateSelfSigned(now.AddDays(-1), now.AddDays(30));
+        X509Certificate2 root = X509CertificateLoader.LoadCertificate(rootWithKey.Export(X509ContentType.Cert));
+
+        using var leafKey = RSA.Create(2048);
+        var leafRequest = new CertificateRequest("CN=localhost", leafKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var san = new SubjectAlternativeNameBuilder();
+        foreach (string name in dns) san.AddDnsName(name);
+        foreach (string ip in ips) san.AddIpAddress(IPAddress.Parse(ip));
+        leafRequest.CertificateExtensions.Add(san.Build());
+        leafRequest.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, true));
+        leafRequest.CertificateExtensions.Add(new X509KeyUsageExtension(
+            X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment, false));
+        leafRequest.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(
+            new OidCollection { new Oid(ServerAuth) }, false));
+        leafRequest.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(leafRequest.PublicKey, false));
+
+        using X509Certificate2 leafPublic = leafRequest.Create(
+            rootWithKey, now.AddDays(-1), now.AddDays(30), RandomNumberGenerator.GetBytes(8));
+        using X509Certificate2 leafWithKey = leafPublic.CopyWithPrivateKey(leafKey);
+        byte[] pfx = leafWithKey.Export(X509ContentType.Pfx, "itotal-test");
+        X509Certificate2 leaf = X509CertificateLoader.LoadPkcs12(pfx, "itotal-test",
+            X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.Exportable);
+        return (root, leaf);
     }
 }

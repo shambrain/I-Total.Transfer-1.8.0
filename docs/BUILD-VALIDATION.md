@@ -504,9 +504,12 @@ node tests\sender\browser-e2e.mjs <DeviceDrill.exe>
 - Setup: exit 0; silent install/uninstall into a temporary folder matched the tree executable and README;
   uninstall removed the install directory and HKCU key and kept `%APPDATA%`.
 - TLS: `ServerCertificateValidatorTests` (14) cover exact IP/DNS SANs, similar names, wildcards, EKU,
-  key usage, validity, private key, no SAN and default-client rejection of an untrusted self-signed
-  certificate.
+  key usage, validity, private key, no SAN, and normal chain validation rejecting a leaf from an untrusted root then accepting it with the generated root in a custom trust store (no permissive callback).
 - Pending approval: `AClientThatDisconnectsWhileWaitingForApprovalCancelsTheOffer` (real socket) and
   `ApprovalInboxTests` (13).
 - Raw outputs: `docs/evidence/2026-10-31/`.
+- Licensing flake (KI-26): the 2026-10-31 run captured `Expected:<SignatureInvalid>. Actual:<Malformed>`.
+  The test's base64-character tamper occasionally corrupted the envelope before signature verification; it
+  now flips a decoded signature byte. 20 isolated runs and three consecutive full suites passed; product
+  code was not changed.
 - Physical iPhone/Android sender and trust-store evidence remain pending (KI-12, KI-31).

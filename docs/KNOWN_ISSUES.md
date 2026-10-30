@@ -251,18 +251,21 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
   mapping; new rows always record the outcome.
 - **To close:** nothing to fix; a future schema version may backfill the column.
 
-### KI-26 - Rare unreproduced failure of a licensing test
+### KI-26 - Licensing-test flake: resolved by correcting the tamper construction
 
-- **Observation:** the test has failed twice in full-suite runs: 2026-10-29 (490 passed, 1 failed) and
-  2026-10-30 (509 passed, 1 failed). Both times it passed immediately in isolation; on 2026-10-30 it then
-  passed **20 isolated runs** and **six consecutive full runs** (511 passed, 2 skipped, 513 total each).
-  The assertion message was not captured by the filtered output either time.
-- **Impact:** the licensing rule itself is deterministic (RSA-PSS verification over a tampered signature)
-  and the test uses an in-memory trial store, so no persisted state is involved. The failure could not be
-  reproduced and its assertion message was not captured by the filtered output.
-- **Mitigation:** the suite is run with `--blame-hang`; the result is recorded here rather than hidden.
-- **To close:** if it recurs, capture the full MSTest failure (assert name, expected/actual) and the
-  sequence file; do not mark the suite green until the cause is known.
+- **Observation:** the test failed in full-suite runs on 2026-10-29 (490 passed, 1 failed) and 2026-10-30
+  (509 passed, 1 failed), then again on 2026-10-31 (546 passed, 1 failed). The 2026-10-31 run captured the
+  assertion: `Expected:<SignatureInvalid>. Actual:<Malformed>` in
+  `ATamperedEntitlementIsRejectedAndLeavesTheTrialExactlyAsItWas`.
+- **Cause:** the test flipped one character of the base64 signature text. Most of the time that still
+  decoded and reached RSA-PSS verification, but occasionally the altered string no longer parsed as a valid
+  envelope, so `EntitlementCodec.Verify` correctly returned `Malformed` before the signature check. The
+  product never accepted the tampered licence; only the expected failure category differed.
+- **Fix (test-only):** the test now decodes the signature, flips one signature byte, and re-encodes it. The
+  envelope stays syntactically valid, so the test deterministically exercises signature verification and
+  still requires `SignatureInvalid`. The product rule was not weakened.
+- **Verification:** the corrected test passed 20 isolated runs and three consecutive full suites
+  (547 passed, 2 skipped, 549 total each) on 2026-10-31.
 
 ### KI-27 - Two app instances can contend for the WPD provider (single-instance guard added)
 

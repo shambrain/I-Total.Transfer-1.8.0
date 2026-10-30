@@ -1,33 +1,33 @@
-node : REPORT C:\Users\Administrator\AppData\Local\Temp\itotal-sender-e2e-is6xCS\happy\pairing.json
-At line:1 char:1
+node : REPORT C:\Users\Administrator\AppData\Local\Temp\itotal-sender-e2e-184eGf\happy\pairing.json
+At line:2 char:1
 + node tests\sender\browser-e2e.mjs "$env:TEMP\opencode\drill-2026-10-3 ...
 + ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (REPORT C:\Users...py\pairing.json:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
-Receiver: http://127.0.0.1:51846/ auto-approve: true
+Receiver: http://127.0.0.1:57851/ auto-approve: true
 Paired: Paired. The pairing code is spent and cannot be reused.
 Receipt: IMG_E2E_0001.HEIC - VERIFIED as DCIM\IMG_E2E_0001.HEIC (64.0 KB, SHA-256 and byte count matched)
 Summary: Sent 1 of 1 selected file(s), 64.0 KB. Only the files you selected were sent; this is not a whole-library transfer.
 Collision: IMG_E2E_0001.HEIC - VERIFIED as DCIM\IMG_E2E_0001 (1).HEIC (64.0 KB, SHA-256 and byte count matched)
 PASS browser sender: paired, uploaded, VERIFIED receipt, collision renamed, bytes match
   "Action": "wireless",
-  "Url": "http://127.0.0.1:51846/",
-  "TicketUrl": "http://127.0.0.1:51846/pair#token=8a3d8b8f513baf4470f6ce42e1cb517e",
-  "Secret": "8a3d8b8f513baf4470f6ce42e1cb517e",
-  "Destination": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\itotal-sender-e2e-is6xCS\\happy\\destination",
+  "Url": "http://127.0.0.1:57851/",
+  "TicketUrl": "http://127.0.0.1:57851/pair#token=0e80e57c12ca0a065c423e136da85d82",
+  "Secret": "0e80e57c12ca0a065c423e136da85d82",
+  "Destination": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\itotal-sender-e2e-184eGf\\happy\\destination",
   "AutoApprove": true,
-  "ExpiresUtc": "2026-10-30T21:18:49.5993965+00:00"
+  "ExpiresUtc": "2026-10-30T23:33:43.4765571+00:00"
 }
-REPORT C:\Users\Administrator\AppData\Local\Temp\itotal-sender-e2e-is6xCS\cancel\pairing.json
-Cancel receiver: http://127.0.0.1:41774/ auto-approve: false
+REPORT C:\Users\Administrator\AppData\Local\Temp\itotal-sender-e2e-184eGf\cancel\pairing.json
+Cancel receiver: http://127.0.0.1:58561/ auto-approve: false
 Cancellation summary: Sent 0 of 2 selected file(s), 0 B. The batch was CANCELLED: 0 sent, 0 failed, 1 cancelled, 1 not attempted. Only the files you selected were sent; this is not a whole-library transfer.
 PASS browser sender cancellation: CANCELLED + NOT ATTEMPTED, no destination file
   "Action": "wireless",
-  "Url": "http://127.0.0.1:41774/",
-  "TicketUrl": "http://127.0.0.1:41774/pair#token=0667bdf2c5d88e54bee14463e4caa4f9",
-  "Secret": "0667bdf2c5d88e54bee14463e4caa4f9",
-  "Destination": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\itotal-sender-e2e-is6xCS\\cancel\\destination",
+  "Url": "http://127.0.0.1:58561/",
+  "TicketUrl": "http://127.0.0.1:58561/pair#token=55a08e504e70de7f572264efbe469645",
+  "Secret": "55a08e504e70de7f572264efbe469645",
+  "Destination": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\itotal-sender-e2e-184eGf\\cancel\\destination",
   "AutoApprove": false,
-  "ExpiresUtc": "2026-10-30T21:18:50.6170974+00:00"
+  "ExpiresUtc": "2026-10-30T23:33:44.3695238+00:00"
 }

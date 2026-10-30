@@ -58,12 +58,22 @@ node tests\sender\browser-e2e.mjs <DeviceDrill.exe>             -> PASS (happy p
 
 - `ServerCertificateValidatorTests` (14) cover exact IPv4/IPv6/DNS SANs, similar addresses/names, wildcard
   one-label matching, clientAuth-only EKU, missing EKU, key usage, expired/not-yet-valid, no private key,
-  no SAN, and a default TLS client rejecting an untrusted self-signed certificate until it is trusted.
+  no SAN, and normal chain validation rejecting a leaf from an untrusted root then accepting it with the
+  generated root in a custom trust store (no permissive callback).
 - `ApprovalInboxTests` (13) cover `Cancelled`, late approval, retry after cancellation, and no-op cancel.
 - `AClientThatDisconnectsWhileWaitingForApprovalCancelsTheOffer` uses a real loopback socket: header only,
   pending offer, disconnect, inbox/waiting counts drop, late approval refused, no destination/`.partial`/
   received item, then the same path is offered, approved and committed.
 - Raw outputs are under `docs/evidence/2026-10-31/`.
+
+### Licensing-test flake resolved (KI-26)
+
+The 2026-10-31 full run captured the previously missing assertion:
+`Expected:<SignatureInvalid>. Actual:<Malformed>`. The test flipped a base64 character of the signature;
+occasionally that made the envelope unparseable, so the verifier correctly returned `Malformed` before the
+signature check. The test now flips a decoded signature byte and re-encodes it, keeping the envelope valid
+while still requiring `SignatureInvalid`. 20 isolated runs and three consecutive full suites passed
+(547/2/549). This is a test correction; the product rule was not weakened.
 
 Physical iPhone Safari / HUAWEI Chrome testing remains pending (KI-12). The two-launch single-instance
 window-activation drill also remains pending (KI-27). No physical compatibility is claimed.

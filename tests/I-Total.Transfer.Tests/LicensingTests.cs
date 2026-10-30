@@ -1,4 +1,6 @@
 using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using ITotalTransfer.Licensing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -211,11 +213,14 @@ public sealed class LicensingTests
         int usedBefore = service.Snapshot().JobsUsed;
 
         string document = EntitlementCodec.Sign(Payload(), key);
-        // Flip one character of the signature: the readable payload stays valid-looking, which is exactly
-        // the attack the signature exists to stop.
-        int index = document.IndexOf("\"Signature\": \"", StringComparison.Ordinal) + 15;
-        char replacement = document[index] == 'A' ? 'B' : 'A';
-        string tampered = document[..index] + replacement + document[(index + 1)..];
+        // Tamper with one decoded signature byte, not one base64 character: the envelope stays
+        // syntactically valid and the test always reaches signature verification instead of
+        // occasionally failing base64/JSON parsing as Malformed.
+        JsonNode envelope = JsonNode.Parse(document)!;
+        byte[] signature = Convert.FromBase64String(envelope["Signature"]!.GetValue<string>());
+        signature[0] ^= 0x01;
+        envelope["Signature"] = Convert.ToBase64String(signature);
+        string tampered = envelope.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
 
         LicenseActivationResult result = service.ActivateText(tampered, "test");
 

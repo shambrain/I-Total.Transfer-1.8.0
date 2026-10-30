@@ -102,7 +102,7 @@ try {
 
   // ---------------------------------------------------------------- happy path + collision
   {
-    const { child, destination, pairing, output } = await startReceiver("happy", ["--auto-approve"], 90);
+    const { child, destination, pairing, output } = await startReceiver("happy", ["--auto-approve", "--expect", "2"], 90);
     const page = await browser.newPage();
     page.on("console", (message) => console.log("page:", message.type(), message.text()));
     try {

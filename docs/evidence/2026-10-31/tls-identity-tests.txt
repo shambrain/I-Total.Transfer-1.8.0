@@ -1,21 +1,21 @@
 Test run for C:\Users\Administrator\Documents\GitHub\I-Total.Transfer-v1.5.0-source\tests\I-Total.Transfer.Tests\bin\Release\net10.0-windows\I-Total.Transfer.Tests.dll (.NETCoreApp,Version=v10.0)
 A total of 1 test files matched the specified pattern.
-  Passed AnExactIpv4SanIsAcceptedAndSimilarAddressesAreNot [113 ms]
-  Passed AnExactIpv6SanIsAcceptedAndSimilarAddressesAreNot [61 ms]
-  Passed AnExactDnsSanIsAcceptedAndSubstringsAreNot [54 ms]
-  Passed ASubjectCnAloneIsNotANameMatch [54 ms]
+  Passed AnExactIpv4SanIsAcceptedAndSimilarAddressesAreNot [65 ms]
+  Passed AnExactIpv6SanIsAcceptedAndSimilarAddressesAreNot [43 ms]
+  Passed AnExactDnsSanIsAcceptedAndSubstringsAreNot [62 ms]
+  Passed ASubjectCnAloneIsNotANameMatch [46 ms]
   Passed ALeftmostWildcardMatchesExactlyOneLabel [< 1 ms]
-  Passed AWildcardSanIsAcceptedForOneLabelOnly [54 ms]
-  Passed ACertificateWithAClientAuthEkuIsRefused [49 ms]
-  Passed ACertificateWithoutEkuIsAccepted [56 ms]
-  Passed KeyUsageMustPermitTlsServerUse [194 ms]
-  Passed AnExpiredCertificateIsRefused [68 ms]
-  Passed ANonYetValidCertificateIsRefused [98 ms]
-  Passed ACertificateWithoutAPrivateKeyIsRefused [58 ms]
-  Passed ACertificateWithoutASanIsRefused [63 ms]
-  Passed ADefaultClientRejectsASelfSignedServerCertificateUntilItIsTrusted [86 ms]
+  Passed AWildcardSanIsAcceptedForOneLabelOnly [59 ms]
+  Passed ACertificateWithAClientAuthEkuIsRefused [66 ms]
+  Passed ACertificateWithoutEkuIsAccepted [82 ms]
+  Passed KeyUsageMustPermitTlsServerUse [150 ms]
+  Passed AnExpiredCertificateIsRefused [60 ms]
+  Passed ANonYetValidCertificateIsRefused [47 ms]
+  Passed ACertificateWithoutAPrivateKeyIsRefused [42 ms]
+  Passed ACertificateWithoutASanIsRefused [43 ms]
+  Passed ADefaultClientRejectsACertificateFromAnUntrustedRootAndAcceptsItWithCustomRootTrust [107 ms]
 
 Test Run Successful.
 Total tests: 14
      Passed: 14
- Total time: 1.5520 Seconds
+ Total time: 1.3017 Seconds

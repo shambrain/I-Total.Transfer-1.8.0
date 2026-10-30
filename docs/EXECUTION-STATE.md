@@ -1,6 +1,6 @@
 # Execution state — I-Total Transfer master directive
 
-Updated: 2026-10-30. Read this file first when resuming. This checkpoint records the verified source checkpoint, subsequent documentation reconciliation, evidence status, and exact next actions. Always fetch the current branch tip before acting; this file cannot contain its own eventual commit SHA.
+Updated: 2026-10-31. Read this file first when resuming. This checkpoint records the verified product-code checkpoint, later documentation/archive/checksum commits, evidence status, and exact next actions. Always fetch the current branch tip before acting; this file cannot contain its own eventual commit SHA.
 
 ## Specification and operating rules
 
@@ -17,21 +17,22 @@ Updated: 2026-10-30. Read this file first when resuming. This checkpoint records
 | --- | --- |
 | Repository | `shambrain/I-Total.Transfer-1.8.0` (GitHub repository) |
 | Working branch | `work/master-directive` |
-| Last product-source/build/artifact checkpoint | `733b7b1658fd35f8c707857c2bac1916b8c10d51` — `Validate TLS identities exactly, cancel pending approvals on disconnect, lock batch controls`; this execution-state update follows that commit. |
-| Session commits | `7cf220f`, `e6440e0`, `6fa29e4`, `9375a51`, `500967b`, `055185a`, `09ca77d` (G3 hardening), `655a6dd` (single-instance guard), `19f80d4` (checkpoint/artifacts), `733b7b1` (exact TLS, pending-approval cancellation, batch controls). |
-| Local workspace recorded in the prior checkpoint | `C:\Users\Administrator\Documents\GitHub\I-Total.Transfer-v1.5.0-source` — confirm it still points to this repository before running commands. |
-| Branch tip before this state refresh | `bdf4341859ce62b80f5fcbefa10bcdc70af08802` — `Record the 2026-10-31 exact-TLS checkpoint and refresh the release artifacts` |
-| Local working-tree status | Clean at `bdf4341`; this state refresh is the only change after it. No reset, clean or force-push was attempted. |
+| Local workspace | `C:\Users\Administrator\Documents\GitHub\I-Total.Transfer-v1.5.0-source` — confirm it still points to this repository before running commands. |
+| Current branch tip at the start of this correction | `596d10ed36102130110ad95f94d019fab0ab132a` — `Correct the physical-sender wording and refresh the archives` |
+| Product-code checkpoint | `733b7b1658fd35f8c707857c2bac1916b8c10d51` — `Validate TLS identities exactly, cancel pending approvals on disconnect, lock batch controls` |
+| Later documentation/archive/checksum commits | `bdf4341` (state/artifact refresh), `da56721` (branch-tip/source refresh), `596d10e` (physical-sender wording/archive refresh); these do not change product code |
+| Local working-tree status | Clean at `596d10e` before this correction. No reset, clean or force-push was attempted. |
 
 ## Latest product validation recorded at the code checkpoint
 
 - Build: `dotnet build I-Total.Transfer.sln -c Release --no-incremental` — **0 warnings, 0 errors**.
-- Tests: `dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s` — **547 passed, 0 failed, 2 skipped, 549 total** (about 49 seconds), including 14 `ServerCertificateValidatorTests`, 13 `ApprovalInboxTests`, the real-socket pending-approval disconnect test and six `SingleInstanceGuardTests`.
+- Tests: `dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s` — **547 passed, 0 failed, 2 skipped, 549 total** (about 51 seconds), including 14 `ServerCertificateValidatorTests`, 13 `ApprovalInboxTests`, the real-socket pending-approval disconnect test and six `SingleInstanceGuardTests`.
 - Node: `node tests\sender\sender.test.mjs src\I-Total.Transfer\Wireless\sender.js` — **PASS** (13 SHA-256 sizes, path rules, hash cancellation before/between slices, 24 receipt cases, five batch-cancellation sequences, summary honesty, fragment/query secret reading).
 - Browser: `node tests\sender\browser-e2e.mjs <DeviceDrill.exe>` — **PASS** (auto-approve happy path with `VERIFIED` receipt and collision rename; manual-approval cancellation with `CANCELLED` + `NOT ATTEMPTED`, no destination or `.partial` file, disabled/restored batch controls and forced change/rotate no-ops).
-- TLS identity: `ServerCertificateValidatorTests` (14) cover exact IP/DNS SANs, similar names, wildcards, EKU, key usage, validity, private key, no SAN and untrusted-client behavior.
+- TLS identity: `ServerCertificateValidatorTests` (14) cover exact IP/DNS SANs, similar names, wildcards, EKU, key usage, validity, private key and no SAN. The chain-trust test uses a normal `X509ChainPolicy` with `TrustMode = CustomRootTrust` and a generated root; it does not use a permissive callback and does not claim Safari/Chrome trust.
+- Physical phone tests: **not performed**. iPhone Safari, Android Chrome, phone TLS trust-store, AN06 current-candidate revalidation, IP07/AN07 cable pull and the KI-27 two-launch drill all remain pending; no physical result is claimed.
 - Pending approval: `AClientThatDisconnectsWhileWaitingForApprovalCancelsTheOffer` closes a real socket while the offer waits; pending/waiting counts drop, the offer is `Cancelled`, a late approval is refused, no file/`.partial`/received item remains, and the path is retried successfully.
-- Licensing flake (KI-26): no recurrence in this hardening run. If it recurs, capture the complete assertion output and sequence file; do not conceal it.
+- Licensing flake (KI-26): the 2026-10-31 run captured `Expected:<SignatureInvalid>. Actual:<Malformed>`. The test's base64-character tamper occasionally corrupted the envelope before signature verification; it now flips a decoded signature byte. 20 isolated runs and three consecutive full suites passed. Product code was not changed.
 - The test/build numbers above are checkpoint evidence for this workspace, not a claim that a later GitHub-only documentation update reran them. Re-run locally after syncing, and report new results separately.
 
 ## KI-29 — inventory scope is separate from enumeration completeness
@@ -108,7 +109,7 @@ Recorded at this checkpoint: installer silent install/uninstall was rechecked (e
 
 ## Exact resume procedure
 
-1. In the Windows workspace, fetch `origin`, confirm it maps to `https://github.com/shambrain/I-Total.Transfer-1.8.0.git`, and inspect `git status --short`, current branch, local HEAD, and origin branch tip. Preserve any local changes; do not reset or clean them. The commits through `19f80d4` must be present before continuing.
+1. In the Windows workspace, fetch `origin`, confirm it maps to `https://github.com/shambrain/I-Total.Transfer-1.8.0.git`, and inspect `git status --short`, current branch, local HEAD, and origin branch tip. Preserve any local changes; do not reset or clean them. The product-code checkpoint `733b7b1` and the later archive/documentation commits through `596d10e` must be present before continuing.
 2. Read this file, the full master directive, and the full execution instruction. Compare the state against the actual code, manifests, test output, and artifact files; update any stale claim with evidence rather than copying it forward.
 3. Run the Release build and full deterministic suite locally on the synced source. Record the command, raw outcome, count, elapsed time, and test log. Resolve a new failure or preserve its full failure output; do not infer the result from an earlier run.
 4. Reconcile README / `PROJECT-STATUS.md` / `docs/PROGRESS.md` / `docs/KNOWN_ISSUES.md` / `docs/DEVICE_TEST_MATRIX.md` / `docs/DEVICE-COMPATIBILITY-MATRIX.md` / `docs/IMPLEMENTATION-GAP-MATRIX.md` / `dist/SHA256SUMS.txt` so statuses and test counts agree. Do not edit historical records to make old runs appear to have current counts.
@@ -118,10 +119,8 @@ Recorded at this checkpoint: installer silent install/uninstall was rechecked (e
 
 ## Single next concrete action
 
-Run the physical sender drill with the current candidate: open the ticket URL in Safari on the iPhone and
-Chrome on the HUAWEI, send one HEIC/photo and one original MOV, approve each on the PC, compare the receipt
-and destination SHA-256, and record the OS/browser versions and whether Safari converted the HEIC (KI-12).
-If `Require TLS` is used, install/trust the exact-SAN certificate on both phones first (KI-31). Then
-revalidate AN06 on the current candidate (the 2026-10-24 PTP pass is historical), perform a genuine mid-file
-cable pull (IP07/AN07) with the marker procedure, and run the two-launch single-instance/window-activation
-drill (KI-27). These need an operator; the sender hardening itself is implemented and locally verified.
+On the physical iPhone, install/trust the exact-SAN certificate if `Require TLS` is on, open the current
+candidate's ticket URL in Safari, select one HEIC photo and one original MOV, approve each on the PC, and
+record the OS/browser version, the receipt, the destination SHA-256, and whether Safari converted the HEIC
+(KI-12/KI-31). The Android Chrome run, AN06 revalidation, the mid-file cable pull (IP07/AN07) and the
+two-launch single-instance drill (KI-27) remain separate pending operator actions; none is complete.

@@ -120,7 +120,7 @@ filter, Apply, Repair, Verify, Export and empty-state wiring.
 | `Approve` / `Refuse` | Decide the selected offer. | Disabled when nothing is selected/pending. |
 | `Approve all` / `Refuse all` | Decide every pending offer. | Disabled when the pending list is empty. |
 | Received grid | Read-only path, bytes and SHA-256 head of committed files. | Empty state is honest; no synthetic receipt. |
-| Activity log | Real events, including the exact TLS fallback reason. | Append-only; no fake success line. |
+| Activity log | Real events, including the exact TLS status/refusal reason. | Append-only; no fake success line. |
 
 The live published build bound `192.168.8.91:47821` from the non-elevated user, showed
 `Listening on http://192.168.8.91:47821/ (HTTP; no certificate).`, and answered `/health` with

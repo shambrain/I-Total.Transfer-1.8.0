@@ -327,7 +327,10 @@ native iOS Shortcut or companion app is a separate capability; it is not shipped
   `docs/BUILD-VALIDATION.md`; on 2026-10-24 a fresh `git clone` also built at 0 warnings / 0 errors, passed the full 449-test suite and published the byte-identical `411F4CC5...` executable, and the source zip is built from scratch at 0 warnings / 0 errors.
 - [x] **Unit and integration tests pass on Windows.** ✅
   **460 passed, 0 failed, 2 skipped (462 total)** on 2026-10-29 (the two skips are hardware-marked Shell-backend
-  apartment tests). The two-phone isolation guard added 14 tests on 2026-10-21; the Appearance preview
+  apartment tests).
+  **2026-10-31 candidate result: 547 passed, 0 failed, 2 skipped (549 total)**, including the exact-TLS
+  selection tests, pending-approval cancellation, active-batch controls and the single-instance guard.
+  Raw output: `docs/evidence/2026-10-31/full-suite.txt`. The two-phone isolation guard added 14 tests on 2026-10-21; the Appearance preview
   controls added 4, the theme token/contrast coverage was expanded and the no-device neutral-wording
   regression was added on 2026-10-22. Earlier waves include 37 added with the commercial subsystem: 83 for the wireless credential model, the QR encoder,
   the approval gate and the receiver's real HTTP surface; 20 for the USB-evidence diagnosis, the diagnostics
@@ -429,28 +432,35 @@ native iOS Shortcut or companion app is a separate capability; it is not shipped
   here (the TSA request hung).
 ## What this means
 
-**Release-ready today**, with the evidence above: the correctness contract, the engine's performance
-behaviour, the destination-safety rules, the privacy of logs and reports, the wireless transport's security
-contract (single-use pairing, session rotation, private-only binding, an approval gate that writes nothing
-until you decide, and an honest TLS fallback - all of it driven live against the published build, not only
-unit-tested), the connection diagnosis (live-verified against this machine's own USB records, so a device
-Windows merely remembers can no longer be told apart from one that is there), the diagnostics bundle (driven
-from the running build after fixing the defect that had stopped it being written at all), and the ability to
-build and test without a device.
+**Software and correctness scope implemented and locally verified**, with the evidence above: the correctness contract, the
+engine's performance behaviour, the destination-safety rules, the privacy of logs and reports, the wireless
+receiver's security contract (single-use pairing, session rotation, private-only binding, an approval gate
+that writes nothing until you decide, and exact-SAN `Require TLS` with no silent fallback), the browser
+sender's local Chrome integration (digest, receipts, cancellation, collision handling and active-batch
+controls), the connection diagnosis, the diagnostics bundle, and the ability to build and test without a
+device.
 
 **Not yet release-ready**, and the remaining reasons:
 
 1. **Physical handset legs.** A locked/untrusted iPhone, a genuinely cloud-optimised library, a real cable
-   pull mid-copy, and the locked/unplugged variants of the USB diagnosis still need the phone attached. The
-   buffers, attached diagnosis, mid-scan pull, selected-phone disappearance, Android cancel/resume and PTP
-   warning are live and recorded above.
-2. **The wireless sender leg.** The receiver is proven; the *sender* is not. No iOS Shortcut or companion app
-   has delivered a file from a real handset, so the pairing QR, the approval prompt and the digest check have
-   never been exercised by a real client - only by a scripted one. The recipe is ready in `docs/WIRELESS.md`.
+   pull mid-copy/mid-verify, and the locked/unplugged variants of the USB diagnosis still need the phone
+   attached. The buffers, attached diagnosis, mid-scan pull, selected-phone disappearance, Android
+   cancel/resume and the historical PTP warning are live and recorded above; AN06 current-candidate
+   revalidation remains pending (the 2026-10-24 PTP pass is historical).
+2. **The physical wireless sender leg.** The browser sender is implemented and locally tested against the
+   real receiver in Chrome, but no physical iPhone Safari or Android Chrome run has delivered a file. The
+   TLS phone trust-store drill, the manual approval prompt and the receipt/destination SHA-256 comparison
+   have therefore not been exercised by a real phone; local browser evidence is not physical evidence.
+   No native iOS Shortcut or companion app is shipped: the recipe in `docs/WIRELESS.md` is a user-created
+   manual workflow, not a product component.
 3. **Signing.** The per-user installer, the portable ZIP and the Inno Setup `setup.exe` are built and tested
-   (the setup was installed, launched and uninstalled silently on 2026-10-24). What remains is an Authenticode
-   certificate and the Windows SDK signing tools, so nothing is signed.
-4. **Android.** Walk/copy, cancel/resume, PTP, unplug, the single-file buffer sweep and the 30-file batch are
-   live; a screen lock is not a disconnect on this MTP stack, and no statistical benchmark is claimed.
+   (silent install/uninstall rechecked on 2026-10-31). What remains is an Authenticode certificate and the
+   Windows SDK signing tools, so nothing is signed.
+4. **Commercial integration.** The production licence key/issuing service, purchase URL and live Steamworks
+   ownership check are not configured; the signed-entitlement behaviour is tested but is not a live Steam
+   call.
+5. **Android and Windows coverage.** Walk/copy, cancel/resume, PTP, unplug, the single-file buffer sweep and
+   the 30-file batch are live; a screen lock is not a disconnect on this MTP stack. Windows 11 rendering and
+   a screen-reader audit remain unobserved.
 
 Release notes must say exactly this and nothing stronger.

@@ -332,6 +332,7 @@ public static class Program
         settings.PairingTokenMinutes = 5;
 
         int timeoutSeconds = int.TryParse(options.GetValueOrDefault("timeout", "120"), out int parsed) ? parsed : 120;
+        int expected = int.TryParse(options.GetValueOrDefault("expect", "1"), out int expectedParsed) ? Math.Max(1, expectedParsed) : 1;
         WirelessReceiver? receiver = null;
         Exception? last = null;
         string url = "";
@@ -360,7 +361,7 @@ public static class Program
         WriteJson(options, payload);
 
         DateTime deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
-        while (DateTime.UtcNow < deadline && receiver.Received.Count == 0)
+        while (DateTime.UtcNow < deadline && receiver.Received.Count < expected)
             Thread.Sleep(200);
 
         Console.WriteLine(JsonSerializer.Serialize(new
@@ -368,9 +369,9 @@ public static class Program
             Action = "wireless-result",
             Received = receiver.Received,
             Count = receiver.Received.Count,
-            TimedOut = receiver.Received.Count == 0
+            TimedOut = receiver.Received.Count < expected
         }, new JsonSerializerOptions { WriteIndented = true }));
-        return receiver.Received.Count > 0 ? 0 : 3;
+        return receiver.Received.Count >= expected ? 0 : 3;
         }
     }
 
