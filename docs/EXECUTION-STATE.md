@@ -17,17 +17,19 @@ Updated: 2026-10-30. Read this file first when resuming. This checkpoint records
 | --- | --- |
 | Repository | `shambrain/I-Total.Transfer-1.8.0` (GitHub repository) |
 | Working branch | `work/master-directive` |
-| Last product-source/build/artifact checkpoint | `055185ae40a69a87baf968b019d2315533fd47f4` — `Commit the browser-sender evidence and refresh the archives`; the G3 hardening described below is the current uncommitted work until its checkpoint commit lands. |
-| Session commits | `7cf220f` (synced remote documentation head), `e6440e0` (browser sender, G3), `6fa29e4` (session outcome counts, sender disconnect test), `9375a51` (honest HEIC-transcoding note), `500967b` (synced checkpoint), `055185a` (sender evidence and archives). |
+| Last product-source/build/artifact checkpoint | `19f80d45424466545e9b628ecc78983ccd6fa8b3` — `Record the single-instance checkpoint and refresh the release artifacts`; the 2026-10-31 TLS/cancellation/controls phase is the current uncommitted work until its checkpoint commit lands. |
+| Session commits | `7cf220f`, `e6440e0` (browser sender), `6fa29e4` (session counts), `9375a51`, `500967b`, `055185a`, `09ca77d` (G3 hardening), `655a6dd` (single-instance guard), `19f80d4` (checkpoint/artifacts). |
 | Local workspace recorded in the prior checkpoint | `C:\Users\Administrator\Documents\GitHub\I-Total.Transfer-v1.5.0-source` — confirm it still points to this repository before running commands. |
-| Local working-tree status | Clean at `055185a` before this hardening phase. `git fetch origin` failed with `Empty reply from server`; the remote tip after `055185a` is unconfirmed. No reset, clean or force-push was attempted. |
+| Local working-tree status | Clean at `19f80d4` at the start of the 2026-10-31 phase; dirty while the TLS, pending-approval cancellation and active-batch-control changes are prepared. No reset, clean or force-push was attempted. |
 
 ## Latest product validation recorded at the code checkpoint
 
 - Build: `dotnet build I-Total.Transfer.sln -c Release --no-incremental` — **0 warnings, 0 errors**.
-- Tests: `dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s` — **528 passed, 0 failed, 2 skipped, 530 total** (about 39 seconds), including the six new `SingleInstanceGuardTests`, after the G3 hardening.
+- Tests: `dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s` — **547 passed, 0 failed, 2 skipped, 549 total** (about 49 seconds), including 14 `ServerCertificateValidatorTests`, 13 `ApprovalInboxTests`, the real-socket pending-approval disconnect test and six `SingleInstanceGuardTests`.
 - Node: `node tests\sender\sender.test.mjs src\I-Total.Transfer\Wireless\sender.js` — **PASS** (13 SHA-256 sizes, path rules, hash cancellation before/between slices, 24 receipt cases, five batch-cancellation sequences, summary honesty, fragment/query secret reading).
-- Browser: `node tests\sender\browser-e2e.mjs <DeviceDrill.exe>` — **PASS** (auto-approve happy path with `VERIFIED` receipt and collision rename; manual-approval cancellation with `CANCELLED` + `NOT ATTEMPTED`, no destination or `.partial` file).
+- Browser: `node tests\sender\browser-e2e.mjs <DeviceDrill.exe>` — **PASS** (auto-approve happy path with `VERIFIED` receipt and collision rename; manual-approval cancellation with `CANCELLED` + `NOT ATTEMPTED`, no destination or `.partial` file, disabled/restored batch controls and forced change/rotate no-ops).
+- TLS identity: `ServerCertificateValidatorTests` (14) cover exact IP/DNS SANs, similar names, wildcards, EKU, key usage, validity, private key, no SAN and untrusted-client behavior.
+- Pending approval: `AClientThatDisconnectsWhileWaitingForApprovalCancelsTheOffer` closes a real socket while the offer waits; pending/waiting counts drop, the offer is `Cancelled`, a late approval is refused, no file/`.partial`/received item remains, and the path is retried successfully.
 - Licensing flake (KI-26): no recurrence in this hardening run. If it recurs, capture the complete assertion output and sequence file; do not conceal it.
 - The test/build numbers above are checkpoint evidence for this workspace, not a claim that a later GitHub-only documentation update reran them. Re-run locally after syncing, and report new results separately.
 
@@ -70,14 +72,14 @@ Updated: 2026-10-30. Read this file first when resuming. This checkpoint records
 
 ## Candidate and artifact hashes at the last package checkpoint
 
-These are the hashes recorded in `dist/SHA256SUMS.txt` at the G3-hardening artifact checkpoint. Verify files locally before distributing; any rebuild requires fresh hashes.
+These are the hashes recorded in `dist/SHA256SUMS.txt` at the 2026-10-31 exact-TLS/cancellation artifact checkpoint. Verify files locally before distributing; any rebuild requires fresh hashes.
 
 | Artifact | SHA-256 | Recorded size |
 | --- | --- | --- |
-| `publish/I-Total.Transfer.exe` | `C9C163C1AB922685D3B8FCF81E82EA3D4AD454424F0535BF48F22D8E1EE2ADB1` | 112,252,742 B |
+| `publish/I-Total.Transfer.exe` | `F4ADC1B13C4125113EF6761D02344B22D9E393FCAC1E63C66C650AA90CB05BD6` | 112,260,934 B |
 | `dist/I-Total.Transfer-1.8.0-win-x64.zip` | see `dist/SHA256SUMS.txt` (repacked after this file) | 54.49 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `7F2F6D0CDA2ACB3D16E327AF66FF377967B001CB3D38D6C0D1D73212B7F562D5` | 44.73 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `821B3281681284E3210E0A6562B59099AE4672E7C9135033D39A9E34CEA2DDD4` | 35.31 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `0A50685A4AE10F5DE0C1B35C691FACF103CFDA7665E7773059112E5053EEB1E6` | 44.73 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `5C63BE6E51B4299F46CCB4D439206E127082ED1BE78AC3543FE512A512D71ECC` | 35.32 MB |
 | `dist/I-Total.Transfer-1.8.0-source.zip` | see `dist/SHA256SUMS.txt` (repacked after this file) | 15.09 MB |
 
 Recorded at this checkpoint: installer silent install/uninstall was rechecked (executable and README hashes match the tree; uninstall removed the install directory and HKCU key while keeping `%APPDATA%`); the executable was reproduced byte-identically from the source ZIP. The two ZIPs that contain this file are repacked after it is written, so their own hashes cannot be stored inside themselves; `dist/SHA256SUMS.txt` is authoritative for them.
@@ -90,18 +92,22 @@ Recorded at this checkpoint: installer silent install/uninstall was rechecked (e
 - Trusted Authenticode signing is blocked on a trusted signing certificate. Production licence key/issuing service and purchase URL are not configured. Live Steamworks ownership integration is blocked on eligibility, SDK and partner access; current signed-entitlement behavior is not a live Steam ownership call.
 - Gate G3: the receiver serves a **real browser sender** (`/`, `/send`, `/pair#token=...`, `/sender.js`) with
   explicit file selection, pairing, cancellation-aware incremental SHA-256, approval, fail-closed
-  receipts, cancellation accounting, rotation and collision-safe storage. Verified by 6 loopback C# tests,
-  Node digest/path/receipt/cancellation tests and a Chrome end-to-end run on this PC (happy path and
-  manual-approval cancellation). A physical iPhone/Android browser run is still pending (KI-12); do not
-  call the physical sender complete.
-- KI-27 single-instance guard: `SingleInstanceGuard` (`Local\` mutex) is held by `Program.Main`; a second launch activates the existing window and exits. Six automated tests; physical two-launch drill pending.\n- Gate G3 hardening decisions: `Require TLS` is a hard requirement (refusal, not a silent HTTP fallback);
-  the ticket secret is in the URL fragment and the page removes it from history; a receipt is `VERIFIED`
-  only when digest, byte count, path and structure all match; cancellation never reads as success.
-- Other recorded open items include cross-device disappearance hardware drill, iPhone lock/trust revocation, Narrator/NVDA audit, broader Android/iOS models, and the WPD two-process contention/possible single-instance decision. Re-open `docs/IMPLEMENTATION-GAP-MATRIX.md`, `docs/KNOWN_ISSUES.md`, and `docs/DEVICE_TEST_MATRIX.md`; continue every safe, unblocked requirement rather than assuming the two manual drills are the only remaining requirements.
+  receipts, cancellation accounting, active-batch controls, rotation and collision-safe storage. Verified by
+  6 loopback sender tests, 14 exact-TLS tests, 13 approval-inbox tests, a real-socket pending-approval
+  disconnect test, Node digest/path/receipt/cancellation tests and a Chrome end-to-end run on this PC (happy
+  path, manual-approval cancellation and control assertions). A physical iPhone/Android browser run is still
+  pending (KI-12); do not call the physical sender complete.
+- KI-27 single-instance guard: `SingleInstanceGuard` (`Local\` mutex) is held by `Program.Main`; a second
+  launch activates the existing window and exits. Six automated tests; physical two-launch drill pending.
+- Gate G3 hardening decisions: `Require TLS` is a hard requirement (refusal, not a silent HTTP fallback) and
+  certificate selection is exact SAN identity; the ticket secret is in the URL fragment and the page removes
+  it from history; a receipt is `VERIFIED` only when digest, byte count, path and structure all match;
+  cancellation never reads as success; a pending approval is cancelled promptly when the sender disconnects.
+- Other recorded open items include cross-device disappearance hardware drill, iPhone lock/trust revocation, Narrator/NVDA audit, broader Android/iOS models, and the physical two-launch single-instance drill (the guard itself is implemented). Re-open `docs/IMPLEMENTATION-GAP-MATRIX.md`, `docs/KNOWN_ISSUES.md`, and `docs/DEVICE_TEST_MATRIX.md`; continue every safe, unblocked requirement rather than assuming the two manual drills are the only remaining requirements.
 
 ## Exact resume procedure
 
-1. In the Windows workspace, fetch `origin`, confirm it maps to `https://github.com/shambrain/I-Total.Transfer-1.8.0.git`, and inspect `git status --short`, current branch, local HEAD, and origin branch tip. Preserve any local changes; do not reset or clean them. The GitHub documentation follow-ups after `9ae20fdd` must be present before continuing.
+1. In the Windows workspace, fetch `origin`, confirm it maps to `https://github.com/shambrain/I-Total.Transfer-1.8.0.git`, and inspect `git status --short`, current branch, local HEAD, and origin branch tip. Preserve any local changes; do not reset or clean them. The commits through `19f80d4` must be present before continuing.
 2. Read this file, the full master directive, and the full execution instruction. Compare the state against the actual code, manifests, test output, and artifact files; update any stale claim with evidence rather than copying it forward.
 3. Run the Release build and full deterministic suite locally on the synced source. Record the command, raw outcome, count, elapsed time, and test log. Resolve a new failure or preserve its full failure output; do not infer the result from an earlier run.
 4. Reconcile README / `PROJECT-STATUS.md` / `docs/PROGRESS.md` / `docs/KNOWN_ISSUES.md` / `docs/DEVICE_TEST_MATRIX.md` / `docs/DEVICE-COMPATIBILITY-MATRIX.md` / `docs/IMPLEMENTATION-GAP-MATRIX.md` / `dist/SHA256SUMS.txt` so statuses and test counts agree. Do not edit historical records to make old runs appear to have current counts.
@@ -114,6 +120,7 @@ Recorded at this checkpoint: installer silent install/uninstall was rechecked (e
 Run the physical sender drill with the current candidate: open the ticket URL in Safari on the iPhone and
 Chrome on the HUAWEI, send one HEIC/photo and one original MOV, approve each on the PC, compare the receipt
 and destination SHA-256, and record the OS/browser versions and whether Safari converted the HEIC (KI-12).
-Then revalidate AN06 on the current candidate (the 2026-10-24 PTP pass is historical) and perform a genuine
-mid-file cable pull (IP07/AN07) with the marker procedure. These need an operator; the sender hardening
-itself is implemented and locally verified.
+If `Require TLS` is used, install/trust the exact-SAN certificate on both phones first (KI-31). Then
+revalidate AN06 on the current candidate (the 2026-10-24 PTP pass is historical), perform a genuine mid-file
+cable pull (IP07/AN07) with the marker procedure, and run the two-launch single-instance/window-activation
+drill (KI-27). These need an operator; the sender hardening itself is implemented and locally verified.

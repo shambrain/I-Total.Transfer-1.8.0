@@ -10,7 +10,7 @@ of "it should work" — where the only evidence is a mock, a mock, or a code ins
 
 ## Candidate note (2026-10-29)
 
-A new candidate executable (`1C62B2B1...`, 112,252,742 B) was built from the master-directive work:
+A new candidate executable (`1C62B2B1...`, 112,260,934 B) was built from the master-directive work:
 zero-byte/unknown-size separation, shared enumeration accounting, SQLite integrity columns with migration,
 the reconciliation report, retry classification, stability timestamps, WPD COM cleanup and accessible
 control names. Build 0/0, suite 488 passed / 2 skipped / 490, source-ZIP rebuild byte-identical, installer
@@ -249,8 +249,8 @@ re-audited line by line for this candidate.
 
 ## Wireless transport
 
-**Browser sender (2026-10-30, local integration).** The receiver serves a real sender page at `/`,
-`/send` and the ticket URL. New tickets carry the single-use secret in the fragment
+**Browser sender (implemented; local integration tested 2026-10-31).** The receiver serves a real sender
+page at `/`, `/send` and the ticket URL. New tickets carry the single-use secret in the fragment
 (`/pair#token=...`); `WirelessSenderTests` (6 loopback tests) pin that the secret is absent from the
 request target and asset responses, that opening the ticket URL does not spend it, that the JSON pairing
 API still accepts the query form, and that the page and script are served with a restrictive CSP.
@@ -260,14 +260,24 @@ five batch-cancellation sequences whose summary must say `CANCELLED` and never r
 `tests/sender/browser-e2e.mjs` drives Chrome against the real receiver in two phases: the auto-approve
 happy path (pair, 64 KiB HEIC, `VERIFIED` receipt, destination bytes identical, second send renamed
 ` (1)`), and a manual-approval cancellation (cancel while the first file waits; `CANCELLED` +
-`NOT ATTEMPTED`, no destination or `.partial` file). `Require TLS` is a hard requirement: the receiver
-refuses to start without a matching certificate (`RequiringTlsWithoutAMatchingCertificateRefusesToStart`),
-and clearing it is the only way to run private-network HTTP. This is a **local browser integration**, not
-a physical iPhone or Android run; the physical sender row remains open (KI-12).
+`NOT ATTEMPTED`, no destination or `.partial` file; the picker/folder/pairing/rotation controls are
+disabled during the batch and restored afterwards). `WirelessReceiverTests` also pins a real socket that
+disconnects while an offer is pending: the offer is `Cancelled`, the waiting count drops to zero, a late
+approval is refused, and the same path can be offered again.
+
+`Require TLS` is a hard requirement: the receiver refuses to start without a certificate whose SAN exactly
+matches the bind address (`ServerCertificateValidatorTests`, 14), and clearing it is the only way to run
+private-network HTTP. Certificate selection is separate from phone trust: Safari and Chrome still reject a
+self-signed certificate until its CA or certificate is trusted on the device, and `docs/WIRELESS.md` lists
+what must be installed.
+
+This is a **local browser integration**, not a physical iPhone or Android run. Physical Safari and Android
+Chrome sender testing is **pending** (KI-12), and physical sender evidence is **not** release evidence. A
+native iOS Shortcut or companion app is a separate capability; it is not shipped here and is not claimed.
 
 
 - [x] **The pairing secret is short-lived, single-use and is not itself a write credential.** ✅
-  `PairingStateTests` (13) and `WirelessReceiverTests` (21, real loopback and private-LAN `TcpListener`): the displayed secret
+  `PairingStateTests` (13) and `WirelessReceiverTests` (25, real loopback and private-LAN `TcpListener`): the displayed secret
   is redeemed once for a separate 32-hex-character session token; a second `/pair` with the same secret is
   `401`; presenting the **secret** to `/upload` is `401` and writes nothing; an issued secret invalidates the
   previous one; sessions expire, rotate (the replaced token dies immediately) and are capped at eight.
@@ -276,34 +286,39 @@ a physical iPhone or Android run; the physical sender row remains open (KI-12).
   `0.0.0.0`, `*`, `+`, public and carrier-grade (100.64/10) addresses are refused **before** a socket is opened,
   with the reason named. The old address list offered every interface the machine had; that is gone.
 - [x] **Show the receiving device and the files, and require approval; never expose an unauthenticated upload.**
-  ✅ `ApprovalInboxTests` (9), `WirelessReceiverTests`, `WirelessPageTests` (11). An upload becomes an *offer*
+  ✅ `ApprovalInboxTests` (13), `WirelessReceiverTests`, `WirelessPageTests` (11). An upload becomes an *offer*
   carrying the sender's address and the path it wants; the response is withheld until the operator decides, and
   a refusal sticks for the session. Approving is a local action only - there is deliberately **no network route
   to approve**. Auto-approval exists as a visible switch, not a silent default. `/upload` without a session is
-  `401` and writes nothing.
+  `401` and writes nothing. A sender that disconnects while waiting cancels the offer immediately (not after the
+  timeout), a late approval cannot commit it, and the same path may be offered again.
 - [x] **No firewall port is opened automatically, and TLS is never claimed when it is not there.** ✅
-  Nothing in the application touches `netsh advfirewall` or the firewall API. `WirelessReceiverTests` pins that a matching `CurrentUser\My` certificate is required before `SslStream` is used, and that without one the receiver falls back to HTTP while building the ticket URL
-  from the scheme that actually bound. The
-  status line, the activity log and `/health` all state which transport is in use; `docs/WIRELESS.md` writes the
-  threat model plainly. Confirmed on the published build, not only in tests: with **Require TLS** checked and no
-  matching certificate, the receiver fell back, the ticket URL was `http://`, the
-  status line read `Listening on http://192.168.8.91:47821/ (HTTP; no certificate).`, and `/health` answered `{"status":"ok","tls":false}`.
+  Nothing in the application touches `netsh advfirewall` or the firewall API. `Require TLS` refuses to start
+  unless a certificate in `CurrentUser\My` is valid, has a private key, is suitable for server authentication
+  and has an **exact** SAN match for the bind address (`ServerCertificateValidatorTests`, 14). There is no HTTP
+  fallback. Private-network HTTP exists only when the operator explicitly clears `Require TLS`; the status line,
+  activity log and `/health` then state that the traffic is not encrypted. Server-side selection is distinct
+  from phone trust: Safari and Chrome must still trust the certificate chain, and `docs/WIRELESS.md` documents
+  the certificate/CA installation steps for both platforms.
 - [x] **Unsafe paths, oversized bodies, digest and size disagreement, and collisions are refused.** ✅
   `WirelessReceiverTests`: traversal and `.i-total` are `400`; a declared digest that disagrees is `422` and
   leaves no staging file; a size disagreement is `422`; a volume that cannot hold the declared size is `507`;
   an existing file is renamed rather than overwritten and the receipt records the name actually used; two
   in-flight uploads of the same path are told so (`409`) instead of racing for the same free name.
-- [ ] **Wireless from a real iOS sender (Shortcut/companion app).** ⛔
-  Both handsets are attached, but no iOS Shortcut/companion sender exists in this environment. The protocol, pairing, approval, rotation,
-  digest, traversal and page-contract rules are covered by the loopback tests above **and** were driven live
-  against the published build with a real HTTP client (see the live row in `PROJECT-STATUS.md`), but the sender
-  recipe in `docs/WIRELESS.md` has not been run from a real device. "A real iPhone delivered its photos over the
-  LAN" is **not** claimed.
+- [ ] **Wireless from a real iOS/Android browser sender.** **PENDING.**
+  Both handsets are attached, but no native iOS Shortcut/companion sender exists in this environment. The
+  browser sender is implemented and locally tested (Chrome against the real receiver, plus Node digest,
+  receipt, cancellation and TLS-identity tests). It has **not** been run from a physical iPhone Safari or
+  Android Chrome, so physical compatibility is not claimed; a native iOS Shortcut or companion app is a
+  separate capability, not shipped here. The protocol, pairing, approval, rotation, digest, traversal and
+  page-contract rules are covered by loopback tests and were driven live against the published build with a
+  real HTTP client, but physical sender evidence is not release evidence until it exists.
 - [ ] **Certificate-pinned TLS.** **NO.**
-  Not implemented and not claimed. The receiver uses a matching `CurrentUser\My` certificate when present but
-  does not pin it; without one it runs the token-authenticated session on the private network and says so.
-  An iOS Shortcut cannot pin a self-signed certificate, which is why the authenticated session exists
-  instead of a self-signed TLS mode no sender could use.
+  Not implemented and not claimed. The receiver selects a certificate only when its SAN exactly matches the
+  bind address, and `Require TLS` refuses to start when none matches; it does not pin a certificate. Clearing
+  `Require TLS` is the explicit operator decision that enables private-network HTTP. A native Shortcut cannot
+  pin a self-signed certificate, which is one reason the browser sender is the implemented path; the phones
+  must still trust the selected certificate chain.
 
 
 ## Release engineering

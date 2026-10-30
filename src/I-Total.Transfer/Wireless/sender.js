@@ -531,7 +531,7 @@ function initSender() {
   const summary = byId("summary");
   const results = byId("results");
 
-  const state = { session: null, expiresUtc: null, files: [], controller: null, sending: false };
+  const state = { session: null, expiresUtc: null, files: [], controller: null, sending: false, rotating: false, blocked: false };
 
   // The ticket URL carries the single-use secret in the fragment, which a browser never sends to the
   // server. Read it locally and remove it from the address bar and history immediately. This is not
@@ -560,7 +560,24 @@ function initSender() {
     return item;
   }
 
+  /**
+   * A batch is a fixed snapshot: while it runs, the file picker and destination folder are disabled so
+   * the selected array cannot be replaced, pairing and rotation are disabled so a token change cannot
+   * invalidate the uploads, and Cancel stays available. Every terminal path calls this again.
+   */
+  function refreshControls() {
+    const busy = state.sending;
+    fileInput.disabled = busy;
+    folderInput.disabled = busy;
+    secretInput.disabled = busy;
+    pairButton.disabled = busy || state.rotating;
+    rotateButton.disabled = busy || state.rotating || !state.session;
+    sendButton.disabled = busy || state.rotating || !state.session || state.files.length === 0 || state.blocked;
+    cancelButton.disabled = !busy;
+  }
+
   async function pair() {
+    if (state.sending || state.rotating) return;
     const secret = secretInput.value.trim();
     if (!secret) { setPairStatus("Enter the pairing code shown on the PC.", "error"); return; }
     pairButton.disabled = true;
@@ -587,11 +604,13 @@ function initSender() {
     } catch (error) {
       setPairStatus("Pairing failed: " + error.message, "error");
     } finally {
-      pairButton.disabled = false;
+      refreshControls();
     }
   }
 
   function renderFiles() {
+    // The active batch holds a snapshot; a stray change event must not replace it mid-flight.
+    if (state.sending) return;
     fileList.replaceChildren();
     state.files = Array.from(fileInput.files || []);
     let blocked = false;
@@ -616,7 +635,8 @@ function initSender() {
       item.appendChild(meta);
       fileList.appendChild(item);
     }
-    sendButton.disabled = blocked || state.files.length === 0 || !state.session || state.sending;
+    state.blocked = blocked;
+    refreshControls();
     summary.textContent = "";
     results.replaceChildren();
     hashProgress.value = 0;
@@ -626,16 +646,21 @@ function initSender() {
   }
 
   async function rotate() {
-    if (!state.session) return;
-    rotateButton.disabled = true;
+    if (!state.session || state.sending || state.rotating) return;
+    const before = state.session;
+    state.rotating = true;
+    refreshControls();
     try {
       const response = await fetch("/rotate", {
         method: "POST",
-        headers: { "X-Session-Token": state.session },
+        headers: { "X-Session-Token": before },
         credentials: "omit"
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) { setSummary(body.detail || "Could not rotate the session.", "error"); return; }
+      // A batch may have started while the request was in flight. Never overwrite the token that
+      // batch is using; its rotation response is simply ignored.
+      if (state.sending || state.session !== before) return;
       state.session = body.session;
       state.expiresUtc = body.expiresUtc;
       sessionInfo.textContent = "Session valid until " + new Date(body.expiresUtc).toLocaleTimeString() + ".";
@@ -643,7 +668,8 @@ function initSender() {
     } catch (error) {
       setSummary("Could not rotate the session: " + error.message, "error");
     } finally {
-      rotateButton.disabled = false;
+      state.rotating = false;
+      refreshControls();
     }
   }
 
@@ -671,18 +697,22 @@ function initSender() {
   }
 
   async function send() {
-    if (!state.session || state.sending || state.files.length === 0) return;
+    if (!state.session || state.sending || state.rotating || state.files.length === 0) return;
+    // Snapshot the batch before any await. The picker and folder are disabled while it runs, and the
+    // snapshot guarantees a late change event cannot alter what this batch is sending.
+    const files = state.files.slice();
+    const session = state.session;
+    const folder = folderInput.value;
+    const total = files.length;
     state.sending = true;
     state.controller = new AbortController();
-    sendButton.disabled = true;
-    cancelButton.disabled = false;
+    refreshControls();
     results.replaceChildren();
     hashProgress.value = 0;
     uploadProgress.value = 0;
     hashLabel.textContent = "Hashing: not started";
     uploadLabel.textContent = "Upload: not started";
 
-    const total = state.files.length;
     const rows = new Map();
     const setRow = (index, entry) => {
       let item = rows.get(index);
@@ -693,12 +723,12 @@ function initSender() {
 
     setSummary("Sending " + total + " selected file(s)...");
 
-    let result;
+    let result = null;
     try {
       result = await sendBatch({
-        files: state.files,
-        folder: folderInput.value,
-        session: state.session,
+        files,
+        folder,
+        session,
         signal: state.controller.signal,
         onEvent: (entry) => {
           setRow(entry.index, entry);
@@ -727,18 +757,15 @@ function initSender() {
       });
     } catch (error) {
       setSummary("The batch stopped unexpectedly: " + error.message, "error");
+      return;
+    } finally {
+      // Every terminal state restores the controls, including an unexpected exception.
       state.sending = false;
       state.controller = null;
-      sendButton.disabled = !state.session;
-      cancelButton.disabled = true;
-      return;
+      if (result && result.sessionExpired) state.session = null;
+      refreshControls();
     }
 
-    if (result.sessionExpired) state.session = null;
-    state.sending = false;
-    state.controller = null;
-    sendButton.disabled = !state.session;
-    cancelButton.disabled = true;
     if (result.cancelledBatch) uploadLabel.textContent = "Upload: cancelled";
     const summaryText = summarizeBatch(result);
     setSummary(summaryText.text, summaryText.kind);

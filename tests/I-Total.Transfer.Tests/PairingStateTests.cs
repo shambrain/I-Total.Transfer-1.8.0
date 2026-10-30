@@ -372,6 +372,63 @@ public sealed class ApprovalInboxTests
     }
 
     [TestMethod]
+    public void CancellingAPendingOfferRemovesItFromThePendingList()
+    {
+        var inbox = new ApprovalInbox();
+        inbox.Offer(Offer("DCIM/IMG_1.HEIC"), Now);
+
+        OfferRecord? cancelled = inbox.Cancel("DCIM/IMG_1.HEIC", Now.AddSeconds(1), "sender disconnected");
+
+        Assert.IsNotNull(cancelled);
+        Assert.AreEqual(OfferState.Cancelled, cancelled!.State);
+        Assert.AreEqual(0, inbox.Pending.Count);
+        Assert.IsFalse(inbox.IsApproved("DCIM/IMG_1.HEIC"));
+    }
+
+    [TestMethod]
+    public void ALateApprovalCannotReviveACancelledOffer()
+    {
+        var inbox = new ApprovalInbox();
+        inbox.Offer(Offer("DCIM/IMG_1.HEIC"), Now);
+        inbox.Cancel("DCIM/IMG_1.HEIC", Now.AddSeconds(1), "sender disconnected");
+
+        OfferRecord? late = inbox.Approve("DCIM/IMG_1.HEIC", Now.AddSeconds(2));
+
+        Assert.IsNotNull(late);
+        Assert.AreEqual(OfferState.Cancelled, late!.State);
+        Assert.IsFalse(inbox.IsApproved("DCIM/IMG_1.HEIC"));
+    }
+
+    [TestMethod]
+    public void ACancelledPathCanBeOfferedAgain()
+    {
+        var inbox = new ApprovalInbox();
+        inbox.Offer(Offer("DCIM/IMG_1.HEIC"), Now);
+        inbox.Cancel("DCIM/IMG_1.HEIC", Now.AddSeconds(1), "sender disconnected");
+
+        OfferRecord retry = inbox.Offer(Offer("DCIM/IMG_1.HEIC"), Now.AddSeconds(2));
+
+        Assert.AreEqual(OfferState.Pending, retry.State,
+            "a cancellation is not a refusal; the sender may retry the same path");
+        Assert.AreEqual(1, inbox.Pending.Count);
+    }
+
+    [TestMethod]
+    public void CancellingAnUnknownOrDecidedOfferChangesNothing()
+    {
+        var inbox = new ApprovalInbox();
+        Assert.IsNull(inbox.Cancel("DCIM/absent.HEIC", Now, "sender disconnected"));
+
+        inbox.Offer(Offer("DCIM/IMG_1.HEIC"), Now);
+        inbox.Approve("DCIM/IMG_1.HEIC", Now.AddSeconds(1));
+        OfferRecord? afterApproval = inbox.Cancel("DCIM/IMG_1.HEIC", Now.AddSeconds(2), "sender disconnected");
+
+        Assert.IsNotNull(afterApproval);
+        Assert.AreEqual(OfferState.Approved, afterApproval!.State,
+            "a decision that already committed must not be rewritten as cancelled");
+    }
+
+    [TestMethod]
     public void ClearingForgetsEveryDecision()
     {
         var inbox = new ApprovalInbox();

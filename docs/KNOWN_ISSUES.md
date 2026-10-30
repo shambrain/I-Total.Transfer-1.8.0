@@ -106,10 +106,10 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
 
 - **Impact:** the receiver serves a real browser sender (`/`, `/send`, `/pair#token=...`) with explicit
   file selection, pairing, cancellation-aware per-file SHA-256, approval, fail-closed receipts,
-  cancellation accounting, rotation and collision-safe storage. It is verified by loopback tests, Node
-  digest/path/receipt/cancellation tests and a Chrome end-to-end run on this PC (happy path and manual
-  cancellation). A real iPhone Safari or Android Chrome run has not been recorded, so the physical sender
-  row stays open.
+  cancellation accounting, rotation, collision-safe storage and active-batch controls. It is verified by loopback tests, Node
+  digest/path/receipt/cancellation tests, a Chrome end-to-end run on this PC (happy path and manual
+  cancellation/control assertions), exact-TLS tests and a real-socket pending-approval disconnect test. A real iPhone Safari or Android Chrome run has not been recorded, so the physical sender
+  row stays open. Physical sender evidence is not release evidence.
 - **Mitigation:** the page states its limits (no library enumeration, foreground only, no partial-upload
   resume, no cloud-only originals, Safari may transcode HEIC). The sender is not claimed as an app-store
   companion, and local browser evidence is labelled as such.
@@ -319,3 +319,15 @@ needed to close it. Resolved defects move to `CHANGELOG.md` with the build that 
   still detects a listing that moves during one scan.
 - **To close:** no code can prove hidden albums. A rescan after the phone settles is the practical answer;
   the warning now tells the operator to do exactly that.
+
+### KI-31 - A selected TLS certificate is not automatically trusted by phones
+
+- **Impact:** `Require TLS` now selects only a certificate whose SAN exactly matches the bind address, but
+  Safari and Chrome still reject a self-signed certificate (or a private CA they do not know) during the
+  handshake. The receiver refuses to start without a certificate, so an operator who installs a certificate
+  only on the PC sees a phone-side certificate warning rather than an HTTP fallback.
+- **Mitigation:** `docs/WIRELESS.md` lists the exact SAN requirement and the iPhone/Android trust-store
+  steps. Clearing `Require TLS` remains the explicit way to use private-network HTTP. A default TLS client
+  rejecting the self-signed certificate is pinned by `ServerCertificateValidatorTests`.
+- **To close:** no code change; a physical iPhone/Android trust-store drill is part of the pending sender
+  evidence (KI-12).

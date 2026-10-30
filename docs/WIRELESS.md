@@ -143,6 +143,14 @@ What the page does:
   summary explicitly says "The batch was CANCELLED" with the counts. An upload cancelled in flight is
   reported as delivery unconfirmed; the receiver discards the partial staging file. A failed POST is
   restarted from zero on retry - there is no partial-upload resume.
+- **Pending-approval cancellation.** The receiver watches each connection without consuming body bytes.
+  If the sender aborts while its offer is waiting for approval, the per-request token is cancelled, the
+  offer becomes `Cancelled` (not pending, not a sticky refusal), a late operator approval is a no-op, and
+  the same relative path can be offered again. No payload byte was read or written before approval.
+- **Active-batch controls.** While a batch runs the file picker, destination folder, pairing input/button
+  and token rotation are disabled; the batch uses a snapshot of the selected files. Cancel stays
+  available. Every terminal state restores the controls, and a rotation response that arrives after a
+  batch starts is ignored rather than overwriting the token the batch is using.
 - **No whole-library claim.** The summary says "Only the files you selected were sent; this is not a
   whole-library transfer." The page cannot list the phone's library and cannot fetch cloud-only originals.
 
@@ -161,7 +169,10 @@ external resources and no referrer.
 | Receipt fails closed for missing/empty/malformed/wrong digest, missing/wrong byte count, missing/unsafe path, and accepts a collision-renamed path | `tests/sender/sender.test.mjs` (`verifyReceipt` cases) |
 | Batch cancellation before hashing, between hash slices, during an upload, after one success, and during a multi-file batch; summary never reads as complete | `tests/sender/sender.test.mjs` (`sendBatch`/`summarizeBatch` cases) |
 | Real browser end to end | `tests/sender/browser-e2e.mjs` with Chrome: pairs, selects a 64 KiB HEIC, uploads, `VERIFIED` receipt, destination bytes equal, second send renamed ` (1)` |
-| Real browser cancellation with manual approval | `tests/sender/browser-e2e.mjs`: cancel while the first file waits for approval; page reports `CANCELLED` + `NOT ATTEMPTED`, no destination file, no `.partial` |
+| Real browser cancellation with manual approval | `tests/sender/browser-e2e.mjs`: cancel while the first file waits for approval; page reports `CANCELLED` + `NOT ATTEMPTED`, no destination file, no `.partial`; the picker/folder/pairing/rotation controls are disabled during the batch, a forced change/rotate does not alter it, and every control is restored afterwards |
+| Pending-approval disconnect | `AClientThatDisconnectsWhileWaitingForApprovalCancelsTheOffer`: a real socket closes while the offer is pending; `Inbox.Pending` and `WaitingUploads` drop to zero, the offer is `Cancelled`, a late approval is refused, no destination/`.partial`/received item remains, and the same path can be offered and approved again |
+| Exact TLS certificate selection | `ServerCertificateValidatorTests` (14): exact IPv4/IPv6/DNS SAN, similar addresses/names, wildcard one-label rule, clientAuth-only EKU, missing EKU, key usage, expired/not-yet-valid, no private key, no SAN, and a default TLS client rejecting an untrusted self-signed certificate until it is trusted |
+| Single-instance guard | `SingleInstanceGuardTests` (6): exclusion across threads, release on dispose, distinct names, session-local default name, blank-name fallback, double dispose |
 | Sender disconnect mid-upload | `AClientThatDisconnectsMidUploadLeavesNoPartialOrDestination`: no destination file, no `.partial`, no received entry |
 
 The browser test runs on the PC against the real receiver; the happy path uses auto-approval, and the
@@ -177,12 +188,50 @@ node tests\sender\browser-e2e.mjs tools\DeviceDrill\bin\Release\net10.0-windows\
 ## TLS and the four separate protections
 
 `Require TLS` is a **hard requirement**, not a preference. When it is on, the receiver searches
-`CurrentUser\My` for a certificate that has a private key, is currently valid, and whose subject or
-subject alternative names include the address being served. If one is found, accepted sockets are
-wrapped in `SslStream` and the ticket, status line and `/health` all say TLS is active.
+`CurrentUser\My` for a certificate that is currently valid, has a private key, is suitable for TLS server
+authentication, and names the bind address in a SAN entry. If one is found, accepted sockets are wrapped
+in `SslStream` and the ticket, status line and `/health` all say TLS is active.
 
-If no matching certificate exists, the receiver **refuses to start**. `Start()` throws before any socket
-is opened, with a message naming the bind address and the two remedies: install a matching certificate, or
+### Exact certificate selection
+
+Selection is a structured identity check (`ServerCertificateValidator`), not a substring search over the
+subject or the formatted SAN text:
+
+- An **IP bind address** requires an **exact IP SAN** (`iPAddress` GeneralName). `192.168.1.5` is not
+  matched by a SAN for `192.168.1.50`, by `192.168.1.5` appearing in the CN, or by the same digits inside
+  another name.
+- A **DNS bind address** requires an exact DNS SAN, compared case-insensitively. A leftmost `*.` wildcard
+  covers exactly one label (`*.example.com` matches `a.example.com`, not `example.com` or
+  `a.b.example.com`). Embedded or partial wildcards are refused.
+- The certificate must be within `NotBefore`/`NotAfter`, have a private key, and — when the extension is
+  present — carry the server-authentication EKU (`1.3.6.1.5.5.7.3.1`) and a key usage that permits
+  `digitalSignature` or `keyEncipherment`. A certificate with only clientAuth EKU is refused.
+- A CN-only certificate is refused; a SAN is required. This is deliberate: modern clients ignore the CN
+  when a SAN exists, and guessing from the subject is how substring bugs get shipped.
+
+**Selection is only the server side.** The receiver cannot decide whether Safari or Chrome trusts the
+chain. A self-signed certificate that passes the selection checks is still rejected by the phone until
+that certificate or its issuing CA is trusted on the device. A local TLS handshake test pins exactly
+this: a default client rejects the self-signed certificate and accepts the same certificate only with an
+explicit trust decision.
+
+### What must be installed on the phones
+
+1. Create or obtain a certificate whose SAN contains the **exact address printed in the ticket URL**
+   (`iPAddress=192.168.8.91` for an IP URL, or `dNSName=receiver.local` for a DNS URL). A certificate for
+   `localhost` is not valid for the LAN address.
+2. Install it in `CurrentUser\My` on the PC with its private key, within its validity period, with
+   serverAuth EKU. The receiver selects it only for a matching bind address.
+3. Install the issuing CA (or the self-signed certificate) on each phone as a trusted root:
+   - **iPhone/iPad:** transfer the `.cer`/`.crt`, install the profile (Settings → General → VPN & Device
+     Management), then enable full trust under Settings → General → About → Certificate Trust Settings.
+   - **Android:** Settings → Security → Encryption & credentials → Install a certificate → CA
+     certificate. Chrome uses the user trust store; Android apps that do not opt in to user CAs may not.
+4. If the certificate is issued by a public CA for a public DNS name, the phone already trusts the chain,
+   but the name must still resolve to the PC on the private network.
+
+If no certificate matches, the receiver **refuses to start**. `Start()` throws before any socket is
+opened, with a message naming the bind address and the two remedies: install a matching certificate, or
 clear `Require TLS` to run the token-authenticated session over the private network without encryption.
 The Settings caption says the same thing ("refuses to start without a matching certificate"), and the
 Wireless page shows the failure and logs it. There is no silent HTTP fallback.

@@ -305,8 +305,8 @@ dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --bl
 
 dotnet publish src\I-Total.Transfer\I-Total.Transfer.csproj -c Release -r win-x64 --self-contained true
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  -> publish\I-Total.Transfer.exe, 112,252,742 bytes
-     SHA-256 C9C163C1AB922685D3B8FCF81E82EA3D4AD454424F0535BF48F22D8E1EE2ADB1
+  -> publish\I-Total.Transfer.exe, 112,236,358 bytes
+     SHA-256 0EE17A24954DE4C3AEB7996FF2264A76916E3BCAC0F0E4BABA9E0D55910646BA
 ```
 
 The source ZIP was extracted into a clean folder, published there, and produced the **same** executable
@@ -437,10 +437,10 @@ The latest user-reported run took approximately 32 seconds; the committed checkp
 
 | Artifact | SHA-256 | Recorded size |
 | --- | --- | --- |
-| `publish/I-Total.Transfer.exe` | `C9C163C1AB922685D3B8FCF81E82EA3D4AD454424F0535BF48F22D8E1EE2ADB1` | 112,252,742 B |
+| `publish/I-Total.Transfer.exe` | `F4ADC1B13C4125113EF6761D02344B22D9E393FCAC1E63C66C650AA90CB05BD6` | 112,260,934 B |
 | `dist/I-Total.Transfer-1.8.0-win-x64.zip` | see `dist/SHA256SUMS.txt` | 54.49 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `7F2F6D0CDA2ACB3D16E327AF66FF377967B001CB3D38D6C0D1D73212B7F562D5` | 44.73 MB |
-| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `821B3281681284E3210E0A6562B59099AE4672E7C9135033D39A9E34CEA2DDD4` | 35.31 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-portable-win-x64.zip` | `0A50685A4AE10F5DE0C1B35C691FACF103CFDA7665E7773059112E5053EEB1E6` | 44.73 MB |
+| `dist/installer/I-Total.Transfer-1.8.0-setup.exe` | `5C63BE6E51B4299F46CCB4D439206E127082ED1BE78AC3543FE512A512D71ECC` | 35.32 MB |
 | `dist/I-Total.Transfer-1.8.0-source.zip` | see `dist/SHA256SUMS.txt` | 15.09 MB |
 
 The checkpoint records that the source ZIP documentation comparison had zero mismatches, setup install/uninstall was rechecked, and the executable was reproducible from the source ZIP. Re-verify the hashes if any source or packaged artifact changes. The setup and executable are not Authenticode-signed with a trusted certificate; see KI-05.
@@ -468,7 +468,7 @@ node tests\sender\browser-e2e.mjs <DeviceDrill.exe>
 ```
 
 - Publish: `dotnet publish ... -o publish` -> `I-Total.Transfer.exe`,
-  SHA-256 `C9C163C1AB922685D3B8FCF81E82EA3D4AD454424F0535BF48F22D8E1EE2ADB1`, 112,252,742 B.
+  SHA-256 `A733FA0836C60F6B733A0903D01BF0CC15F457D902B39B31FFD9C5700259EB7E`, 112,252,742 B.
 - Setup: `Build-Installer.ps1 -Version 1.8.0 -ExpectedSha256 <exe>` -> exit 0; silent install/uninstall
   into a temporary folder matched the tree executable and README; uninstall removed the install directory
   and HKCU key and kept `%APPDATA%`.
@@ -479,3 +479,34 @@ node tests\sender\browser-e2e.mjs <DeviceDrill.exe>
 - Raw sender outputs: `docs/evidence/2026-10-30/node-sender-test.txt` and
   `docs/evidence/2026-10-30/browser-sender-e2e.txt`.
 - Physical iPhone Safari / HUAWEI Chrome sender run is still pending (KI-12).
+
+## 2026-10-31 — exact TLS, pending-approval cancellation, active-batch controls
+
+```text
+dotnet build I-Total.Transfer.sln -c Release --no-incremental
+  -> Build succeeded, 0 Warning(s), 0 Error(s)
+
+dotnet test tests\I-Total.Transfer.Tests -c Release --no-build --blame-hang --blame-hang-timeout 240s
+  -> Passed! Failed: 0, Passed: 547, Skipped: 2, Total: 549, Duration: 49 s
+
+node tests\sender\sender.test.mjs src\I-Total.Transfer\Wireless\sender.js
+  -> PASS (13 SHA-256 sizes, path rules, hash cancellation x3, receipt fail-closed x24,
+     batch cancellation x5, summary honesty, pairing location)
+
+node tests\sender\browser-e2e.mjs <DeviceDrill.exe>
+  -> PASS phase 1: pair, 64 KiB HEIC, VERIFIED receipt, collision rename
+  -> PASS phase 2: manual approval, Cancel, CANCELLED + NOT ATTEMPTED, disabled/restored
+     controls, forced change/rotate no-ops, no destination or .partial
+```
+
+- Publish: `I-Total.Transfer.exe`, SHA-256
+  `F4ADC1B13C4125113EF6761D02344B22D9E393FCAC1E63C66C650AA90CB05BD6`, 112,260,934 B.
+- Setup: exit 0; silent install/uninstall into a temporary folder matched the tree executable and README;
+  uninstall removed the install directory and HKCU key and kept `%APPDATA%`.
+- TLS: `ServerCertificateValidatorTests` (14) cover exact IP/DNS SANs, similar names, wildcards, EKU,
+  key usage, validity, private key, no SAN and default-client rejection of an untrusted self-signed
+  certificate.
+- Pending approval: `AClientThatDisconnectsWhileWaitingForApprovalCancelsTheOffer` (real socket) and
+  `ApprovalInboxTests` (13).
+- Raw outputs: `docs/evidence/2026-10-31/`.
+- Physical iPhone/Android sender and trust-store evidence remain pending (KI-12, KI-31).

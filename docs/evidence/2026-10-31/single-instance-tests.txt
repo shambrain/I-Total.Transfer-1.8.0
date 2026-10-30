@@ -1,0 +1,13 @@
+Test run for C:\Users\Administrator\Documents\GitHub\I-Total.Transfer-v1.5.0-source\tests\I-Total.Transfer.Tests\bin\Release\net10.0-windows\I-Total.Transfer.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Passed ASecondGuardCannotAcquireWhileTheFirstIsHeld [3 ms]
+  Passed ReleasingTheFirstGuardLetsTheNextLaunchStart [< 1 ms]
+  Passed DifferentNamesDoNotCollide [< 1 ms]
+  Passed TheDefaultNameIsSessionLocal [< 1 ms]
+  Passed AnEmptyNameFallsBackToTheDefault [< 1 ms]
+  Passed DisposingTwiceIsSafe [< 1 ms]
+
+Test Run Successful.
+Total tests: 6
+     Passed: 6
+ Total time: 0.5503 Seconds

@@ -643,6 +643,85 @@ public sealed class WirelessReceiverTests
         finally { Directory.Delete(dir, true); }
     }
 
+    /// <summary>Waits for a receiver state change without sleeping for the full timeout.</summary>
+    private static async Task WaitUntilAsync(Func<bool> condition, int milliseconds = 5000)
+    {
+        DateTime deadline = DateTime.UtcNow.AddMilliseconds(milliseconds);
+        while (!condition() && DateTime.UtcNow < deadline)
+            await Task.Delay(50);
+        Assert.IsTrue(condition(), "Timed out waiting for the receiver state to change.");
+    }
+
+    [TestMethod]
+    public async Task AClientThatDisconnectsWhileWaitingForApprovalCancelsTheOffer()
+    {
+        string dir = TempDir();
+        (WirelessReceiver receiver, string url)? started = null;
+        try
+        {
+            started = StartReceiver(dir, autoApprove: false);
+            using var client = new HttpClient { BaseAddress = new Uri(started.Value.url) };
+            string session = Pair(started.Value.receiver, client);
+            Uri baseUri = client.BaseAddress!;
+            const string relative = "DCIM/IMG_WAIT.HEIC";
+
+            using (var raw = new TcpClient())
+            {
+                await raw.ConnectAsync(baseUri.Host, baseUri.Port);
+                using NetworkStream stream = raw.GetStream();
+                string head = $"POST /upload?path={Uri.EscapeDataString(relative)} HTTP/1.1\r\n" +
+                              $"Host: {baseUri.Host}\r\n" +
+                              $"X-Session-Token: {session}\r\n" +
+                              "Content-Type: application/octet-stream\r\n" +
+                              "Content-Length: 1048576\r\n\r\n";
+                await stream.WriteAsync(Encoding.ASCII.GetBytes(head));
+                await stream.FlushAsync();
+
+                await WaitUntilAsync(() => started.Value.receiver.Inbox.Pending.Count == 1);
+                Assert.AreEqual(1, started.Value.receiver.WaitingUploads,
+                    "the request must be registered as waiting for approval");
+
+                // Close before sending a body: this is the XHR abort while the operator is deciding.
+            }
+
+            await WaitUntilAsync(() => started.Value.receiver.Inbox.Pending.Count == 0);
+            await WaitUntilAsync(() => started.Value.receiver.WaitingUploads == 0);
+            Assert.AreEqual(OfferState.Cancelled, started.Value.receiver.Inbox.StateOf(relative),
+                "the pending offer must be cancelled, not left waiting for the five-minute timeout");
+
+            // A late operator approval must not revive the cancelled request.
+            Assert.IsFalse(started.Value.receiver.Approve(relative),
+                "a late approval must not accept a cancelled request");
+            Assert.AreEqual(OfferState.Cancelled, started.Value.receiver.Inbox.StateOf(relative));
+
+            Assert.IsFalse(File.Exists(Path.Combine(dir, "DCIM", "IMG_WAIT.HEIC")),
+                "a cancelled request must not leave a destination file");
+            Assert.AreEqual(0, started.Value.receiver.Received.Count);
+            string staging = Path.Combine(dir, ".i-total", "wireless");
+            if (Directory.Exists(staging))
+                Assert.AreEqual(0, Directory.GetFiles(staging, "*.partial").Length);
+
+            // The same path must be offerable again: a cancellation is not a sticky refusal.
+            using var retry = new HttpRequestMessage(HttpMethod.Post, "/upload?path=" + Uri.EscapeDataString(relative))
+            {
+                Content = new ByteArrayContent([1, 2, 3, 4])
+            };
+            retry.Headers.Add("X-Session-Token", session);
+            Task<HttpResponseMessage> retryResponse = client.SendAsync(retry);
+            await WaitUntilAsync(() => started.Value.receiver.Inbox.Pending.Count == 1);
+            Assert.IsTrue(started.Value.receiver.Approve(relative), "the retried offer must be approvable");
+            using HttpResponseMessage accepted = await retryResponse;
+            Assert.AreEqual(HttpStatusCode.OK, accepted.StatusCode);
+            Assert.IsTrue(File.Exists(Path.Combine(dir, "DCIM", "IMG_WAIT.HEIC")));
+            Assert.AreEqual(1, started.Value.receiver.Received.Count);
+        }
+        finally
+        {
+            started?.receiver.Dispose();
+            Directory.Delete(dir, true);
+        }
+    }
+
     [TestMethod]
     public void RequiringTlsWithoutAMatchingCertificateRefusesToStart()
     {

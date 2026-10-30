@@ -13,7 +13,7 @@ public sealed record IncomingOffer(
 }
 
 /// <summary>Lifecycle of one offer in the approval inbox.</summary>
-public enum OfferState { Pending, Approved, Refused, Expired }
+public enum OfferState { Pending, Approved, Refused, Expired, Cancelled }
 
 /// <summary>One offer with its decision, as the UI and the log see it.</summary>
 public sealed record OfferRecord(IncomingOffer Offer, OfferState State, string Reason)
@@ -100,8 +100,30 @@ public sealed class ApprovalInbox
     public OfferRecord? Refuse(string relativePath, DateTimeOffset now)
     {
         OfferRecord? record = Decide(relativePath, false, "Refused by the operator.", now);
-        if (record is not null) lock (_sync) _refused.Add(record.Offer.RelativePath);
+        // Only a real refusal is sticky. A cancelled/expired offer must not become a refusal.
+        if (record is not null && record.State == OfferState.Refused)
+            lock (_sync) _refused.Add(record.Offer.RelativePath);
         return record;
+    }
+
+    /// <summary>
+    /// Cancels a pending offer because the sender went away or the approval wait timed out. Unlike a
+    /// refusal this is not sticky: the same path may be offered again in a later attempt.
+    /// </summary>
+    public OfferRecord? Cancel(string relativePath, DateTimeOffset now, string reason)
+    {
+        lock (_sync)
+        {
+            Expire(now);
+            for (int i = _offers.Count - 1; i >= 0; i--)
+            {
+                if (!string.Equals(_offers[i].Offer.RelativePath, relativePath, StringComparison.OrdinalIgnoreCase)) continue;
+                if (_offers[i].State != OfferState.Pending) return _offers[i];
+                _offers[i] = _offers[i] with { State = OfferState.Cancelled, Reason = reason };
+                return _offers[i];
+            }
+            return null;
+        }
     }
 
     /// <summary>Approves every pending offer. Returns how many changed.</summary>
@@ -195,11 +217,11 @@ public sealed class ApprovalInbox
         lock (_sync)
         {
             Expire(now);
-            for (int i = 0; i < _offers.Count; i++)
+            for (int i = _offers.Count - 1; i >= 0; i--)
             {
                 if (!string.Equals(_offers[i].Offer.RelativePath, relativePath, StringComparison.OrdinalIgnoreCase)) continue;
                 if (_offers[i].State == OfferState.Approved && approve) return _offers[i];
-                if (_offers[i].State is OfferState.Refused or OfferState.Expired) return _offers[i];
+                if (_offers[i].State is OfferState.Refused or OfferState.Expired or OfferState.Cancelled) return _offers[i];
                 _offers[i] = _offers[i] with { State = approve ? OfferState.Approved : OfferState.Refused, Reason = reason };
                 return _offers[i];
             }

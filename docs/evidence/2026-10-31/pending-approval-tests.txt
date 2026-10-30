@@ -1,0 +1,21 @@
+Test run for C:\Users\Administrator\Documents\GitHub\I-Total.Transfer-v1.5.0-source\tests\I-Total.Transfer.Tests\bin\Release\net10.0-windows\I-Total.Transfer.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Passed AnOfferWaitsForTheOperatorByDefault [3 ms]
+  Passed ApprovingMakesTheOfferCommittable [< 1 ms]
+  Passed ARefusedPathStaysRefusedForTheSession [< 1 ms]
+  Passed AutoApproveIsAnExplicitPreferenceNotASilentDefault [< 1 ms]
+  Passed PendingOffersExpire [< 1 ms]
+  Passed ApproveAllAndRefuseAllCoverEveryPendingOffer [< 1 ms]
+  Passed PathMatchingIsCaseInsensitiveBecauseWindowsIs [< 1 ms]
+  Passed DecidingAnUnknownPathChangesNothing [< 1 ms]
+  Passed CancellingAPendingOfferRemovesItFromThePendingList [< 1 ms]
+  Passed ALateApprovalCannotReviveACancelledOffer [< 1 ms]
+  Passed ACancelledPathCanBeOfferedAgain [< 1 ms]
+  Passed CancellingAnUnknownOrDecidedOfferChangesNothing [< 1 ms]
+  Passed ClearingForgetsEveryDecision [< 1 ms]
+  Passed AClientThatDisconnectsWhileWaitingForApprovalCancelsTheOffer [288 ms]
+
+Test Run Successful.
+Total tests: 14
+     Passed: 14
+ Total time: 0.9530 Seconds

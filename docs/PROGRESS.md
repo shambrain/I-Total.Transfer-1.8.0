@@ -12,6 +12,63 @@ start from here without re-reading the whole conversation.
 > hashes quoted in this log before this note identify the pre-publication history; the file contents, tests
 > and evidence are unchanged. The release executable is unaffected.
 
+## 2026-10-31 - exact TLS identity, pending-approval cancellation, active-batch controls
+
+### Exact TLS certificate selection
+
+`WirelessReceiver.FindServerCertificate()` no longer does a substring search over the subject or the
+formatted SAN text. `ServerCertificateValidator` parses the SAN extension with `System.Formats.Asn1`:
+
+- an IP bind address requires an exact `iPAddress` SAN; a similar address or a CN occurrence is refused;
+- a DNS bind address requires an exact DNS SAN (case-insensitive), with a leftmost `*.` wildcard covering
+  exactly one label and no embedded/partial wildcards;
+- validity, private-key availability, serverAuth EKU (when EKU is present) and a usable key usage
+  (`digitalSignature` or `keyEncipherment`) are all checked;
+- a CN-only certificate or a certificate without a SAN is refused.
+
+`Require TLS` still refuses to start without a match; there is no HTTP fallback. Selection is server-side
+only: a self-signed certificate that passes selection is still rejected by a default client until its
+chain is trusted, and `WIRELESS.md` now lists the exact certificate/SAN and iPhone/Android trust steps.
+
+### Pending-approval cancellation
+
+`ServeConnectionAsync` now creates a per-connection `CancellationTokenSource` and watches the socket without
+reading body bytes. If the sender aborts while its offer waits for approval, the wait is cancelled promptly,
+the offer becomes `OfferState.Cancelled`, `WaitingUploads` drops to zero, a late `Approve` is refused, and
+the same relative path can be offered again (cancellation is not a sticky refusal). The approval timeout
+also cancels the offer instead of leaving it pending for the 30-minute inbox lifetime. No payload byte is
+read or written before approval.
+
+### Active-batch controls
+
+`sender.js` snapshots the selected files and folder when a batch starts. While it runs the file picker,
+folder field, pairing input/button and token rotation are disabled; Cancel stays available. Every terminal
+path restores the controls. A rotation response that arrives after a batch starts is ignored instead of
+overwriting the token the batch is using, and a forced `change`/`click` cannot replace the batch state.
+The Chrome end-to-end test asserts the disabled/enabled states and the forced-change/rotate behavior.
+
+### Tests and evidence
+
+```text
+dotnet build I-Total.Transfer.sln -c Release --no-incremental   -> 0 warnings, 0 errors
+dotnet test ... --blame-hang --blame-hang-timeout 240s          -> 547 passed, 2 skipped, 549 total
+node tests\sender\sender.test.mjs src\I-Total.Transfer\Wireless\sender.js -> PASS
+node tests\sender\browser-e2e.mjs <DeviceDrill.exe>             -> PASS (happy path + cancellation/controls)
+```
+
+- `ServerCertificateValidatorTests` (14) cover exact IPv4/IPv6/DNS SANs, similar addresses/names, wildcard
+  one-label matching, clientAuth-only EKU, missing EKU, key usage, expired/not-yet-valid, no private key,
+  no SAN, and a default TLS client rejecting an untrusted self-signed certificate until it is trusted.
+- `ApprovalInboxTests` (13) cover `Cancelled`, late approval, retry after cancellation, and no-op cancel.
+- `AClientThatDisconnectsWhileWaitingForApprovalCancelsTheOffer` uses a real loopback socket: header only,
+  pending offer, disconnect, inbox/waiting counts drop, late approval refused, no destination/`.partial`/
+  received item, then the same path is offered, approved and committed.
+- Raw outputs are under `docs/evidence/2026-10-31/`.
+
+Physical iPhone Safari / HUAWEI Chrome testing remains pending (KI-12). The two-launch single-instance
+window-activation drill also remains pending (KI-27). No physical compatibility is claimed.
+
+---
 ## 2026-10-30 - G3 hardening: cancellation, fail-closed receipts, fragment ticket, TLS semantics
 
 ### Starting point

@@ -106,6 +106,9 @@ public sealed class WirelessReceiver : IDisposable
     /// <summary>Number of live sender sessions.</summary>
     public int LiveSessions => _pairing.LiveSessionCount(DateTimeOffset.UtcNow);
 
+    /// <summary>Uploads currently waiting for an operator decision. Used by tests and diagnostics.</summary>
+    public int WaitingUploads => _waiting.Count;
+
     public event Action<WirelessEvent>? Activity;
 
     /// <summary>Raised when an offer needs a decision, so the UI can show it immediately.</summary>
@@ -242,8 +245,9 @@ public sealed class WirelessReceiver : IDisposable
 
     /// <summary>
     /// Finds a certificate usable for this bind address without requiring an elevated HTTP.sys
-    /// reservation. A certificate is accepted only when it has a private key, is currently valid and
-    /// its subject or subject alternative names include the address being served.
+    /// reservation. A certificate is accepted only when it has a private key, is currently valid, is
+    /// suitable for TLS server authentication and names the address in a SAN entry. Selection is exact:
+    /// a similar address in the subject or in a different SAN entry is not enough.
     /// </summary>
     private static X509Certificate2? FindServerCertificate(string address)
     {
@@ -251,32 +255,16 @@ public sealed class WirelessReceiver : IDisposable
         {
             using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
             store.Open(OpenFlags.ReadOnly);
-            DateTime now = DateTime.Now;
+            DateTimeOffset now = DateTimeOffset.UtcNow;
             foreach (X509Certificate2 candidate in store.Certificates)
             {
-                if (!candidate.HasPrivateKey || now < candidate.NotBefore || now > candidate.NotAfter) continue;
-                if (!CertificateNamesAddress(candidate, address)) continue;
+                if (!ServerCertificateValidator.IsUsableForServer(candidate, address, now)) continue;
                 return new X509Certificate2(candidate);
             }
         }
         catch (CryptographicException) { }
         catch (PlatformNotSupportedException) { }
         return null;
-    }
-
-    private static bool CertificateNamesAddress(X509Certificate2 certificate, string address)
-    {
-        if (certificate.Subject.Contains(address, StringComparison.OrdinalIgnoreCase)) return true;
-        foreach (X509Extension extension in certificate.Extensions)
-        {
-            if (extension.Oid?.Value != "2.5.29.17") continue;
-            try
-            {
-                if (extension.Format(false).Contains(address, StringComparison.OrdinalIgnoreCase)) return true;
-            }
-            catch (CryptographicException) { }
-        }
-        return false;
     }
 
     public void Stop()
@@ -303,9 +291,9 @@ public sealed class WirelessReceiver : IDisposable
     public bool Approve(string relativePath)
     {
         OfferRecord? record = _inbox.Approve(relativePath, DateTimeOffset.UtcNow);
-        if (record is null) return false;
+        if (record is null || record.State != OfferState.Approved) return false;
         if (_waiting.TryRemove(record.Offer.RelativePath, out TaskCompletionSource<bool>? wait))
-            wait.TrySetResult(record.State == OfferState.Approved);
+            wait.TrySetResult(true);
         Raise("approve", $"Approved {record.Offer.RelativePath}.", true);
         return true;
     }
@@ -314,7 +302,7 @@ public sealed class WirelessReceiver : IDisposable
     public bool Refuse(string relativePath)
     {
         OfferRecord? record = _inbox.Refuse(relativePath, DateTimeOffset.UtcNow);
-        if (record is null) return false;
+        if (record is null || record.State != OfferState.Refused) return false;
         if (_waiting.TryRemove(record.Offer.RelativePath, out TaskCompletionSource<bool>? wait))
             wait.TrySetResult(false);
         Raise("refuse", $"Refused {record.Offer.RelativePath}.", false);
@@ -365,6 +353,12 @@ public sealed class WirelessReceiver : IDisposable
             client.NoDelay = true;
             Stream stream = client.GetStream();
             SslStream? tls = null;
+            // A disconnect is a per-request fact. Without this linked source an XHR abort while an
+            // upload waits for approval would not be noticed until the five-minute approval timeout,
+            // and the pending offer would stay visible. The monitor watches the socket without
+            // consuming body bytes, so nothing is read before approval.
+            using var connection = CancellationTokenSource.CreateLinkedTokenSource(token);
+            Task monitor = MonitorClientDisconnectAsync(client, connection);
             try
             {
                 if (UsingTls && _serverCertificate is not null)
@@ -376,12 +370,12 @@ public sealed class WirelessReceiver : IDisposable
                         ClientCertificateRequired = false,
                         EnabledSslProtocols = SslProtocols.None,
                         CertificateRevocationCheckMode = X509RevocationMode.NoCheck
-                    }, token).ConfigureAwait(false);
+                    }, connection.Token).ConfigureAwait(false);
                     stream = tls;
                 }
 
-                WirelessRequest? request = await ReadRequestAsync(stream, client, token).ConfigureAwait(false);
-                if (request is not null) await HandleAsync(request, token).ConfigureAwait(false);
+                WirelessRequest? request = await ReadRequestAsync(stream, client, connection.Token).ConfigureAwait(false);
+                if (request is not null) await HandleAsync(request, connection.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException) { }
             catch (IOException) { }
@@ -390,12 +384,45 @@ public sealed class WirelessReceiver : IDisposable
             catch (Exception ex) { _log.Write("Wireless connection failed: " + ex.Message, "WARN"); }
             finally
             {
+                try { connection.Cancel(); } catch { }
+                try { await monitor.ConfigureAwait(false); } catch { }
                 if (tls is not null)
                 {
                     try { await tls.DisposeAsync().ConfigureAwait(false); } catch { }
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Watches a connection for a peer close while a request is being handled. It never reads body
+    /// bytes, so an upload still waits for approval before any payload is consumed or written. A
+    /// completed request simply cancels the monitor in the caller's finally block.
+    /// </summary>
+    private static async Task MonitorClientDisconnectAsync(TcpClient client, CancellationTokenSource connection)
+    {
+        try
+        {
+            Socket socket = client.Client;
+            while (!connection.IsCancellationRequested)
+            {
+                await Task.Delay(100, connection.Token).ConfigureAwait(false);
+                if (!socket.Connected)
+                {
+                    connection.Cancel();
+                    return;
+                }
+                if (socket.Poll(0, SelectMode.SelectRead) && socket.Available == 0)
+                {
+                    connection.Cancel();
+                    return;
+                }
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
+        catch (SocketException) { }
     }
 
     /// <summary>
@@ -689,8 +716,22 @@ public sealed class WirelessReceiver : IDisposable
             bool approved = await WaitForDecisionAsync(relative, token).ConfigureAwait(false);
             if (!approved)
             {
-                _inbox.Expire(DateTimeOffset.UtcNow);
-                _log.Write($"Wireless offer {relative} was not approved; nothing was written.", "WARN");
+                if (token.IsCancellationRequested)
+                {
+                    // The sender disconnected while waiting, or the receiver stopped. Cancel the offer
+                    // immediately instead of leaving it in the approval inbox until it expires, and do
+                    // not try to answer a socket that is gone.
+                    _inbox.Cancel(relative, DateTimeOffset.UtcNow,
+                        "The sender disconnected before a decision was made; nothing was written.");
+                    _log.Write($"Wireless offer {relative} was cancelled because the sender disconnected; nothing was written.", "WARN");
+                    return;
+                }
+
+                // The operator did not decide before the approval timeout. This is not a sticky refusal:
+                // the same path may be offered again later.
+                _inbox.Cancel(relative, DateTimeOffset.UtcNow,
+                    "No decision was made before the approval timeout; nothing was written.");
+                _log.Write($"Wireless offer {relative} timed out waiting for approval; nothing was written.", "WARN");
                 await DrainBodyAsync(request, token).ConfigureAwait(false);
                 await WriteJsonAsync(request, 403, new { error = "not approved", detail = "The operator did not approve this file." }).ConfigureAwait(false);
                 return;

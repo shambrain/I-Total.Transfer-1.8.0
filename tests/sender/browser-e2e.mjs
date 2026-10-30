@@ -176,9 +176,36 @@ try {
       assert.equal(await page.$eval("#hashProgress", (el) => el.value), 100,
         "hashing progress must reach 100% before the upload starts");
 
+      // The active batch owns its snapshot: selection, folder, pairing and rotation are disabled,
+      // Cancel stays available, and a forced change/rotate must not alter the batch.
+      assert.equal(await page.isDisabled("#files"), true, "the file picker must be disabled during a batch");
+      assert.equal(await page.isDisabled("#folder"), true, "the destination folder must be disabled during a batch");
+      assert.equal(await page.isDisabled("#pairButton"), true, "pairing must be disabled during a batch");
+      assert.equal(await page.isDisabled("#rotateButton"), true, "token rotation must be disabled during a batch");
+      assert.equal(await page.isDisabled("#cancelButton"), false, "Cancel must stay available during a batch");
+
+      const sessionInfoBefore = await page.textContent("#sessionInfo");
+      await page.evaluate(() => {
+        document.querySelector("#files").dispatchEvent(new Event("change"));
+        document.querySelector("#rotateButton").click();
+      });
+      await delay(500);
+      assert.equal(await page.locator("#fileList li").count(), 2,
+        "a forced change event must not replace the active batch's file list");
+      assert.equal((await page.textContent("#sessionInfo")).trim(), sessionInfoBefore.trim(),
+        "a forced rotate click must not change the session during a batch");
+      assert.ok(!(await page.textContent("#summary")).includes("rotated"),
+        "a forced rotate click must not report a rotation during a batch");
+
       await page.click("#cancelButton");
       await waitForResultText(page, "CANCELLED", 30000);
       await waitForResultText(page, "NOT ATTEMPTED", 30000);
+
+      assert.equal(await page.isDisabled("#files"), false, "the file picker must be restored after a batch");
+      assert.equal(await page.isDisabled("#folder"), false, "the destination folder must be restored after a batch");
+      assert.equal(await page.isDisabled("#pairButton"), false, "pairing must be restored after a batch");
+      assert.equal(await page.isDisabled("#rotateButton"), false, "token rotation must be restored after a batch");
+      assert.equal(await page.isDisabled("#cancelButton"), true, "Cancel must be disabled when no batch runs");
 
       const summary = (await page.textContent("#summary")).trim();
       console.log("Cancellation summary:", summary);

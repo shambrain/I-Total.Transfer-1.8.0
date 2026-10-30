@@ -1,7 +1,21 @@
 ## 1.8.0 — 2026-10-20 — borderless chrome, honest device detection, unfinished-session recovery, Android storage
 
 - **One app instance per Windows session (2026-10-30).** A `Local\` named mutex stops a second copy from sharing the WPD provider and making the first abort (KI-27). The second launch brings the existing window forward and exits with an explanation. `SingleInstanceGuardTests` covers exclusion, release, names and disposal; the physical two-launch drill is still pending.
-- **Wireless sender hardening (2026-10-30).** `hashFile` is cancellation-aware (checked before every
+- **Exact TLS certificate identity (2026-10-31).** `ServerCertificateValidator` replaces substring matching
+  with structured SAN parsing: exact IP SAN for an IP bind address, exact DNS SAN (one-label wildcard only)
+  for a DNS address, validity, private key, serverAuth EKU and usable key usage. Similar addresses, CN-only
+  certificates and missing SANs are refused. `Require TLS` still refuses to start without a match; there is
+  no HTTP fallback. `ServerCertificateValidatorTests` (14) include a default TLS client rejecting an
+  untrusted self-signed certificate until it is trusted.
+- **Pending-approval cancellation (2026-10-31).** A per-connection monitor cancels the approval wait when the
+  sender disconnects, without reading body bytes. The offer becomes `Cancelled` promptly, a late approval is
+  refused, no destination/`.partial`/received item remains, and the same path can be retried. A real-socket
+  loopback test covers the whole sequence; the approval timeout also cancels instead of leaving the offer
+  pending for 30 minutes.
+- **Active-batch controls (2026-10-31).** The sender snapshots the batch and disables the file picker,
+  destination folder, pairing and token rotation while it runs; Cancel stays available and every terminal
+  path restores the controls. A late rotation response cannot overwrite the batch's token. The Chrome E2E
+  asserts the disabled/restored states and forced change/rotate no-ops.- **Wireless sender hardening (2026-10-30).** `hashFile` is cancellation-aware (checked before every
   4 MiB slice and after each read) and hashing progress is shown separately from upload progress.
   `sendBatch` reports `VERIFIED`, `FAILED`, `RECEIPT INVALID`, `CANCELLED` and `UNATTEMPTED` separately;
   a cancelled batch always says "The batch was CANCELLED" with its counts and never reads as complete.

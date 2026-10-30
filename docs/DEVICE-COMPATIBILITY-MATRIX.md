@@ -15,7 +15,7 @@ Evidence classes: **LIVE** recorded physical run in this repository, **SIM** aut
 | Android phone in PTP mode | — | WPD | LIVE (historical, 2026-10-24) | camera-only warning shown (2026-10-24); revalidation on the current candidate is pending | n/a (warning state) | n/a | HISTORICAL PHYSICAL PASS; CURRENT-CANDIDATE REVALIDATION PENDING |
 | Android, other vendors/versions | — | WPD | SIM | SIM | SIM | not supported | NOT VERIFIED — no second Android model tested |
 | iPhone/iPad, other models | — | WPD | SIM | SIM | SIM | n/a | NOT VERIFIED |
-| Any device, wireless | — | HTTP receiver | LIVE receiver only | sender-side enumeration not implemented | receiver stores + verifies uploads | n/a | BLOCKED — no sender application |
+| Any device, wireless | browser sender | HTTP receiver + browser page | LIVE receiver; local Chrome E2E | sender selects files explicitly (no enumeration) | receiver stores + verifies SHA-256 | n/a | IMPLEMENTED; LOCAL BROWSER E2E VERIFIED; PHYSICAL PHONE PENDING |
 
 ## Backend capability declarations (source of truth: `BackendCapabilities`)
 
@@ -42,5 +42,5 @@ Evidence classes: **LIVE** recorded physical run in this repository, **SIM** aut
 | AFC rows | pinned native binaries, hash verification, a physical read/write drill |
 | Other Android vendors | attach the device, run the standard Android drill set (AN01–AN14) |
 | Other iPhones/iPads | attach, run IP01–IP13 |
-| Wireless sender | a real sender app/Shortcut plus the end-to-end drill in `docs/WIRELESS.md` |
+| Wireless sender | a physical iPhone Safari and Android Chrome run of the browser sender, including the TLS trust-store drill, plus the end-to-end drill in `docs/WIRELESS.md` |
 | Windows 11 | run the visual and device drills on a Windows 11 machine |

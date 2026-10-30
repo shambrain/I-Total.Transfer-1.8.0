@@ -133,10 +133,11 @@ coordinated. Recorded as KI-27.
 | EN2 | Windows 11 rendering (build 22000+) | NOT OBSERVED (no such machine) |
 | EN3 | 200 % scaling | LIVE PASS (2026-10-24; real 192-DPI render at minimum and design sizes plus 200 % window captures of all seven pages from the published exe) |
 | EN4 | Audible UI cues | PARTIAL (PCM verified; endpoint active; loopback masked; no listening test) |
-| EN5 | Wireless receive end-to-end from a real iOS browser | NOT RUN (no physical iOS sender) |
-| EN6 | Wireless TLS-fallback refusal drill | LIVE PASS (2026-10-22, current build) |
+| EN5 | Wireless receive end-to-end from a real iPhone Safari browser | NOT RUN (local Chrome E2E only; physical phone pending) |
+| EN6 | `Require TLS` refuses to start without an exact-SAN certificate | AUTOMATED PASS (2026-10-31, `ServerCertificateValidatorTests` + `RequiringTlsWithoutAMatchingCertificateRefusesToStart`); physical trust-store drill pending |
 | EN7 | Theme preview and Overview action-row drill at 150 % (real executable) | LIVE PASS (2026-10-22) |
 | EN8 | Wireless private-LAN bind without elevation/URL ACL | LIVE PASS (2026-10-22, current build) |
+| EN9 | Wireless receive end-to-end from a real Android Chrome browser, including TLS trust | NOT RUN (local Chrome E2E only; physical phone pending) |
 
 ## How a row is closed
 
